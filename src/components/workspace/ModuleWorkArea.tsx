@@ -223,63 +223,105 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
 
       userMessage += `\n\n---\n\n${interdependency ? interdependency + "\n\n" : ""}Com base em todo o contexto acima${activeResearch ? " (incluindo a pesquisa de mercado com dados reais e atualizados)" : ""}, execute a tarefa do módulo ${moduleConfig.number} - ${moduleConfig.title}. ${activeResearch ? "OBRIGATÓRIO: Incorpore e cruze os dados da pesquisa de mercado com o material do projeto para tornar o conteúdo mais fundamentado e realista." : ""} Garanta coerência e continuidade com os módulos anteriores já gerados.`;
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-module`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-           body: JSON.stringify({
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: userMessage },
-            ],
-            pdfParts: pdfParts.length > 0 ? pdfParts : undefined,
-            model: `google/${selectedModel}`,
-          }),
+
+
+      // Helper to stream one call and return { text, finishReason }
+      const streamOneCall = async (msgs: any[], pdfs: any[]) => {
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-module`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({
+              messages: msgs,
+              pdfParts: pdfs.length > 0 ? pdfs : undefined,
+              model: `google/${selectedModel}`,
+            }),
+          }
+        );
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Erro ${res.status}`);
         }
-      );
+        if (!res.body) throw new Error("Stream não disponível");
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || `Erro ${response.status}`);
-      }
-      if (!response.body) throw new Error("Stream não disponível");
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let text = "";
+        let textBuffer = "";
+        let lastFinishReason = "";
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullText = "";
-      let textBuffer = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          textBuffer += decoder.decode(value, { stream: true });
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const delta = parsed.choices?.[0]?.delta?.content;
-            if (delta) {
-              fullText += delta;
-              setStreamText(fullText);
+          let newlineIndex: number;
+          while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+            let line = textBuffer.slice(0, newlineIndex);
+            textBuffer = textBuffer.slice(newlineIndex + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (line.startsWith(":") || line.trim() === "") continue;
+            if (!line.startsWith("data: ")) continue;
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === "[DONE]") break;
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const delta = parsed.choices?.[0]?.delta?.content;
+              const fr = parsed.choices?.[0]?.finish_reason;
+              if (fr) lastFinishReason = fr;
+              if (delta) text += delta;
+            } catch {
+              textBuffer = line + "\n" + textBuffer;
+              break;
             }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
           }
         }
+        return { text, finishReason: lastFinishReason };
+      };
+
+      // Initial generation
+      let fullText = "";
+      const initialMessages = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ];
+      
+      const result = await streamOneCall(initialMessages, pdfParts);
+      fullText = result.text;
+      setStreamText(fullText);
+
+      // Auto-continuation: if model stopped due to token limit, continue up to 3 times
+      const MAX_CONTINUATIONS = 3;
+      let continuations = 0;
+      let lastFinishReason = result.finishReason;
+
+      while (lastFinishReason === "length" && continuations < MAX_CONTINUATIONS) {
+        continuations++;
+        console.log(`[Auto-continuation ${continuations}] finish_reason was "length", continuing...`);
+        toast.info(`Conteúdo extenso — continuando geração (parte ${continuations + 1})...`);
+        
+        const contMessages = [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userMessage },
+          { role: "assistant", content: fullText },
+          { role: "user", content: "Continue EXATAMENTE de onde parou, sem repetir nenhum conteúdo anterior. Continue a geração do ponto exato onde foi interrompida." },
+        ];
+        
+        const contResult = await streamOneCall(contMessages, []);
+        fullText += contResult.text;
+        setStreamText(fullText);
+        lastFinishReason = contResult.finishReason;
       }
+
+      if (lastFinishReason === "length") {
+        toast.warning("O conteúdo pode estar incompleto — limite máximo de continuações atingido.");
+      }
+
+      console.log(`[Generation complete] finish_reason: ${lastFinishReason}, length: ${fullText.length} chars, continuations: ${continuations}`);
 
       if (module.generated_content) {
         await supabase.from("module_versions").insert({
