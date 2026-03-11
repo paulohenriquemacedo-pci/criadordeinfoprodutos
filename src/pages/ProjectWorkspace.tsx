@@ -110,6 +110,7 @@ export default function ProjectWorkspace() {
           </div>
         </div>
         <div className="flex items-center gap-1">
+          <PromptExportImport projectId={project.id} />
           <Button variant="outline" size="sm" onClick={() => setBatchConfigOpen(true)} className="gap-1.5" title="Gerar todos os módulos de uma vez">
             <Zap className="h-4 w-4" /> Gerar Tudo
           </Button>
