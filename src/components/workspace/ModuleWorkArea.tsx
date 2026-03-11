@@ -401,6 +401,25 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
     setResearchOpen(!researchOpen);
   };
 
+  const handleClearGeneration = async () => {
+    if (!module) return;
+    // Backup current content before clearing
+    if (module.generated_content) {
+      await supabase.from("module_versions").insert({
+        module_id: module.id,
+        content: module.generated_content,
+      });
+    }
+    await supabase.from("modules").update({
+      generated_content: null,
+      is_outdated: false,
+    } as any).eq("id", module.id);
+    setContent("");
+    setStreamText("");
+    updateModule.reset();
+    toast.success("Geração limpa! Pesquisas mantidas para nova geração.");
+  };
+
   const handleClearModule = async () => {
     if (!module) return;
     // Backup current content before clearing
@@ -504,20 +523,51 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
                 </DropdownMenuItem>
                 {module?.generated_content && (
                   <DropdownMenuItem
+                    className="text-orange-600 focus:text-orange-600"
+                    onClick={() => {
+                      const trigger = document.getElementById("clear-generation-trigger");
+                      trigger?.click();
+                    }}
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" /> Limpar geração (manter pesquisas)
+                  </DropdownMenuItem>
+                )}
+                {module?.generated_content && (
+                  <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
                     onClick={() => {
-                      // We trigger the alert dialog via state instead
                       const trigger = document.getElementById("clear-module-trigger");
                       trigger?.click();
                     }}
                   >
-                    <Trash2 className="h-4 w-4 mr-2" /> Limpar módulo
+                    <Trash2 className="h-4 w-4 mr-2" /> Limpar tudo (geração + pesquisas)
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Hidden alert dialog trigger */}
+            {/* Hidden alert dialog triggers */}
+            {module?.generated_content && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button id="clear-generation-trigger" className="hidden" />
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Limpar geração do M{moduleConfig.number}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Isso apagará apenas o conteúdo gerado. As pesquisas (IA e externa) serão mantidas para a próxima geração. O conteúdo atual será salvo no histórico.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleClearGeneration} className="bg-orange-600 text-white hover:bg-orange-700">
+                      Limpar geração
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
             {module?.generated_content && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
