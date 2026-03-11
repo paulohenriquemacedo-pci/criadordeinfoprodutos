@@ -46,6 +46,30 @@ export default function CustomResearchPanel({ moduleId, savedCustomResearch, onC
   const [processingProgress, setProcessingProgress] = useState(0);
   const [processingLabel, setProcessingLabel] = useState("");
 
+  // Parse imported file names from text separators
+  const importedFiles = (() => {
+    const regex = /--- Importado de: (.+?)(?:\s*\(.+?\))? ---/g;
+    const files: { name: string; startIndex: number; endIndex: number }[] = [];
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      const sepStart = text.lastIndexOf("\n\n", match.index);
+      const afterSep = match.index + match[0].length;
+      const nextSep = text.indexOf("\n\n--- Importado de:", afterSep);
+      files.push({
+        name: match[1],
+        startIndex: sepStart === -1 ? match.index : sepStart,
+        endIndex: nextSep === -1 ? text.length : nextSep,
+      });
+    }
+    return files;
+  })();
+
+  const handleRemoveFile = (fileIndex: number) => {
+    const file = importedFiles[fileIndex];
+    const newText = (text.slice(0, file.startIndex) + text.slice(file.endIndex)).trim();
+    setText(newText);
+  };
+
   const fileToBase64 = async (file: File): Promise<string> => {
     const arrayBuffer = await file.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
