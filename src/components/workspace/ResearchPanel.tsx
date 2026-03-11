@@ -32,7 +32,7 @@ interface Props {
 
 const PROVIDER_CONFIG: Record<ResearchProvider, { label: string; edgeFunction: string; icon: "globe" | "brain" | "zap" }> = {
   perplexity: { label: "Perplexity", edgeFunction: "market-research", icon: "globe" },
-  "lovable-ai": { label: "Lovable IA", edgeFunction: "ai-research", icon: "brain" },
+  "lovable-ai": { label: "Gemini", edgeFunction: "ai-research", icon: "brain" },
   qwen: { label: "Qwen", edgeFunction: "qwen-research", icon: "zap" },
 };
 
