@@ -6,7 +6,7 @@ import { DEFAULT_GENERATION_PROMPTS, DEFAULT_RESEARCH_PROMPTS, QUALITY_DIRECTIVE
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Sparkles, Save, History, AlertTriangle, Loader2, Search, FileText, Trash2, ChevronDown } from "lucide-react";
+import { Sparkles, Save, History, AlertTriangle, Loader2, Search, FileText, Trash2, ChevronDown, ChevronRight, MessageSquare, MoreHorizontal } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,6 +14,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Progress } from "@/components/ui/progress";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import PromptEditor from "./PromptEditor";
 import ResearchPanel from "./ResearchPanel";
 import ResearchChat from "./ResearchChat";
