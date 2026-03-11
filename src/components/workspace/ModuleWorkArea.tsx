@@ -223,7 +223,6 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
 
       userMessage += `\n\n---\n\n${interdependency ? interdependency + "\n\n" : ""}Com base em todo o contexto acima${activeResearch ? " (incluindo a pesquisa de mercado com dados reais e atualizados)" : ""}, execute a tarefa do módulo ${moduleConfig.number} - ${moduleConfig.title}. ${activeResearch ? "OBRIGATÓRIO: Incorpore e cruze os dados da pesquisa de mercado com o material do projeto para tornar o conteúdo mais fundamentado e realista." : ""} Garanta coerência e continuidade com os módulos anteriores já gerados.`;
 
-      const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-module`,
         {
           method: "POST",
