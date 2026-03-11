@@ -26,6 +26,7 @@ type CreationMode = null | "scratch" | "existing";
 export default function Dashboard() {
   const { data: projects, isLoading } = useProjects();
   const createProject = useCreateProject();
+  const queryClient = useQueryClient();
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
