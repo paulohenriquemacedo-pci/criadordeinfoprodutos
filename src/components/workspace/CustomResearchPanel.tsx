@@ -228,6 +228,26 @@ export default function CustomResearchPanel({ moduleId, savedCustomResearch, onC
         </div>
       )}
 
+      {importedFiles.length > 0 && (
+        <div className="space-y-1.5">
+          <span className="text-xs font-medium text-muted-foreground">Arquivos importados:</span>
+          {importedFiles.map((f, i) => (
+            <div key={i} className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-secondary/30 group">
+              <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <span className="text-xs flex-1 truncate">{f.name}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => handleRemoveFile(i)}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <Textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
