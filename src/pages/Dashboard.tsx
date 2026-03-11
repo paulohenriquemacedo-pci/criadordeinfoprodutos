@@ -48,6 +48,7 @@ export default function Dashboard() {
       await supabase.from("modules").delete().eq("project_id", projectId);
       await supabase.from("project_files").delete().eq("project_id", projectId);
       await supabase.from("projects").delete().eq("id", projectId);
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
       toast.success("Projeto excluído com sucesso!");
     } catch (err: any) {
       toast.error("Erro ao excluir projeto: " + err.message);
