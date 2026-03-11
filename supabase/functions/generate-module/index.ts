@@ -48,7 +48,7 @@ serve(async (req) => {
       }
     }
 
-    const geminiModel = toGeminiModel(requestedModel || "google/gemini-2.5-flash");
+    const geminiModel = toGeminiModel(requestedModel || "google/gemini-2.5-pro");
 
     const response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",

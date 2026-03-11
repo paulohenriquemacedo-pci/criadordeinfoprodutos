@@ -421,10 +421,21 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
               </AlertDialogContent>
             </AlertDialog>
           )}
-          <Button size="sm" onClick={handleGenerate} disabled={isGenerating} className="gap-1">
-            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {isGenerating ? "Gerando..." : module?.is_outdated ? "Regenerar" : "Gerar com IA"}
-          </Button>
+          <div className="flex items-center gap-1">
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              className="h-8 text-xs rounded-md border border-border/50 bg-background px-2 pr-6 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
+              disabled={isGenerating}
+            >
+              <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            </select>
+            <Button size="sm" onClick={handleGenerate} disabled={isGenerating} className="gap-1">
+              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {isGenerating ? "Gerando..." : module?.is_outdated ? "Regenerar" : "Gerar com IA"}
+            </Button>
+          </div>
         </div>
       </div>
 
