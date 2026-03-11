@@ -59,6 +59,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: geminiModel,
         messages: aiMessages,
+        max_tokens: 65536,
         stream: true,
       }),
     });
