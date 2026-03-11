@@ -546,7 +546,28 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Hidden alert dialog trigger */}
+            {/* Hidden alert dialog triggers */}
+            {module?.generated_content && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button id="clear-generation-trigger" className="hidden" />
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Limpar geração do M{moduleConfig.number}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Isso apagará apenas o conteúdo gerado. As pesquisas (IA e externa) serão mantidas para a próxima geração. O conteúdo atual será salvo no histórico.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleClearGeneration} className="bg-orange-600 text-white hover:bg-orange-700">
+                      Limpar geração
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
             {module?.generated_content && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
