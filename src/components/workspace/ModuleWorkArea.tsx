@@ -53,6 +53,7 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
   const [projectData, setProjectData] = useState<{ niche: string; promise: string; target_audience: string } | null>(null);
   const [refinedContext, setRefinedContext] = useState("");
   const [customResearch, setCustomResearch] = useState((module as any)?.custom_research || "");
+  const [selectedModel, setSelectedModel] = useState("gemini-2.5-pro");
   const updateModule = useUpdateModule();
   const { data: versions } = useModuleVersions(module?.id);
 
