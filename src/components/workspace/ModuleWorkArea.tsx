@@ -6,7 +6,7 @@ import { DEFAULT_GENERATION_PROMPTS, DEFAULT_RESEARCH_PROMPTS, QUALITY_DIRECTIVE
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Sparkles, Save, History, AlertTriangle, Loader2, Search, FileText, Trash2 } from "lucide-react";
+import { Sparkles, Save, History, AlertTriangle, Loader2, Search, FileText, Trash2, ChevronDown } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -53,6 +53,7 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
   const [projectData, setProjectData] = useState<{ niche: string; promise: string; target_audience: string } | null>(null);
   const [refinedContext, setRefinedContext] = useState("");
   const [customResearch, setCustomResearch] = useState((module as any)?.custom_research || "");
+  const [selectedModel, setSelectedModel] = useState("gemini-2.5-pro");
   const updateModule = useUpdateModule();
   const { data: versions } = useModuleVersions(module?.id);
 
@@ -228,12 +229,13 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({
+           body: JSON.stringify({
             messages: [
               { role: "system", content: systemPrompt },
               { role: "user", content: userMessage },
             ],
             pdfParts: pdfParts.length > 0 ? pdfParts : undefined,
+            model: `google/${selectedModel}`,
           }),
         }
       );
@@ -419,10 +421,21 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
               </AlertDialogContent>
             </AlertDialog>
           )}
-          <Button size="sm" onClick={handleGenerate} disabled={isGenerating} className="gap-1">
-            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {isGenerating ? "Gerando..." : module?.is_outdated ? "Regenerar" : "Gerar com IA"}
-          </Button>
+          <div className="flex items-center gap-1">
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              className="h-8 text-xs rounded-md border border-border/50 bg-background px-2 pr-6 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
+              disabled={isGenerating}
+            >
+              <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            </select>
+            <Button size="sm" onClick={handleGenerate} disabled={isGenerating} className="gap-1">
+              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {isGenerating ? "Gerando..." : module?.is_outdated ? "Regenerar" : "Gerar com IA"}
+            </Button>
+          </div>
         </div>
       </div>
 
