@@ -138,7 +138,7 @@ export default function ResearchPanel({
     const combined = results
       .map((r) => {
         const config = PROVIDER_CONFIG[r.provider];
-        const label = r.provider === "perplexity" ? "Perplexity (web)" : r.provider === "qwen" ? "Qwen (OpenRouter)" : "Lovable IA";
+        const label = r.provider === "perplexity" ? "Perplexity (web)" : r.provider === "qwen" ? "Qwen (OpenRouter)" : "Gemini";
         return `[Pesquisa via ${label}]\n${r.content}`;
       })
       .join("\n\n========\n\n");
