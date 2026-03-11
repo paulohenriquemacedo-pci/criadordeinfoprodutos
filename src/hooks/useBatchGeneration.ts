@@ -100,7 +100,7 @@ export function useBatchGeneration() {
     messages: any[],
     pdfParts: any[],
     model?: string
-  ): Promise<{ text: string; finishReason: string }> => {
+  ): Promise<{ text: string; finishReason: string; sawDone: boolean }> => {
     const response = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-module`,
       {
@@ -128,6 +128,31 @@ export function useBatchGeneration() {
     let text = "";
     let textBuffer = "";
     let lastFinishReason = "";
+    let sawDone = false;
+
+    const processSseLine = (rawLine: string) => {
+      let line = rawLine;
+      if (line.endsWith("\r")) line = line.slice(0, -1);
+      if (line.startsWith(":") || line.trim() === "") return true;
+      if (!line.startsWith("data: ")) return true;
+
+      const jsonStr = line.slice(6).trim();
+      if (jsonStr === "[DONE]") {
+        sawDone = true;
+        return true;
+      }
+
+      try {
+        const parsed = JSON.parse(jsonStr);
+        const delta = parsed.choices?.[0]?.delta?.content;
+        const fr = parsed.choices?.[0]?.finish_reason;
+        if (fr) lastFinishReason = fr;
+        if (delta) text += delta;
+        return true;
+      } catch {
+        return false;
+      }
+    };
 
     while (true) {
       const { done, value } = await reader.read();
@@ -136,27 +161,25 @@ export function useBatchGeneration() {
 
       let newlineIndex: number;
       while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-        let line = textBuffer.slice(0, newlineIndex);
+        const line = textBuffer.slice(0, newlineIndex);
         textBuffer = textBuffer.slice(newlineIndex + 1);
-        if (line.endsWith("\r")) line = line.slice(0, -1);
-        if (line.startsWith(":") || line.trim() === "") continue;
-        if (!line.startsWith("data: ")) continue;
-        const jsonStr = line.slice(6).trim();
-        if (jsonStr === "[DONE]") break;
-        try {
-          const parsed = JSON.parse(jsonStr);
-          const delta = parsed.choices?.[0]?.delta?.content;
-          const fr = parsed.choices?.[0]?.finish_reason;
-          if (fr) lastFinishReason = fr;
-          if (delta) text += delta;
-        } catch {
+        const ok = processSseLine(line);
+        if (!ok) {
           textBuffer = line + "\n" + textBuffer;
           break;
         }
       }
     }
 
-    return { text, finishReason: lastFinishReason };
+    // Flush final buffer (pode conter último finish_reason sem newline)
+    if (textBuffer.trim()) {
+      for (const raw of textBuffer.split("\n")) {
+        if (!raw) continue;
+        processSseLine(raw);
+      }
+    }
+
+    return { text, finishReason: lastFinishReason, sawDone };
   }, []);
 
   const generateModule = useCallback(async (
@@ -166,6 +189,16 @@ export function useBatchGeneration() {
     pdfParts: any[],
     model?: string
   ): Promise<string> => {
+    const isTokenLimitFinishReason = (reason: string) => {
+      const normalized = (reason || "").toLowerCase();
+      return normalized === "length" || normalized === "max_tokens" || normalized === "max_output_tokens";
+    };
+
+    const shouldAutoContinue = (reason: string, sawDone: boolean, text: string) => {
+      if (isTokenLimitFinishReason(reason)) return true;
+      return !sawDone && !reason && text.trim().length > 0;
+    };
+
     const initialMessages = [
       { role: "system", content: systemPrompt },
       { role: "user", content: userMessage },
@@ -174,14 +207,15 @@ export function useBatchGeneration() {
     const result = await streamOneCall(initialMessages, pdfParts, model);
     let fullText = result.text;
 
-    // Auto-continuation if model stopped due to token limit
+    // Auto-continuation if model stopped due to token limit or interrupted stream
     const MAX_CONTINUATIONS = 3;
     let continuations = 0;
     let lastFinishReason = result.finishReason;
+    let sawDone = result.sawDone;
 
-    while (lastFinishReason === "length" && continuations < MAX_CONTINUATIONS) {
+    while (shouldAutoContinue(lastFinishReason, sawDone, fullText) && continuations < MAX_CONTINUATIONS) {
       continuations++;
-      console.log(`[Batch auto-continuation ${continuations}] Module ${moduleNumber} - continuing...`);
+      console.log(`[Batch auto-continuation ${continuations}] Module ${moduleNumber} - finish_reason: ${lastFinishReason || "(vazio)"}, sawDone: ${sawDone}`);
       
       const contMessages = [
         { role: "system", content: systemPrompt },
@@ -193,9 +227,10 @@ export function useBatchGeneration() {
       const contResult = await streamOneCall(contMessages, [], model);
       fullText += contResult.text;
       lastFinishReason = contResult.finishReason;
+      sawDone = contResult.sawDone;
     }
 
-    console.log(`[Module ${moduleNumber} complete] finish_reason: ${lastFinishReason}, length: ${fullText.length}, continuations: ${continuations}`);
+    console.log(`[Module ${moduleNumber} complete] finish_reason: ${lastFinishReason || "(vazio)"}, sawDone: ${sawDone}, length: ${fullText.length}, continuations: ${continuations}`);
     return fullText;
   }, [streamOneCall]);
 

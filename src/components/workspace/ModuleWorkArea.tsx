@@ -225,7 +225,19 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
 
 
 
-      // Helper to stream one call and return { text, finishReason }
+      // Helpers para detectar truncamento e stream interrompido
+      const isTokenLimitFinishReason = (reason: string) => {
+        const normalized = (reason || "").toLowerCase();
+        return normalized === "length" || normalized === "max_tokens" || normalized === "max_output_tokens";
+      };
+
+      const shouldAutoContinue = (reason: string, sawDone: boolean, text: string) => {
+        if (isTokenLimitFinishReason(reason)) return true;
+        // Stream pode encerrar sem [DONE] e sem finish_reason quando há corte/interrupção
+        return !sawDone && !reason && text.trim().length > 0;
+      };
+
+      // Helper to stream one call and return { text, finishReason, sawDone }
       const streamOneCall = async (msgs: any[], pdfs: any[]) => {
         const res = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-module`,
@@ -253,6 +265,31 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
         let text = "";
         let textBuffer = "";
         let lastFinishReason = "";
+        let sawDone = false;
+
+        const processSseLine = (rawLine: string) => {
+          let line = rawLine;
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") return true;
+          if (!line.startsWith("data: ")) return true;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") {
+            sawDone = true;
+            return true;
+          }
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const delta = parsed.choices?.[0]?.delta?.content;
+            const fr = parsed.choices?.[0]?.finish_reason;
+            if (fr) lastFinishReason = fr;
+            if (delta) text += delta;
+            return true;
+          } catch {
+            return false;
+          }
+        };
 
         while (true) {
           const { done, value } = await reader.read();
@@ -261,26 +298,25 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
 
           let newlineIndex: number;
           while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-            let line = textBuffer.slice(0, newlineIndex);
+            const line = textBuffer.slice(0, newlineIndex);
             textBuffer = textBuffer.slice(newlineIndex + 1);
-            if (line.endsWith("\r")) line = line.slice(0, -1);
-            if (line.startsWith(":") || line.trim() === "") continue;
-            if (!line.startsWith("data: ")) continue;
-            const jsonStr = line.slice(6).trim();
-            if (jsonStr === "[DONE]") break;
-            try {
-              const parsed = JSON.parse(jsonStr);
-              const delta = parsed.choices?.[0]?.delta?.content;
-              const fr = parsed.choices?.[0]?.finish_reason;
-              if (fr) lastFinishReason = fr;
-              if (delta) text += delta;
-            } catch {
+            const ok = processSseLine(line);
+            if (!ok) {
               textBuffer = line + "\n" + textBuffer;
               break;
             }
           }
         }
-        return { text, finishReason: lastFinishReason };
+
+        // Flush final buffer (pode conter último finish_reason sem newline)
+        if (textBuffer.trim()) {
+          for (let raw of textBuffer.split("\n")) {
+            if (!raw) continue;
+            processSseLine(raw);
+          }
+        }
+
+        return { text, finishReason: lastFinishReason, sawDone };
       };
 
       // Initial generation
@@ -294,14 +330,15 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
       fullText = result.text;
       setStreamText(fullText);
 
-      // Auto-continuation: if model stopped due to token limit, continue up to 3 times
+      // Auto-continuation robusta para limites de token e streams interrompidos
       const MAX_CONTINUATIONS = 3;
       let continuations = 0;
       let lastFinishReason = result.finishReason;
+      let sawDone = result.sawDone;
 
-      while (lastFinishReason === "length" && continuations < MAX_CONTINUATIONS) {
+      while (shouldAutoContinue(lastFinishReason, sawDone, fullText) && continuations < MAX_CONTINUATIONS) {
         continuations++;
-        console.log(`[Auto-continuation ${continuations}] finish_reason was "length", continuing...`);
+        console.log(`[Auto-continuation ${continuations}] finish_reason: ${lastFinishReason || "(vazio)"}, sawDone: ${sawDone}.`);
         toast.info(`Conteúdo extenso — continuando geração (parte ${continuations + 1})...`);
         
         const contMessages = [
@@ -315,13 +352,14 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
         fullText += contResult.text;
         setStreamText(fullText);
         lastFinishReason = contResult.finishReason;
+        sawDone = contResult.sawDone;
       }
 
-      if (lastFinishReason === "length") {
+      if (shouldAutoContinue(lastFinishReason, sawDone, fullText)) {
         toast.warning("O conteúdo pode estar incompleto — limite máximo de continuações atingido.");
       }
 
-      console.log(`[Generation complete] finish_reason: ${lastFinishReason}, length: ${fullText.length} chars, continuations: ${continuations}`);
+      console.log(`[Generation complete] finish_reason: ${lastFinishReason || "(vazio)"}, sawDone: ${sawDone}, length: ${fullText.length} chars, continuations: ${continuations}`);
 
       if (module.generated_content) {
         await supabase.from("module_versions").insert({
@@ -344,7 +382,7 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
       setIsGenerating(false);
       setGenerationPhase("");
     }
-  }, [module, projectId, moduleConfig, updateModule, researchContext, researchCitations, customResearch, refinedContext, ensureProjectData, autoResearch]);
+  }, [module, projectId, moduleConfig, updateModule, researchContext, researchCitations, customResearch, refinedContext, ensureProjectData, autoResearch, selectedModel]);
 
   const handleSave = async () => {
     if (!module) return;
