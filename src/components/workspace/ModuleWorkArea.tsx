@@ -347,152 +347,212 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
     toast.success("Módulo limpo! Pronto para nova pesquisa e geração.");
   };
 
+  const [researchPanelOpen, setResearchPanelOpen] = useState(false);
+  const [customResearchOpen, setCustomResearchOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+
   const displayContent = isGenerating ? streamText : content;
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Module header */}
-      <div className="border-b border-border/50 p-4 flex items-center justify-between shrink-0">
-        <div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">M{moduleConfig.number}</Badge>
-            <h2 className="text-lg font-semibold">{moduleConfig.title}</h2>
+      {/* Compact module header with toolbar */}
+      <div className="border-b border-border/50 px-4 py-3 shrink-0">
+        {/* Row 1: Title + status badges */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Badge variant="outline" className="text-xs shrink-0">M{moduleConfig.number}</Badge>
+            <h2 className="text-base font-semibold truncate">{moduleConfig.title}</h2>
             {module?.is_outdated && (
-              <Badge variant="destructive" className="text-xs gap-1">
+              <Badge variant="destructive" className="text-xs gap-1 shrink-0">
                 <AlertTriangle className="h-3 w-3" /> Desatualizado
               </Badge>
             )}
+          </div>
+          <p className="text-xs text-muted-foreground hidden md:block shrink-0 ml-2">{moduleConfig.description}</p>
+        </div>
+
+        {/* Row 2: Actions toolbar */}
+        <div className="flex items-center justify-between gap-2">
+          {/* Left: toggle panels */}
+          <div className="flex items-center gap-1.5">
             {researchContext && (
               <Badge variant="secondary" className="text-xs gap-1">
-                <Search className="h-3 w-3" /> Pesquisa aplicada
+                <Search className="h-3 w-3" /> Pesquisa
               </Badge>
             )}
             {customResearch && (
               <Badge variant="secondary" className="text-xs gap-1">
-                <FileText className="h-3 w-3" /> Pesquisa externa
+                <FileText className="h-3 w-3" /> Externa
               </Badge>
             )}
           </div>
-          <p className="text-sm text-muted-foreground mt-1">{moduleConfig.description}</p>
-        </div>
-        <div className="flex items-center gap-2 relative">
-          {module && (
-            <PromptEditor
-              moduleId={module.id}
-              moduleNumber={moduleConfig.number}
-              researchPrompt={module.research_prompt}
-              generationPrompt={module.generation_prompt}
-              onSaved={() => {}}
-            />
-          )}
-          <Button
-            variant={researchOpen ? "default" : "outline"}
-            size="sm"
-            onClick={handleOpenResearch}
-            className="gap-1"
-          >
-            <Search className="h-4 w-4" />
-            Pesquisar
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setHistoryOpen(true)} disabled={!versions?.length}>
-            <History className="h-4 w-4 mr-1" /> Histórico
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleSave} disabled={!content || updateModule.isPending}>
-            <Save className="h-4 w-4 mr-1" /> Salvar
-          </Button>
-          {module?.generated_content && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1 text-destructive hover:text-destructive">
-                  <Trash2 className="h-4 w-4" /> Limpar
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Limpar módulo M{moduleConfig.number}?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Isso apagará o conteúdo gerado, pesquisas e dados do chat. O conteúdo atual será salvo no histórico de versões. Você poderá iniciar uma nova pesquisa e geração do zero.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleClearModule} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Limpar módulo
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          <div className="flex items-center gap-1">
-            <select
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-              className="h-8 text-xs rounded-md border border-border/50 bg-background px-2 pr-6 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
-              disabled={isGenerating}
+
+          {/* Right: actions */}
+          <div className="flex items-center gap-1.5">
+            {module && (
+              <PromptEditor
+                moduleId={module.id}
+                moduleNumber={moduleConfig.number}
+                researchPrompt={module.research_prompt}
+                generationPrompt={module.generation_prompt}
+                onSaved={() => {}}
+              />
+            )}
+            <Button
+              variant={researchOpen ? "default" : "outline"}
+              size="sm"
+              onClick={handleOpenResearch}
+              className="gap-1 h-8 text-xs"
             >
-              <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-              <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-            </select>
-            <Button size="sm" onClick={handleGenerate} disabled={isGenerating} className="gap-1">
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              {isGenerating ? "Gerando..." : module?.is_outdated ? "Regenerar" : "Gerar com IA"}
+              <Search className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Pesquisar</span>
             </Button>
+
+            {/* Secondary actions in dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setHistoryOpen(true)} disabled={!versions?.length}>
+                  <History className="h-4 w-4 mr-2" /> Histórico de versões
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSave} disabled={!content || updateModule.isPending}>
+                  <Save className="h-4 w-4 mr-2" /> Salvar conteúdo
+                </DropdownMenuItem>
+                {module?.generated_content && (
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => {
+                      // We trigger the alert dialog via state instead
+                      const trigger = document.getElementById("clear-module-trigger");
+                      trigger?.click();
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" /> Limpar módulo
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Hidden alert dialog trigger */}
+            {module?.generated_content && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button id="clear-module-trigger" className="hidden" />
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Limpar módulo M{moduleConfig.number}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Isso apagará o conteúdo gerado, pesquisas e dados do chat. O conteúdo atual será salvo no histórico de versões.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleClearModule} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Limpar módulo
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+
+            {/* Model selector + Generate */}
+            <div className="flex items-center gap-1 ml-1">
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="h-8 text-xs rounded-md border border-border/50 bg-background px-2 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
+                disabled={isGenerating}
+              >
+                <option value="gemini-2.5-pro">Gemini Pro</option>
+                <option value="gemini-2.5-flash">Gemini Flash</option>
+              </select>
+              <Button size="sm" onClick={handleGenerate} disabled={isGenerating} className="gap-1 h-8">
+                {isGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                {isGenerating ? "Gerando..." : "Gerar com IA"}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Research panel */}
-      {researchOpen && module && projectData && (
-        <ResearchPanel
-          projectId={projectId}
-          moduleNumber={moduleConfig.number}
-          moduleTitle={moduleConfig.title}
-          niche={projectData.niche}
-          promise={projectData.promise}
-          targetAudience={projectData.target_audience}
-          customResearchPrompt={module.research_prompt}
-          savedResearch={researchContext}
-          savedCitations={researchCitations}
-          onResearchReady={handleResearchReady}
-        />
-      )}
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Research panel (collapsible) */}
+        {researchOpen && module && projectData && (
+          <Collapsible open={researchPanelOpen} onOpenChange={setResearchPanelOpen} defaultOpen>
+            <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-2 border-b border-border/50 hover:bg-muted/30 transition-colors text-left">
+              {researchPanelOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+              <Search className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Pesquisa de Mercado</span>
+              {researchContext && <Badge variant="secondary" className="text-xs ml-auto">Concluída</Badge>}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <ResearchPanel
+                projectId={projectId}
+                moduleNumber={moduleConfig.number}
+                moduleTitle={moduleConfig.title}
+                niche={projectData.niche}
+                promise={projectData.promise}
+                targetAudience={projectData.target_audience}
+                customResearchPrompt={module.research_prompt}
+                savedResearch={researchContext}
+                savedCitations={researchCitations}
+                onResearchReady={handleResearchReady}
+              />
+            </CollapsibleContent>
+          </Collapsible>
+        )}
 
-      {/* Custom research panel */}
-      {module && (
-        <CustomResearchPanel
-          key={module.id}
-          moduleId={module.id}
-          savedCustomResearch={customResearch}
-          onCustomResearchChange={setCustomResearch}
-        />
-      )}
+        {/* Custom research panel (collapsible) */}
+        {module && (
+          <Collapsible open={customResearchOpen} onOpenChange={setCustomResearchOpen}>
+            <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-2 border-b border-border/50 hover:bg-muted/30 transition-colors text-left">
+              {customResearchOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+              <FileText className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Pesquisa Externa do Usuário</span>
+              {customResearch && <Badge variant="secondary" className="text-xs ml-auto">Salva</Badge>}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CustomResearchPanel
+                key={module.id}
+                moduleId={module.id}
+                savedCustomResearch={customResearch}
+                onCustomResearchChange={setCustomResearch}
+              />
+            </CollapsibleContent>
+          </Collapsible>
+        )}
 
-      {/* Generation progress */}
-      {isGenerating && (
-        <div className="border-b border-border/50 px-4 py-3 flex items-center gap-3 bg-accent/10">
-          <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-          <div className="flex-1">
-            <p className="text-sm font-medium">{generationPhase || "Processando..."}</p>
-            <p className="text-xs text-muted-foreground">
-              {researchContext ? "Contexto do projeto + pesquisa de mercado integrada" : "Pesquisa automática + contexto do projeto"}
-            </p>
-            <Progress value={generationPhase.includes("Pesquisando") ? 30 : generationPhase.includes("Construindo") ? 50 : 70} className="mt-2 h-1.5" />
+        {/* Generation progress */}
+        {isGenerating && (
+          <div className="border-b border-border/50 px-4 py-3 flex items-center gap-3 bg-accent/10">
+            <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">{generationPhase || "Processando..."}</p>
+              <p className="text-xs text-muted-foreground">
+                {researchContext ? "Contexto do projeto + pesquisa de mercado integrada" : "Pesquisa automática + contexto do projeto"}
+              </p>
+              <Progress value={generationPhase.includes("Pesquisando") ? 30 : generationPhase.includes("Construindo") ? 50 : 70} className="mt-2 h-1.5" />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Content area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 p-4 overflow-y-auto">
+        {/* Content area - takes maximum space */}
+        <div className="p-4">
           {displayContent ? (
             <Textarea
               value={displayContent}
               onChange={(e) => setContent(e.target.value)}
-              className="min-h-[400px] resize-none border-border/30 bg-card/30 text-sm leading-relaxed font-mono"
+              className="w-full min-h-[60vh] resize-vertical border-border/30 bg-card/30 text-sm leading-relaxed font-mono"
               readOnly={isGenerating}
             />
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="flex flex-col items-center justify-center min-h-[40vh] text-center">
               <Sparkles className="h-12 w-12 text-muted-foreground/20 mb-4" />
               <h3 className="text-lg font-medium text-muted-foreground">Nenhum conteúdo gerado</h3>
               <p className="text-sm text-muted-foreground/70 mt-1 max-w-md">
@@ -502,19 +562,28 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
           )}
         </div>
 
-        {/* Research Chat - always visible after content */}
+        {/* Research Chat (collapsible) */}
         {module && projectData && (
-          <ResearchChat
-            moduleId={module.id}
-            moduleNumber={moduleConfig.number}
-            moduleTitle={moduleConfig.title}
-            niche={projectData.niche}
-            promise={projectData.promise}
-            targetAudience={projectData.target_audience}
-            researchContext={researchContext}
-            generatedContent={content}
-            onRefinedContext={setRefinedContext}
-          />
+          <Collapsible open={chatOpen} onOpenChange={setChatOpen}>
+            <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-2 border-t border-border/50 hover:bg-muted/30 transition-colors text-left sticky bottom-0 bg-background/95 backdrop-blur-sm">
+              {chatOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+              <MessageSquare className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Refinar & Aprofundar</span>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <ResearchChat
+                moduleId={module.id}
+                moduleNumber={moduleConfig.number}
+                moduleTitle={moduleConfig.title}
+                niche={projectData.niche}
+                promise={projectData.promise}
+                targetAudience={projectData.target_audience}
+                researchContext={researchContext}
+                generatedContent={content}
+                onRefinedContext={setRefinedContext}
+              />
+            </CollapsibleContent>
+          </Collapsible>
         )}
       </div>
 
