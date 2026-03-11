@@ -255,7 +255,7 @@ export default function CustomResearchPanel({ moduleId, savedCustomResearch, onC
         className="min-h-[120px] text-sm bg-card/30 border-border/30 resize-y"
       />
       <p className="text-xs text-muted-foreground">
-        Importe múltiplos arquivos (.txt, .md, .csv, .json, .pdf, .docx, .xlsx). Documentos binários terão texto extraído via IA. Dados integrados à geração final com pesquisas Perplexity e Lovable IA.
+        Importe múltiplos arquivos (.txt, .md, .csv, .json, .pdf, .docx, .xlsx). Documentos binários terão texto extraído via IA. Dados integrados à geração final com pesquisas Perplexity e Gemini.
       </p>
     </div>
   );

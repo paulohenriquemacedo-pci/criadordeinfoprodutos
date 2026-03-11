@@ -183,7 +183,7 @@ export default function ResearchPanel({
               <span className="flex items-center gap-1.5"><Globe className="h-3 w-3" /> Perplexity</span>
             </SelectItem>
             <SelectItem value="lovable-ai">
-              <span className="flex items-center gap-1.5"><Brain className="h-3 w-3" /> Lovable IA</span>
+              <span className="flex items-center gap-1.5"><Brain className="h-3 w-3" /> Gemini</span>
             </SelectItem>
             <SelectItem value="qwen">
               <span className="flex items-center gap-1.5"><Zap className="h-3 w-3" /> Qwen</span>
