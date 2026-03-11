@@ -1,0 +1,337 @@
+import { useState, useCallback, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { buildProjectContext, buildPdfParts } from "@/lib/context-builder";
+import { DEFAULT_GENERATION_PROMPTS, DEFAULT_RESEARCH_PROMPTS, QUALITY_DIRECTIVES } from "@/lib/default-prompts";
+import { MODULE_CONFIG } from "@/lib/modules";
+
+export interface BatchLogEntry {
+  timestamp: Date;
+  moduleNumber: number;
+  phase: "research" | "context" | "generation" | "saving" | "done" | "error";
+  message: string;
+}
+
+export interface BatchState {
+  isRunning: boolean;
+  currentModule: number;
+  completedModules: number[];
+  failedModule: number | null;
+  logs: BatchLogEntry[];
+  totalModules: number;
+  isDone: boolean;
+  error: string | null;
+}
+
+const INTERDEPENDENCY_MAP: Record<number, string> = {
+  2: "IMPORTANTE: Baseie a estrutura do produto nos insights do Módulo 1 (Briefing Estratégico) — posicionamento, persona e diferenciação.",
+  3: "IMPORTANTE: A copy e VSL devem refletir a estrutura definida no Módulo 2 e o posicionamento do Módulo 1. Use os mesmos termos, promessas e ângulos.",
+  4: "IMPORTANTE: O conteúdo orgânico deve atrair o público definido no Módulo 1, nutrir com base na estrutura do Módulo 2 e usar ganchos da copy do Módulo 3.",
+  5: "IMPORTANTE: Os criativos devem usar os ângulos e headlines do Módulo 3, direcionados ao público do Módulo 1.",
+  6: "IMPORTANTE: As sequências de email devem seguir o funil definido, usar a copy do Módulo 3 e a estratégia de conteúdo do Módulo 4.",
+  7: "IMPORTANTE: Os scripts de WhatsApp devem complementar o email (Módulo 6) e usar abordagem alinhada à copy (Módulo 3).",
+  8: "IMPORTANTE: O funil de vendas deve integrar TODOS os canais anteriores (copy, conteúdo, ads, email, WhatsApp) em uma jornada coesa.",
+};
+
+export type ResearchEngine = "perplexity" | "gemini" | "qwen";
+
+export function useBatchGeneration() {
+  const [state, setState] = useState<BatchState>({
+    isRunning: false,
+    currentModule: 0,
+    completedModules: [],
+    failedModule: null,
+    logs: [],
+    totalModules: 8,
+    isDone: false,
+    error: null,
+  });
+
+  const abortRef = useRef(false);
+
+  const addLog = useCallback((moduleNumber: number, phase: BatchLogEntry["phase"], message: string) => {
+    setState(prev => ({
+      ...prev,
+      logs: [...prev.logs, { timestamp: new Date(), moduleNumber, phase, message }],
+    }));
+  }, []);
+
+  const autoResearch = useCallback(async (
+    moduleNumber: number,
+    moduleTitle: string,
+    niche: string,
+    promise: string,
+    targetAudience: string,
+    customPrompt: string | null,
+    engine: ResearchEngine = "perplexity"
+  ): Promise<{ research: string; citations: string[] } | null> => {
+    const researchPrompt = customPrompt || DEFAULT_RESEARCH_PROMPTS[moduleNumber] || "";
+    
+    const functionName = engine === "qwen" ? "qwen-research" : engine === "gemini" ? "ai-research" : "market-research";
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          niche,
+          promise,
+          targetAudience,
+          moduleTitle,
+          moduleNumber,
+          customPrompt: researchPrompt,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      console.warn("Auto-research failed for module", moduleNumber);
+      return null;
+    }
+
+    const data = await response.json();
+    return { research: data.research || "", citations: data.citations || [] };
+  }, []);
+
+  const generateModule = useCallback(async (
+    moduleNumber: number,
+    systemPrompt: string,
+    userMessage: string,
+    pdfParts: any[],
+    model?: string
+  ): Promise<string> => {
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-module`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userMessage },
+          ],
+          pdfParts: pdfParts.length > 0 ? pdfParts : undefined,
+          model: model || undefined,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || `Erro ${response.status}`);
+    }
+    if (!response.body) throw new Error("Stream não disponível");
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+    let textBuffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      textBuffer += decoder.decode(value, { stream: true });
+
+      let newlineIndex: number;
+      while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+        let line = textBuffer.slice(0, newlineIndex);
+        textBuffer = textBuffer.slice(newlineIndex + 1);
+        if (line.endsWith("\r")) line = line.slice(0, -1);
+        if (line.startsWith(":") || line.trim() === "") continue;
+        if (!line.startsWith("data: ")) continue;
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === "[DONE]") break;
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const delta = parsed.choices?.[0]?.delta?.content;
+          if (delta) fullText += delta;
+        } catch {
+          textBuffer = line + "\n" + textBuffer;
+          break;
+        }
+      }
+    }
+
+    return fullText;
+  }, []);
+
+  const runBatch = useCallback(async (projectId: string, options?: { researchEngine?: ResearchEngine; generationModel?: string }) => {
+    abortRef.current = false;
+    setState({
+      isRunning: true,
+      currentModule: 1,
+      completedModules: [],
+      failedModule: null,
+      logs: [],
+      totalModules: 8,
+      isDone: false,
+      error: null,
+    });
+
+    try {
+      // Fetch project data
+      const { data: project } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("id", projectId)
+        .single();
+      if (!project) throw new Error("Projeto não encontrado");
+
+      const niche = project.niche || "";
+      const promise = project.promise || "";
+      const targetAudience = project.target_audience || "";
+
+      // Fetch all modules
+      const { data: modules } = await supabase
+        .from("modules")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("module_number");
+      if (!modules) throw new Error("Módulos não encontrados");
+
+      for (let num = 1; num <= 8; num++) {
+        if (abortRef.current) {
+          addLog(num, "error", "Execução cancelada pelo usuário");
+          throw new Error("Cancelado pelo usuário");
+        }
+
+        const moduleConfig = MODULE_CONFIG.find(m => m.number === num)!;
+        const module = modules.find(m => m.module_number === num);
+        if (!module) continue;
+
+        // Skip modules that already have generated content
+        if (module.generated_content) {
+          addLog(num, "done", `${moduleConfig.title} já possui conteúdo — pulando ✓`);
+          setState(prev => ({
+            ...prev,
+            completedModules: [...prev.completedModules, num],
+          }));
+          continue;
+        }
+
+        setState(prev => ({ ...prev, currentModule: num }));
+        const researchEngine = options?.researchEngine || "perplexity";
+        const engineLabel = researchEngine === "perplexity" ? "Perplexity" : researchEngine === "gemini" ? "Gemini" : "Qwen";
+        addLog(num, "research", `Iniciando pesquisa via ${engineLabel} para ${moduleConfig.title}...`);
+
+        // Step 1: Auto-research
+        let activeResearch = "";
+        let activeCitations: string[] = [];
+
+        const researchResult = await autoResearch(
+          num, moduleConfig.title, niche, promise, targetAudience, module.research_prompt, researchEngine
+        );
+        if (researchResult) {
+          activeResearch = `[Pesquisa via ${engineLabel}]\n${researchResult.research}`;
+          activeCitations = researchResult.citations;
+          addLog(num, "research", "Pesquisa de mercado concluída ✓");
+          
+          // Persist research
+          await supabase.from("modules").update({
+            research_result: activeResearch,
+            research_citations: activeCitations,
+          } as any).eq("id", module.id);
+        } else {
+          addLog(num, "research", "Pesquisa indisponível — continuando sem dados externos");
+        }
+
+        if (abortRef.current) throw new Error("Cancelado pelo usuário");
+
+        // Step 2: Build context (refreshes each iteration to include previous module outputs)
+        addLog(num, "context", "Construindo contexto do projeto...");
+        const context = await buildProjectContext(projectId);
+        const pdfParts = await buildPdfParts(context.files);
+
+        // Step 3: Build prompt
+        let systemPrompt = module.generation_prompt || DEFAULT_GENERATION_PROMPTS[num] || "";
+        if (!systemPrompt) {
+          const { data: promptData } = await supabase
+            .from("prompts")
+            .select("prompt_text")
+            .eq("module_number", num)
+            .single();
+          systemPrompt = promptData?.prompt_text || "Gere conteúdo estratégico para este módulo.";
+        }
+        systemPrompt += QUALITY_DIRECTIVES;
+
+        let userMessage = context.fullContext;
+        if (activeResearch) {
+          userMessage += `\n\n========\n\nPESQUISA DE MERCADO (DADOS EXTERNOS ATUALIZADOS):\n${activeResearch}`;
+          userMessage += `\n\nINSTRUÇÃO CRÍTICA: Você DEVE integrar os dados da pesquisa de mercado acima com o material do projeto. Compare, contraste e enriqueça suas recomendações com dados reais de mercado.`;
+          if (activeCitations.length > 0) {
+            userMessage += `\n\nFONTES DA PESQUISA:\n${activeCitations.map((c, i) => `[${i + 1}] ${c}`).join("\n")}`;
+          }
+        }
+
+        const interdependency = INTERDEPENDENCY_MAP[num] || "";
+        userMessage += `\n\n---\n\n${interdependency ? interdependency + "\n\n" : ""}Com base em todo o contexto acima${activeResearch ? " (incluindo a pesquisa de mercado com dados reais e atualizados)" : ""}, execute a tarefa do módulo ${num} - ${moduleConfig.title}. ${activeResearch ? "OBRIGATÓRIO: Incorpore e cruze os dados da pesquisa de mercado com o material do projeto." : ""} Garanta coerência e continuidade com os módulos anteriores já gerados.`;
+
+        // Step 4: Generate
+        const genModel = options?.generationModel;
+        addLog(num, "generation", `Gerando conteúdo com ${genModel?.includes("pro") ? "Gemini Pro" : genModel?.includes("3-flash") ? "Gemini 3 Flash" : "Gemini 2.5 Flash"} para ${moduleConfig.title}...`);
+        const fullText = await generateModule(num, systemPrompt, userMessage, pdfParts, genModel);
+
+        if (abortRef.current) throw new Error("Cancelado pelo usuário");
+
+        // Step 5: Save
+        addLog(num, "saving", "Salvando conteúdo gerado...");
+        
+        // Version backup
+        if (module.generated_content) {
+          await supabase.from("module_versions").insert({
+            module_id: module.id,
+            content: module.generated_content,
+          });
+        }
+
+        await supabase.from("modules").update({
+          generated_content: fullText,
+          is_outdated: false,
+        }).eq("id", module.id);
+
+        addLog(num, "done", `${moduleConfig.title} concluído ✓`);
+        setState(prev => ({
+          ...prev,
+          completedModules: [...prev.completedModules, num],
+        }));
+      }
+
+      addLog(0, "done", "🎉 Todos os módulos foram gerados com sucesso!");
+      setState(prev => ({ ...prev, isRunning: false, isDone: true }));
+    } catch (err: any) {
+      const errorMsg = err.message || "Erro desconhecido";
+      setState(prev => ({
+        ...prev,
+        isRunning: false,
+        failedModule: prev.currentModule,
+        error: errorMsg,
+      }));
+      addLog(0, "error", `❌ Erro: ${errorMsg}`);
+    }
+  }, [addLog, autoResearch, generateModule]);
+
+  const cancel = useCallback(() => {
+    abortRef.current = true;
+  }, []);
+
+  const reset = useCallback(() => {
+    setState({
+      isRunning: false,
+      currentModule: 0,
+      completedModules: [],
+      failedModule: null,
+      logs: [],
+      totalModules: 8,
+      isDone: false,
+      error: null,
+    });
+  }, []);
+
+  return { state, runBatch, cancel, reset };
+}

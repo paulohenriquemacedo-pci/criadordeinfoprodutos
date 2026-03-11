@@ -1,0 +1,1 @@
+ALTER TABLE public.modules ADD COLUMN research_chat text;

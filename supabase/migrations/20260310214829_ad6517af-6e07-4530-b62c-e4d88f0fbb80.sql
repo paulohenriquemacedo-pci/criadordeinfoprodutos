@@ -1,0 +1,1 @@
+ALTER TABLE public.modules ADD COLUMN custom_research text DEFAULT NULL;
