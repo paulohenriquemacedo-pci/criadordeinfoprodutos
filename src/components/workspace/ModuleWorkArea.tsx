@@ -445,6 +445,7 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
       {/* Custom research panel */}
       {module && (
         <CustomResearchPanel
+          key={module.id}
           moduleId={module.id}
           savedCustomResearch={customResearch}
           onCustomResearchChange={setCustomResearch}
