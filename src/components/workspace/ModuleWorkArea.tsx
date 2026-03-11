@@ -401,6 +401,25 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
     setResearchOpen(!researchOpen);
   };
 
+  const handleClearGeneration = async () => {
+    if (!module) return;
+    // Backup current content before clearing
+    if (module.generated_content) {
+      await supabase.from("module_versions").insert({
+        module_id: module.id,
+        content: module.generated_content,
+      });
+    }
+    await supabase.from("modules").update({
+      generated_content: null,
+      is_outdated: false,
+    } as any).eq("id", module.id);
+    setContent("");
+    setStreamText("");
+    updateModule.reset();
+    toast.success("Geração limpa! Pesquisas mantidas para nova geração.");
+  };
+
   const handleClearModule = async () => {
     if (!module) return;
     // Backup current content before clearing
