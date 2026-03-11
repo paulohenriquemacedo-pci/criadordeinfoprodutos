@@ -96,13 +96,11 @@ export function useBatchGeneration() {
     return { research: data.research || "", citations: data.citations || [] };
   }, []);
 
-  const generateModule = useCallback(async (
-    moduleNumber: number,
-    systemPrompt: string,
-    userMessage: string,
+  const streamOneCall = useCallback(async (
+    messages: any[],
     pdfParts: any[],
     model?: string
-  ): Promise<string> => {
+  ): Promise<{ text: string; finishReason: string }> => {
     const response = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-module`,
       {
@@ -112,10 +110,7 @@ export function useBatchGeneration() {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userMessage },
-          ],
+          messages,
           pdfParts: pdfParts.length > 0 ? pdfParts : undefined,
           model: model || undefined,
         }),
@@ -130,8 +125,9 @@ export function useBatchGeneration() {
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let fullText = "";
+    let text = "";
     let textBuffer = "";
+    let lastFinishReason = "";
 
     while (true) {
       const { done, value } = await reader.read();
@@ -150,7 +146,9 @@ export function useBatchGeneration() {
         try {
           const parsed = JSON.parse(jsonStr);
           const delta = parsed.choices?.[0]?.delta?.content;
-          if (delta) fullText += delta;
+          const fr = parsed.choices?.[0]?.finish_reason;
+          if (fr) lastFinishReason = fr;
+          if (delta) text += delta;
         } catch {
           textBuffer = line + "\n" + textBuffer;
           break;
@@ -158,8 +156,48 @@ export function useBatchGeneration() {
       }
     }
 
-    return fullText;
+    return { text, finishReason: lastFinishReason };
   }, []);
+
+  const generateModule = useCallback(async (
+    moduleNumber: number,
+    systemPrompt: string,
+    userMessage: string,
+    pdfParts: any[],
+    model?: string
+  ): Promise<string> => {
+    const initialMessages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMessage },
+    ];
+
+    const result = await streamOneCall(initialMessages, pdfParts, model);
+    let fullText = result.text;
+
+    // Auto-continuation if model stopped due to token limit
+    const MAX_CONTINUATIONS = 3;
+    let continuations = 0;
+    let lastFinishReason = result.finishReason;
+
+    while (lastFinishReason === "length" && continuations < MAX_CONTINUATIONS) {
+      continuations++;
+      console.log(`[Batch auto-continuation ${continuations}] Module ${moduleNumber} - continuing...`);
+      
+      const contMessages = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
+        { role: "assistant", content: fullText },
+        { role: "user", content: "Continue EXATAMENTE de onde parou, sem repetir nenhum conteúdo anterior. Continue a geração do ponto exato onde foi interrompida." },
+      ];
+      
+      const contResult = await streamOneCall(contMessages, [], model);
+      fullText += contResult.text;
+      lastFinishReason = contResult.finishReason;
+    }
+
+    console.log(`[Module ${moduleNumber} complete] finish_reason: ${lastFinishReason}, length: ${fullText.length}, continuations: ${continuations}`);
+    return fullText;
+  }, [streamOneCall]);
 
   const runBatch = useCallback(async (projectId: string, options?: { researchEngine?: ResearchEngine; generationModel?: string }) => {
     abortRef.current = false;
