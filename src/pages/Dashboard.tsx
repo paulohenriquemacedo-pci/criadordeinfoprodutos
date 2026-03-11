@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useProjects, useCreateProject } from "@/hooks/useProjects";
@@ -8,7 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Sparkles, LogOut, FolderOpen, Clock, FileText, Rocket, Upload, ArrowLeft, Zap } from "lucide-react";
+import { Plus, Sparkles, LogOut, FolderOpen, Clock, FileText, Rocket, Upload, ArrowLeft, Zap, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { MODULE_CONFIG } from "@/lib/modules";
 import { format } from "date-fns";
@@ -23,6 +26,7 @@ type CreationMode = null | "scratch" | "existing";
 export default function Dashboard() {
   const { data: projects, isLoading } = useProjects();
   const createProject = useCreateProject();
+  const queryClient = useQueryClient();
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -35,6 +39,20 @@ export default function Dashboard() {
     e.stopPropagation();
     setBatchProjectId(projectId);
     batch.runBatch(projectId);
+  };
+
+  const handleDeleteProject = async (e: React.MouseEvent, projectId: string) => {
+    e.stopPropagation();
+    try {
+      // Delete modules first (cascade should handle, but be safe)
+      await supabase.from("modules").delete().eq("project_id", projectId);
+      await supabase.from("project_files").delete().eq("project_id", projectId);
+      await supabase.from("projects").delete().eq("id", projectId);
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Projeto excluído com sucesso!");
+    } catch (err: any) {
+      toast.error("Erro ao excluir projeto: " + err.message);
+    }
   };
 
   const handleBatchDownloadPdf = async () => {
@@ -265,6 +283,36 @@ export default function Dashboard() {
                       >
                         <Zap className="h-3.5 w-3.5 text-primary" />
                       </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Excluir projeto"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir projeto?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              O projeto "{project.name}" e todos os seus módulos serão excluídos permanentemente. Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={(e) => handleDeleteProject(e, project.id)}
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </CardContent>
                 </Card>
