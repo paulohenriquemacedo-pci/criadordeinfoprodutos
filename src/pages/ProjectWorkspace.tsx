@@ -8,6 +8,7 @@ import CoherenceWorkArea from "@/components/workspace/CoherenceWorkArea";
 import ContextSidebar from "@/components/workspace/ContextSidebar";
 import BatchGenerationScreen from "@/components/workspace/BatchGenerationScreen";
 import BatchConfigDialog, { BatchEngineConfig } from "@/components/workspace/BatchConfigDialog";
+import PromptExportImport from "@/components/workspace/PromptExportImport";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings, Zap } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
