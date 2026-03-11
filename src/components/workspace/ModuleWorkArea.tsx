@@ -229,12 +229,13 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({
+           body: JSON.stringify({
             messages: [
               { role: "system", content: systemPrompt },
               { role: "user", content: userMessage },
             ],
             pdfParts: pdfParts.length > 0 ? pdfParts : undefined,
+            model: `google/${selectedModel}`,
           }),
         }
       );
