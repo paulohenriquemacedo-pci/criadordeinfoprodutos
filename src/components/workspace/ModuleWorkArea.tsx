@@ -579,7 +579,14 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
               <p className="text-xs text-muted-foreground">
                 {researchContext ? "Contexto do projeto + pesquisa de mercado integrada" : "Pesquisa automática + contexto do projeto"}
               </p>
-              <Progress value={generationPhase.includes("Pesquisando") ? 30 : generationPhase.includes("Construindo") ? 50 : 70} className="mt-2 h-1.5" />
+              <Progress value={
+                generationPhase.includes("Pesquisando") ? 15 :
+                generationPhase.includes("Construindo") ? 25 :
+                generationPhase.includes("Continuando") ? 60 :
+                generationPhase.includes("Gerando") ? 40 :
+                generationPhase.includes("Salvando") ? 90 :
+                35
+              } className="mt-2 h-1.5" />
             </div>
           </div>
         )}
