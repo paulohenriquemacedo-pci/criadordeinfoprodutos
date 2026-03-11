@@ -46,6 +46,30 @@ export default function CustomResearchPanel({ moduleId, savedCustomResearch, onC
   const [processingProgress, setProcessingProgress] = useState(0);
   const [processingLabel, setProcessingLabel] = useState("");
 
+  // Parse imported file names from text separators
+  const importedFiles = (() => {
+    const regex = /--- Importado de: (.+?)(?:\s*\(.+?\))? ---/g;
+    const files: { name: string; startIndex: number; endIndex: number }[] = [];
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      const sepStart = text.lastIndexOf("\n\n", match.index);
+      const afterSep = match.index + match[0].length;
+      const nextSep = text.indexOf("\n\n--- Importado de:", afterSep);
+      files.push({
+        name: match[1],
+        startIndex: sepStart === -1 ? match.index : sepStart,
+        endIndex: nextSep === -1 ? text.length : nextSep,
+      });
+    }
+    return files;
+  })();
+
+  const handleRemoveFile = (fileIndex: number) => {
+    const file = importedFiles[fileIndex];
+    const newText = (text.slice(0, file.startIndex) + text.slice(file.endIndex)).trim();
+    setText(newText);
+  };
+
   const fileToBase64 = async (file: File): Promise<string> => {
     const arrayBuffer = await file.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
@@ -201,6 +225,26 @@ export default function CustomResearchPanel({ moduleId, savedCustomResearch, onC
         <div className="space-y-1">
           <Progress value={processingProgress} className="h-2" />
           <p className="text-xs text-muted-foreground">{processingLabel}</p>
+        </div>
+      )}
+
+      {importedFiles.length > 0 && (
+        <div className="space-y-1.5">
+          <span className="text-xs font-medium text-muted-foreground">Arquivos importados:</span>
+          {importedFiles.map((f, i) => (
+            <div key={i} className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-secondary/30 group">
+              <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <span className="text-xs flex-1 truncate">{f.name}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => handleRemoveFile(i)}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
         </div>
       )}
 
