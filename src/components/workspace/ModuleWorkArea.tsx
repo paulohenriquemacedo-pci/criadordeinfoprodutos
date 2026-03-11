@@ -223,29 +223,7 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
 
       userMessage += `\n\n---\n\n${interdependency ? interdependency + "\n\n" : ""}Com base em todo o contexto acima${activeResearch ? " (incluindo a pesquisa de mercado com dados reais e atualizados)" : ""}, execute a tarefa do módulo ${moduleConfig.number} - ${moduleConfig.title}. ${activeResearch ? "OBRIGATÓRIO: Incorpore e cruze os dados da pesquisa de mercado com o material do projeto para tornar o conteúdo mais fundamentado e realista." : ""} Garanta coerência e continuidade com os módulos anteriores já gerados.`;
 
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-module`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-           body: JSON.stringify({
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: userMessage },
-            ],
-            pdfParts: pdfParts.length > 0 ? pdfParts : undefined,
-            model: `google/${selectedModel}`,
-          }),
-        }
-      );
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || `Erro ${response.status}`);
-      }
-      if (!response.body) throw new Error("Stream não disponível");
 
       // Helper to stream one call and return { text, finishReason }
       const streamOneCall = async (msgs: any[], pdfs: any[]) => {
