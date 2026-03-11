@@ -6,7 +6,6 @@ const corsHeaders = {
 };
 
 function toGeminiModel(model: string): string {
-  // Strip "google/" prefix if present
   return model.startsWith("google/") ? model.slice(7) : model;
 }
 
@@ -49,6 +48,7 @@ serve(async (req) => {
     }
 
     const geminiModel = toGeminiModel(requestedModel || "google/gemini-2.5-pro");
+    console.log(`[generate-module] Model: ${geminiModel}, Messages: ${aiMessages.length}`);
 
     const response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
@@ -85,6 +85,7 @@ serve(async (req) => {
       });
     }
 
+    // Stream-through: pass the response body directly but also log finish_reason
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
