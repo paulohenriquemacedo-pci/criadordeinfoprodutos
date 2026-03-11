@@ -6,7 +6,7 @@ import { DEFAULT_GENERATION_PROMPTS, DEFAULT_RESEARCH_PROMPTS, QUALITY_DIRECTIVE
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Sparkles, Save, History, AlertTriangle, Loader2, Search, FileText, Trash2 } from "lucide-react";
+import { Sparkles, Save, History, AlertTriangle, Loader2, Search, FileText, Trash2, ChevronDown } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
