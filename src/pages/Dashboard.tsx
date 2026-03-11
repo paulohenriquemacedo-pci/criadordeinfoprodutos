@@ -39,6 +39,19 @@ export default function Dashboard() {
     batch.runBatch(projectId);
   };
 
+  const handleDeleteProject = async (e: React.MouseEvent, projectId: string) => {
+    e.stopPropagation();
+    try {
+      // Delete modules first (cascade should handle, but be safe)
+      await supabase.from("modules").delete().eq("project_id", projectId);
+      await supabase.from("project_files").delete().eq("project_id", projectId);
+      await supabase.from("projects").delete().eq("id", projectId);
+      toast.success("Projeto excluído com sucesso!");
+    } catch (err: any) {
+      toast.error("Erro ao excluir projeto: " + err.message);
+    }
+  };
+
   const handleBatchDownloadPdf = async () => {
     if (!batchProjectId) return;
     const project = projects?.find(p => p.id === batchProjectId);
