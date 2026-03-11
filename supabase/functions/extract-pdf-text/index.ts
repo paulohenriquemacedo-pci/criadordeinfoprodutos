@@ -16,28 +16,21 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Download the file
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("project-files")
       .download(filePath);
 
     if (downloadError) throw downloadError;
 
-    // Update status to processing
     await supabase
       .from("project_files")
       .update({ processing_status: "processing" })
       .eq("project_id", projectId)
       .eq("file_name", fileName);
 
-    // Use Lovable AI to extract text from the PDF
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY not configured");
-    }
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY não configurada.");
 
-    // Convert file to base64 for vision processing
     const arrayBuffer = await fileData.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
     let binary = "";
@@ -47,14 +40,14 @@ serve(async (req) => {
     }
     const base64 = btoa(binary);
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${GEMINI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gemini-2.5-flash",
         messages: [
           {
             role: "user",
@@ -77,14 +70,13 @@ serve(async (req) => {
 
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
-      console.error("AI extraction error:", errText);
-      throw new Error("Falha na extração de texto via IA");
+      console.error("Gemini extraction error:", errText);
+      throw new Error("Falha na extração de texto via Gemini");
     }
 
     const aiData = await aiResponse.json();
     const extractedText = aiData.choices?.[0]?.message?.content || "";
 
-    // Save extracted text
     await supabase
       .from("project_files")
       .update({
@@ -99,7 +91,6 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("extract-pdf-text error:", e);
-
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

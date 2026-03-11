@@ -11,8 +11,8 @@ serve(async (req) => {
   try {
     const { briefing, moduleNumber, moduleTitle, moduleContent, previousModules } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY não configurada. Adicione sua chave pessoal do Google Gemini.");
 
     const systemPrompt = `Você é um Orquestrador de Coerência para projetos de infoprodutos digitais. Sua função é analisar o conteúdo gerado por um módulo e validar sua coerência com o briefing estratégico e os módulos anteriores.
 
@@ -62,14 +62,14 @@ Analise:
 
     userMessage += `MÓDULO SENDO VALIDADO - ${moduleNumber} (${moduleTitle}):\n${moduleContent}\n\nAnalise a coerência deste módulo em relação ao briefing e aos módulos anteriores. Retorne APENAS o JSON.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${GEMINI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
@@ -79,24 +79,23 @@ Analise:
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns instantes." }), {
+        return new Response(JSON.stringify({ error: "Limite de requisições excedido na API Gemini." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      if (response.status === 401 || response.status === 403) {
+        return new Response(JSON.stringify({ error: "Chave Gemini inválida ou sem permissão." }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      throw new Error("Erro no gateway de IA");
+      console.error("Gemini API error:", response.status, t);
+      throw new Error("Erro na API do Gemini");
     }
 
     const data = await response.json();
     const rawContent = data.choices?.[0]?.message?.content || "";
 
-    // Parse JSON from response (handle potential markdown wrapping)
     let parsed;
     try {
       const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
