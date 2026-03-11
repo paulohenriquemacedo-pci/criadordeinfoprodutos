@@ -382,7 +382,7 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
       setIsGenerating(false);
       setGenerationPhase("");
     }
-  }, [module, projectId, moduleConfig, updateModule, researchContext, researchCitations, customResearch, refinedContext, ensureProjectData, autoResearch]);
+  }, [module, projectId, moduleConfig, updateModule, researchContext, researchCitations, customResearch, refinedContext, ensureProjectData, autoResearch, selectedModel]);
 
   const handleSave = async () => {
     if (!module) return;
