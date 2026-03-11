@@ -32,7 +32,7 @@ interface Props {
 
 const PROVIDER_CONFIG: Record<ResearchProvider, { label: string; edgeFunction: string; icon: "globe" | "brain" | "zap" }> = {
   perplexity: { label: "Perplexity", edgeFunction: "market-research", icon: "globe" },
-  "lovable-ai": { label: "Lovable IA", edgeFunction: "ai-research", icon: "brain" },
+  "lovable-ai": { label: "Gemini", edgeFunction: "ai-research", icon: "brain" },
   qwen: { label: "Qwen", edgeFunction: "qwen-research", icon: "zap" },
 };
 
@@ -138,7 +138,7 @@ export default function ResearchPanel({
     const combined = results
       .map((r) => {
         const config = PROVIDER_CONFIG[r.provider];
-        const label = r.provider === "perplexity" ? "Perplexity (web)" : r.provider === "qwen" ? "Qwen (OpenRouter)" : "Lovable IA";
+        const label = r.provider === "perplexity" ? "Perplexity (web)" : r.provider === "qwen" ? "Qwen (OpenRouter)" : "Gemini";
         return `[Pesquisa via ${label}]\n${r.content}`;
       })
       .join("\n\n========\n\n");
@@ -183,7 +183,7 @@ export default function ResearchPanel({
               <span className="flex items-center gap-1.5"><Globe className="h-3 w-3" /> Perplexity</span>
             </SelectItem>
             <SelectItem value="lovable-ai">
-              <span className="flex items-center gap-1.5"><Brain className="h-3 w-3" /> Lovable IA</span>
+              <span className="flex items-center gap-1.5"><Brain className="h-3 w-3" /> Gemini</span>
             </SelectItem>
             <SelectItem value="qwen">
               <span className="flex items-center gap-1.5"><Zap className="h-3 w-3" /> Qwen</span>
