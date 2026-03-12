@@ -501,13 +501,17 @@ export function useBatchGeneration() {
             .eq("id", projectId)
             .single();
 
+          const { data: sessionData } = await supabase.auth.getSession();
+          const accessToken = sessionData?.session?.access_token;
+          
           const memResponse = await fetch(
             `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/strategic-memory`,
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                Authorization: `Bearer ${accessToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
               },
               body: JSON.stringify({
                 moduleNumber: num,
@@ -519,10 +523,19 @@ export function useBatchGeneration() {
 
           if (memResponse.ok) {
             const memData = await memResponse.json();
-            await supabase.from("projects").update({
+            const { error: updateErr } = await supabase.from("projects").update({
               strategic_memory: memData.memory,
             } as any).eq("id", projectId);
-            addLog(num, "done", "Memória estratégica atualizada ✓");
+            if (updateErr) {
+              console.error("Failed to save strategic memory:", updateErr);
+              addLog(num, "error", `Erro ao salvar memória estratégica: ${updateErr.message}`);
+            } else {
+              addLog(num, "done", "Memória estratégica atualizada ✓");
+            }
+          } else {
+            const errText = await memResponse.text();
+            console.error("Strategic memory function error:", memResponse.status, errText);
+            addLog(num, "error", `Erro na função de memória estratégica (${memResponse.status})`);
           }
         } catch (memErr) {
           console.warn("Strategic memory error (non-fatal):", memErr);
