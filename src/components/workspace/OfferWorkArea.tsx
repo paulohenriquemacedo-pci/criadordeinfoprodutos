@@ -586,11 +586,18 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
                     <p className="text-xs text-muted-foreground">Extrair produto dos arquivos enviados pelo usuário</p>
                   </div>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleImportFromM2} className="gap-2 cursor-pointer">
+                <DropdownMenuItem onClick={() => handleImportFromModules([2])} className="gap-2 cursor-pointer">
                   <BookOpen className="h-4 w-4 text-primary" />
                   <div>
-                    <p className="text-sm font-medium">Módulo 2 (Estrutura)</p>
-                    <p className="text-xs text-muted-foreground">Importar produto estruturado pela plataforma no M2</p>
+                    <p className="text-sm font-medium">M2 — Estrutura do Produto</p>
+                    <p className="text-xs text-muted-foreground">Produto principal + bônus definidos no M2</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleImportFromModules([2, 6, 7, 8])} className="gap-2 cursor-pointer">
+                  <LayoutGrid className="h-4 w-4 text-primary" />
+                  <div>
+                    <p className="text-sm font-medium">Todos os Módulos (M2+M6+M7+M8)</p>
+                    <p className="text-xs text-muted-foreground">Consolida produto, bônus, bumps e upsells de todos os módulos</p>
                   </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>
