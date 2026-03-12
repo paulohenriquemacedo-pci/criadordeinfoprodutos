@@ -67,10 +67,18 @@ export default function ProjectWorkspace() {
     const blocks: string[] = [];
     for (const mod of mods) {
       const parts: string[] = [];
-      for (const col of ["research_perplexity", "research_gemini", "research_qwen", "research_result"] as const) {
+      for (const col of ["research_perplexity", "research_gemini", "research_qwen"] as const) {
         const val = (mod as any)[col];
-        if (val && !parts.includes(val)) parts.push(val);
+        if (val) parts.push(val);
       }
+      // Add research_result only if not duplicate of engine columns
+      const resResult = (mod as any).research_result;
+      if (resResult && !parts.some(p => resResult.includes(p) || p.includes(resResult))) {
+        parts.push(resResult);
+      }
+      // Add custom/manual research
+      const customRes = (mod as any).custom_research;
+      if (customRes) parts.push(`[Pesquisa Manual]\n${customRes}`);
       if (parts.length === 0) continue;
       const config = MODULE_CONFIG.find(c => c.number === mod.module_number);
       blocks.push(`${"=".repeat(60)}\nM${mod.module_number} — ${config?.title || ""}\n${"=".repeat(60)}\n\n${parts.join("\n\n---\n\n")}`);
