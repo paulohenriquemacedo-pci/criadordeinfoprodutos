@@ -82,6 +82,13 @@ Promessa Principal: ${project.promise || "Não definida"}
 Público-Alvo: ${project.target_audience || "Não definido"}`
     : "";
 
+  // Strategic memory (M0) - consolidated decisions from all modules
+  const strategicMemory = (project as any)?.strategic_memory;
+  const strategicMemoryBlock = strategicMemory
+    ? `MEMÓRIA ESTRATÉGICA CONSOLIDADA (M0 — USE COMO REFERÊNCIA OBRIGATÓRIA):
+${JSON.stringify(strategicMemory, null, 2)}`
+    : "";
+
   // Build previous outputs with explicit dependency markers
   const previousOutputs = (modules || [])
     .filter((m) => m.generated_content)
@@ -109,6 +116,7 @@ Público-Alvo: ${project.target_audience || "Não definido"}`
     files: files || [],
     fullContext: [
       briefing,
+      strategicMemoryBlock,
       keyDecisions && `RESUMO DE DECISÕES ESTRATÉGICAS DOS MÓDULOS ANTERIORES (USE COMO REFERÊNCIA OBRIGATÓRIA):\n${keyDecisions}`,
       previousOutputs && `CONTEÚDO GERADO ANTERIORMENTE:\n${previousOutputs}`,
       pdfContent && `MATERIAIS DE REFERÊNCIA (texto extraído):\n${pdfContent}`,

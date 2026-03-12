@@ -368,6 +368,44 @@ export function useBatchGeneration() {
           is_outdated: false,
         }).eq("id", module.id);
 
+        // Step 6: Update strategic memory (M0)
+        addLog(num, "saving", "Atualizando memória estratégica (M0)...");
+        try {
+          const { data: currentProject } = await supabase
+            .from("projects")
+            .select("strategic_memory")
+            .eq("id", projectId)
+            .single();
+
+          const memResponse = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/strategic-memory`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+              },
+              body: JSON.stringify({
+                moduleNumber: num,
+                moduleContent: fullText,
+                existingMemory: (currentProject as any)?.strategic_memory || null,
+              }),
+            }
+          );
+
+          if (memResponse.ok) {
+            const memData = await memResponse.json();
+            await supabase.from("projects").update({
+              strategic_memory: memData.memory,
+            } as any).eq("id", projectId);
+            addLog(num, "done", "Memória estratégica atualizada ✓");
+          } else {
+            console.warn("Strategic memory update failed, continuing...");
+          }
+        } catch (memErr) {
+          console.warn("Strategic memory error (non-fatal):", memErr);
+        }
+
         addLog(num, "done", `${moduleConfig.title} concluído ✓`);
         setState(prev => ({
           ...prev,
