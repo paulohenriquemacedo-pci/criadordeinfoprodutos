@@ -10,7 +10,7 @@ import BatchGenerationScreen from "@/components/workspace/BatchGenerationScreen"
 import BatchConfigDialog, { BatchEngineConfig } from "@/components/workspace/BatchConfigDialog";
 import PromptExportImport from "@/components/workspace/PromptExportImport";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Settings, Zap } from "lucide-react";
+import { ArrowLeft, Settings, Search, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
