@@ -2,3 +2,6 @@ project_id = "xelrutazncasjdenrzyz"
 
 [functions.strategic-memory]
 verify_jwt = false
+
+[functions.generate-chapter]
+verify_jwt = false
