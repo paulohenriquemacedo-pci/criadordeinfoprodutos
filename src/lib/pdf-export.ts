@@ -241,13 +241,13 @@ export function exportResearchPdf(project: ProjectData, modules: ResearchModuleD
   // === RESEARCH PAGES ===
   modules
     .filter((m) => {
-      const combined = combineModuleResearch(m);
+      const combined = combineModuleResearch(m, includeCustom);
       return combined.text.length > 0;
     })
     .sort((a, b) => a.module_number - b.module_number)
     .forEach((mod) => {
       const config = MODULE_CONFIG.find((c) => c.number === mod.module_number);
-      const combined = combineModuleResearch(mod);
+      const combined = combineModuleResearch(mod, includeCustom);
       if (!config || !combined.text) return;
 
       addPage();
