@@ -1,0 +1,1 @@
+ALTER TABLE public.projects ADD COLUMN strategic_memory jsonb DEFAULT NULL;

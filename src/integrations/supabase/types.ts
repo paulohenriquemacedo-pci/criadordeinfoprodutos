@@ -145,6 +145,7 @@ export type Database = {
           niche: string | null
           promise: string | null
           status: string
+          strategic_memory: Json | null
           target_audience: string | null
           updated_at: string
           user_id: string
@@ -156,6 +157,7 @@ export type Database = {
           niche?: string | null
           promise?: string | null
           status?: string
+          strategic_memory?: Json | null
           target_audience?: string | null
           updated_at?: string
           user_id: string
@@ -167,6 +169,7 @@ export type Database = {
           niche?: string | null
           promise?: string | null
           status?: string
+          strategic_memory?: Json | null
           target_audience?: string | null
           updated_at?: string
           user_id?: string
