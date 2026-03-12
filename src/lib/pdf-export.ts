@@ -170,7 +170,7 @@ interface ResearchModuleData {
   custom_research?: string | null;
 }
 
-function combineModuleResearch(mod: ResearchModuleData): { text: string; citations: string[] } {
+function combineModuleResearch(mod: ResearchModuleData, includeCustom = true): { text: string; citations: string[] } {
   const parts: string[] = [];
   const allCitations: string[] = [];
 
@@ -189,8 +189,8 @@ function combineModuleResearch(mod: ResearchModuleData): { text: string; citatio
     parts.push(mod.research_result);
   }
 
-  // Add custom/manual research
-  if (mod.custom_research) {
+  // Add custom/manual research only if requested
+  if (includeCustom && mod.custom_research) {
     parts.push(`[Pesquisa Manual]\n${mod.custom_research}`);
   }
 
