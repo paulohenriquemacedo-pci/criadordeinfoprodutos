@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { RefreshCw, Globe, Brain, Loader2, Plus, Send, Download, CheckCircle2, Zap } from "lucide-react";
+import { RefreshCw, Globe, Brain, Loader2, Plus, Send, Download, CheckCircle2, Zap, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DEFAULT_RESEARCH_PROMPTS } from "@/lib/default-prompts";
@@ -28,6 +28,7 @@ interface Props {
   savedResearch: string;
   savedCitations: string[];
   onResearchReady: (research: string, citations: string[]) => void;
+  onClearResearch?: () => void;
 }
 
 const PROVIDER_CONFIG: Record<ResearchProvider, { label: string; edgeFunction: string; icon: "globe" | "brain" | "zap" }> = {
@@ -55,6 +56,7 @@ export default function ResearchPanel({
   savedResearch,
   savedCitations,
   onResearchReady,
+  onClearResearch,
 }: Props) {
   const [results, setResults] = useState<ResearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -205,6 +207,19 @@ export default function ResearchPanel({
           <>
             <Button size="sm" variant="outline" onClick={handleDownload} className="gap-1 text-xs">
               <Download className="h-3 w-3" /> Exportar
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setResults([]);
+                setIsApplied(false);
+                onClearResearch?.();
+                toast.success("Pesquisa apagada!");
+              }}
+              className="gap-1 text-xs text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-3 w-3" /> Apagar
             </Button>
             <Button
               size="sm"

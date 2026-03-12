@@ -10,8 +10,10 @@ import BatchGenerationScreen from "@/components/workspace/BatchGenerationScreen"
 import BatchConfigDialog, { BatchEngineConfig } from "@/components/workspace/BatchConfigDialog";
 import PromptExportImport from "@/components/workspace/PromptExportImport";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Settings, Search, Sparkles } from "lucide-react";
+import { ArrowLeft, Settings, Search, Sparkles, Download, Trash2, MoreVertical } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -32,8 +34,8 @@ export default function ProjectWorkspace() {
   const [batchConfigOpen, setBatchConfigOpen] = useState(false);
   const [editForm, setEditForm] = useState({ name: "", niche: "", promise: "", target_audience: "" });
   const batch = useBatchGeneration();
-
   const [batchMode, setBatchMode] = useState<"research" | "generation">("research");
+  const [clearResearchConfirm, setClearResearchConfirm] = useState(false);
 
   const handleBatchConfirm = (config: BatchEngineConfig) => {
     if (!projectId) return;
@@ -55,6 +57,59 @@ export default function ProjectWorkspace() {
     } else if (hasResearch) {
       exportResearchPdf(project, mods);
     }
+  };
+
+  const handleBatchDownloadResearch = async () => {
+    if (!project) return;
+    const { data: mods } = await supabase.from("modules").select("*").eq("project_id", project.id).order("module_number");
+    if (!mods) return;
+    
+    const blocks: string[] = [];
+    for (const mod of mods) {
+      const parts: string[] = [];
+      for (const col of ["research_perplexity", "research_gemini", "research_qwen", "research_result"] as const) {
+        const val = (mod as any)[col];
+        if (val && !parts.includes(val)) parts.push(val);
+      }
+      if (parts.length === 0) continue;
+      const config = MODULE_CONFIG.find(c => c.number === mod.module_number);
+      blocks.push(`${"=".repeat(60)}\nM${mod.module_number} — ${config?.title || ""}\n${"=".repeat(60)}\n\n${parts.join("\n\n---\n\n")}`);
+    }
+    
+    if (blocks.length === 0) {
+      toast.error("Nenhuma pesquisa encontrada para exportar.");
+      return;
+    }
+
+    const text = blocks.join("\n\n\n");
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${project.name.replace(/[^a-zA-Z0-9]/g, "_")}_pesquisas_completas.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Todas as pesquisas exportadas!");
+  };
+
+  const handleBatchClearResearch = async () => {
+    if (!project) return;
+    const { data: mods } = await supabase.from("modules").select("id").eq("project_id", project.id);
+    if (!mods) return;
+    for (const mod of mods) {
+      await supabase.from("modules").update({
+        research_result: null,
+        research_citations: null,
+        research_perplexity: null,
+        research_perplexity_citations: null,
+        research_gemini: null,
+        research_gemini_citations: null,
+        research_qwen: null,
+        research_qwen_citations: null,
+      } as any).eq("id", mod.id);
+    }
+    setClearResearchConfirm(false);
+    toast.success("Todas as pesquisas foram apagadas!");
   };
 
   const openSettings = () => {
@@ -127,6 +182,25 @@ export default function ProjectWorkspace() {
           <Button variant="outline" size="sm" onClick={() => { setBatchMode("generation"); setBatchConfigOpen(true); }} className="gap-1.5" title="Gerar conteúdo para todos os módulos">
             <Sparkles className="h-4 w-4" /> Gerar Tudo
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" title="Mais opções">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleBatchDownloadResearch} className="gap-2">
+                <Download className="h-4 w-4" /> Baixar todas as pesquisas
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleBatchDownloadPdf} className="gap-2">
+                <Download className="h-4 w-4" /> Baixar projeto (PDF)
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setClearResearchConfirm(true)} className="gap-2 text-destructive focus:text-destructive">
+                <Trash2 className="h-4 w-4" /> Apagar todas as pesquisas
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
             <DialogTrigger asChild>
               <Button variant="ghost" size="icon" onClick={openSettings}>
@@ -197,6 +271,24 @@ export default function ProjectWorkspace() {
           />
         )}
       </AnimatePresence>
+
+      {/* Clear research confirmation */}
+      <AlertDialog open={clearResearchConfirm} onOpenChange={setClearResearchConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apagar todas as pesquisas?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso removerá todas as pesquisas (Perplexity, Gemini e Qwen) de todos os módulos. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBatchClearResearch} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Apagar tudo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

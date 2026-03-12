@@ -658,6 +658,22 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
                 savedResearch={researchContext}
                 savedCitations={researchCitations}
                 onResearchReady={handleResearchReady}
+                onClearResearch={async () => {
+                  if (module?.id) {
+                    await supabase.from("modules").update({
+                      research_result: null,
+                      research_citations: null,
+                      research_perplexity: null,
+                      research_perplexity_citations: null,
+                      research_gemini: null,
+                      research_gemini_citations: null,
+                      research_qwen: null,
+                      research_qwen_citations: null,
+                    } as any).eq("id", module.id);
+                    setResearchContext("");
+                    setResearchCitations([]);
+                  }
+                }}
               />
             </CollapsibleContent>
           </Collapsible>
