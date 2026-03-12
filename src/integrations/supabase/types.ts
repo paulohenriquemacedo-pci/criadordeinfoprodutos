@@ -55,7 +55,13 @@ export type Database = {
           project_id: string
           research_chat: string | null
           research_citations: string[] | null
+          research_gemini: string | null
+          research_gemini_citations: string[] | null
+          research_perplexity: string | null
+          research_perplexity_citations: string[] | null
           research_prompt: string | null
+          research_qwen: string | null
+          research_qwen_citations: string[] | null
           research_result: string | null
         }
         Insert: {
@@ -69,7 +75,13 @@ export type Database = {
           project_id: string
           research_chat?: string | null
           research_citations?: string[] | null
+          research_gemini?: string | null
+          research_gemini_citations?: string[] | null
+          research_perplexity?: string | null
+          research_perplexity_citations?: string[] | null
           research_prompt?: string | null
+          research_qwen?: string | null
+          research_qwen_citations?: string[] | null
           research_result?: string | null
         }
         Update: {
@@ -83,7 +95,13 @@ export type Database = {
           project_id?: string
           research_chat?: string | null
           research_citations?: string[] | null
+          research_gemini?: string | null
+          research_gemini_citations?: string[] | null
+          research_perplexity?: string | null
+          research_perplexity_citations?: string[] | null
           research_prompt?: string | null
+          research_qwen?: string | null
+          research_qwen_citations?: string[] | null
           research_result?: string | null
         }
         Relationships: [

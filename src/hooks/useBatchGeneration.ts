@@ -279,9 +279,11 @@ export function useBatchGeneration() {
         const module = modules.find(m => m.module_number === num);
         if (!module) continue;
 
-        // Skip modules that already have research (unless force re-research)
-        if (module.research_result && !options?.forceReResearch) {
-          addLog(num, "done", `${moduleConfig.title} já possui pesquisa — pulando ✓`);
+        // Skip modules that already have research for this engine (unless force re-research)
+        const engineColumn = researchEngine === "perplexity" ? "research_perplexity" : researchEngine === "gemini" ? "research_gemini" : "research_qwen";
+        const existingEngineResearch = (module as any)[engineColumn];
+        if (existingEngineResearch && !options?.forceReResearch) {
+          addLog(num, "done", `${moduleConfig.title} já possui pesquisa ${engineLabel} — pulando ✓`);
           setState(prev => ({
             ...prev,
             completedModules: [...prev.completedModules, num],
@@ -298,7 +300,11 @@ export function useBatchGeneration() {
 
         if (researchResult) {
           const researchText = `[Pesquisa via ${engineLabel}]\n${researchResult.research}`;
+          const citationsColumn = `${engineColumn}_citations`;
+          // Save to engine-specific column AND legacy research_result for backward compat
           await supabase.from("modules").update({
+            [engineColumn]: researchText,
+            [citationsColumn]: researchResult.citations,
             research_result: researchText,
             research_citations: researchResult.citations,
           } as any).eq("id", module.id);
@@ -395,14 +401,25 @@ export function useBatchGeneration() {
         systemPrompt += QUALITY_DIRECTIVES;
 
         let userMessage = context.fullContext;
-        const activeResearch = module.research_result || "";
-        const activeCitations = module.research_citations || [];
+        
+        // Combine research from all engines
+        const engineResearches: string[] = [];
+        const allCitations: string[] = [];
+        for (const eng of ["research_perplexity", "research_gemini", "research_qwen", "research_result"] as const) {
+          const val = (module as any)[eng];
+          if (val && !engineResearches.includes(val)) engineResearches.push(val);
+        }
+        for (const eng of ["research_perplexity_citations", "research_gemini_citations", "research_qwen_citations", "research_citations"] as const) {
+          const cits = (module as any)[eng] as string[] | null;
+          if (cits) allCitations.push(...cits.filter(c => !allCitations.includes(c)));
+        }
+        const activeResearch = engineResearches.join("\n\n---\n\n");
 
         if (activeResearch) {
-          userMessage += `\n\n========\n\nPESQUISA DE MERCADO (DADOS EXTERNOS ATUALIZADOS):\n${activeResearch}`;
+          userMessage += `\n\n========\n\nPESQUISA DE MERCADO (DADOS EXTERNOS ATUALIZADOS — MÚLTIPLAS FONTES):\n${activeResearch}`;
           userMessage += `\n\nINSTRUÇÃO CRÍTICA: Você DEVE integrar os dados da pesquisa de mercado acima com o material do projeto.`;
-          if (activeCitations.length > 0) {
-            userMessage += `\n\nFONTES DA PESQUISA:\n${activeCitations.map((c, i) => `[${i + 1}] ${c}`).join("\n")}`;
+          if (allCitations.length > 0) {
+            userMessage += `\n\nFONTES DA PESQUISA:\n${allCitations.map((c, i) => `[${i + 1}] ${c}`).join("\n")}`;
           }
         }
 

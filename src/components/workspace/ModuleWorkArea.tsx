@@ -21,6 +21,25 @@ import ResearchPanel from "./ResearchPanel";
 import ResearchChat from "./ResearchChat";
 import CustomResearchPanel from "./CustomResearchPanel";
 
+function combineEngineResearch(mod: any): string {
+  if (!mod) return "";
+  const parts: string[] = [];
+  for (const col of ["research_perplexity", "research_gemini", "research_qwen", "research_result"]) {
+    const val = mod[col];
+    if (val && !parts.includes(val)) parts.push(val);
+  }
+  return parts.join("\n\n---\n\n");
+}
+
+function combineEngineCitations(mod: any): string[] {
+  if (!mod) return [];
+  const all: string[] = [];
+  for (const col of ["research_perplexity_citations", "research_gemini_citations", "research_qwen_citations", "research_citations"]) {
+    const cits = mod[col] as string[] | null;
+    if (cits) all.push(...cits.filter(c => !all.includes(c)));
+  }
+  return all;
+}
 
 interface ModuleConfig {
   number: number;
@@ -50,8 +69,8 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
   const [streamText, setStreamText] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [researchOpen, setResearchOpen] = useState(false);
-  const [researchContext, setResearchContext] = useState((module as any)?.research_result || "");
-  const [researchCitations, setResearchCitations] = useState<string[]>((module as any)?.research_citations || []);
+  const [researchContext, setResearchContext] = useState(() => combineEngineResearch(module));
+  const [researchCitations, setResearchCitations] = useState<string[]>(() => combineEngineCitations(module));
   const [projectData, setProjectData] = useState<{ niche: string; promise: string; target_audience: string } | null>(null);
   const [refinedContext, setRefinedContext] = useState("");
   const [customResearch, setCustomResearch] = useState((module as any)?.custom_research || "");
@@ -64,8 +83,8 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
     setPrevModuleId(module?.id);
     setContent(module?.generated_content || "");
     // Load persisted research from DB for the new module
-    setResearchContext((module as any)?.research_result || "");
-    setResearchCitations((module as any)?.research_citations || []);
+    setResearchContext(combineEngineResearch(module));
+    setResearchCitations(combineEngineCitations(module));
     setCustomResearch((module as any)?.custom_research || "");
     setResearchOpen(false);
   }
@@ -433,6 +452,12 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
       generated_content: null,
       research_result: null,
       research_citations: null,
+      research_perplexity: null,
+      research_perplexity_citations: null,
+      research_gemini: null,
+      research_gemini_citations: null,
+      research_qwen: null,
+      research_qwen_citations: null,
       research_chat: null,
       custom_research: null,
       is_outdated: false,

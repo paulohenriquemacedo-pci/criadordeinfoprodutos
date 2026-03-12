@@ -62,7 +62,7 @@ export default function Dashboard() {
     const { data: modules } = await supabase.from("modules").select("*").eq("project_id", batchProjectId).order("module_number");
     if (!modules) return;
     const hasGenerated = modules.some(m => m.generated_content);
-    const hasResearch = modules.some(m => m.research_result);
+    const hasResearch = modules.some(m => m.research_result || (m as any).research_perplexity || (m as any).research_gemini || (m as any).research_qwen);
     if (hasGenerated) {
       exportProjectPdf(project, modules);
     } else if (hasResearch) {

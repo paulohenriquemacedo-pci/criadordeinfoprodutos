@@ -161,6 +161,26 @@ interface ResearchModuleData {
   module_number: number;
   research_result: string | null;
   research_citations: string[] | null;
+  research_perplexity?: string | null;
+  research_perplexity_citations?: string[] | null;
+  research_gemini?: string | null;
+  research_gemini_citations?: string[] | null;
+  research_qwen?: string | null;
+  research_qwen_citations?: string[] | null;
+}
+
+function combineModuleResearch(mod: ResearchModuleData): { text: string; citations: string[] } {
+  const parts: string[] = [];
+  const allCitations: string[] = [];
+  for (const col of ["research_perplexity", "research_gemini", "research_qwen", "research_result"] as const) {
+    const val = (mod as any)[col];
+    if (val && !parts.includes(val)) parts.push(val);
+  }
+  for (const col of ["research_perplexity_citations", "research_gemini_citations", "research_qwen_citations", "research_citations"] as const) {
+    const cits = (mod as any)[col] as string[] | null;
+    if (cits) allCitations.push(...cits.filter(c => !allCitations.includes(c)));
+  }
+  return { text: parts.join("\n\n---\n\n"), citations: allCitations };
 }
 
 export function exportResearchPdf(project: ProjectData, modules: ResearchModuleData[]) {
@@ -200,11 +220,15 @@ export function exportResearchPdf(project: ProjectData, modules: ResearchModuleD
 
   // === RESEARCH PAGES ===
   modules
-    .filter((m) => m.research_result)
+    .filter((m) => {
+      const combined = combineModuleResearch(m);
+      return combined.text.length > 0;
+    })
     .sort((a, b) => a.module_number - b.module_number)
     .forEach((mod) => {
       const config = MODULE_CONFIG.find((c) => c.number === mod.module_number);
-      if (!config || !mod.research_result) return;
+      const combined = combineModuleResearch(mod);
+      if (!config || !combined.text) return;
 
       addPage();
 
@@ -225,11 +249,11 @@ export function exportResearchPdf(project: ProjectData, modules: ResearchModuleD
 
       // Render research content
       const ctx = { doc, margin, contentWidth, y, pageHeight };
-      renderMarkdownToPdf(ctx, mod.research_result);
+      renderMarkdownToPdf(ctx, combined.text);
       y = ctx.y;
 
       // Citations
-      if (mod.research_citations && mod.research_citations.length > 0) {
+      if (combined.citations.length > 0) {
         y += 5;
         if (y + 20 > pageHeight - margin) {
           addPage();
@@ -242,7 +266,7 @@ export function exportResearchPdf(project: ProjectData, modules: ResearchModuleD
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(75, 85, 99);
-        mod.research_citations.forEach((citation, i) => {
+        combined.citations.forEach((citation, i) => {
           if (y + 5 > pageHeight - margin) {
             addPage();
           }
