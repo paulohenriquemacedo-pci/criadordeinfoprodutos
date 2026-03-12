@@ -205,8 +205,11 @@ export default function ProjectWorkspace() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleBatchDownloadResearch} className="gap-2">
-                <Download className="h-4 w-4" /> Baixar todas as pesquisas
+              <DropdownMenuItem onClick={handleBatchDownloadResearchTxt} className="gap-2">
+                <Download className="h-4 w-4" /> Baixar pesquisas (TXT)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleBatchDownloadResearchPdf} className="gap-2">
+                <Download className="h-4 w-4" /> Baixar pesquisas (PDF)
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleBatchDownloadPdf} className="gap-2">
                 <Download className="h-4 w-4" /> Baixar projeto (PDF)
