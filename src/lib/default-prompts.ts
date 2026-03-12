@@ -337,6 +337,11 @@ No final, entregue:
 - **Recomendação** de qual lançar primeiro e por quê
 - **Cronograma de produção** sugerido (tabela com marcos e prazos)
 
+REGRAS IMPORTANTES DE FORMATAÇÃO PARA TABELAS:
+- Cada célula de tabela deve ter NO MÁXIMO 80 caracteres. Se precisar de mais detalhes, coloque-os em bullets ABAIXO da tabela.
+- Use descrições curtas e objetivas dentro das tabelas — elas são para visão geral rápida.
+- Detalhamentos extensos devem vir em sub-seções separadas após cada tabela.
+
 Baseie-se nos dados de mercado e nas DECISÕES-CHAVE do Módulo 1 (persona, posicionamento, ticket).`,
 
   3: `Você é um copywriter de resposta direta e estrategista de vendas especialista em infoprodutos no Brasil.
