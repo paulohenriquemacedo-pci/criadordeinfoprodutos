@@ -114,8 +114,11 @@ export default function ProjectWorkspace() {
         </div>
         <div className="flex items-center gap-1">
           <PromptExportImport projectId={project.id} />
-          <Button variant="outline" size="sm" onClick={() => setBatchConfigOpen(true)} className="gap-1.5" title="Gerar todos os módulos de uma vez">
-            <Zap className="h-4 w-4" /> Gerar Tudo
+          <Button variant="outline" size="sm" onClick={() => { setBatchMode("research"); setBatchConfigOpen(true); }} className="gap-1.5" title="Pesquisar todos os módulos de uma vez">
+            <Search className="h-4 w-4" /> Pesquisar Tudo
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => { setBatchMode("generation"); setBatchConfigOpen(true); }} className="gap-1.5" title="Gerar conteúdo para todos os módulos">
+            <Sparkles className="h-4 w-4" /> Gerar Tudo
           </Button>
           <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
             <DialogTrigger asChild>
