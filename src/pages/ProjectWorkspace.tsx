@@ -49,7 +49,7 @@ export default function ProjectWorkspace() {
     const { data: mods } = await supabase.from("modules").select("*").eq("project_id", project.id).order("module_number");
     if (!mods) return;
     const hasGenerated = mods.some(m => m.generated_content);
-    const hasResearch = mods.some(m => m.research_result);
+    const hasResearch = mods.some(m => m.research_result || (m as any).research_perplexity || (m as any).research_gemini || (m as any).research_qwen);
     if (hasGenerated) {
       exportProjectPdf(project, mods);
     } else if (hasResearch) {
