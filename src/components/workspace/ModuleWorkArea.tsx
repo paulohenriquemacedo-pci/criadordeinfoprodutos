@@ -497,6 +497,7 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
   };
 
   const [researchPanelOpen, setResearchPanelOpen] = useState(false);
+  const [researchViewOpen, setResearchViewOpen] = useState(false);
   const [customResearchOpen, setCustomResearchOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
 
