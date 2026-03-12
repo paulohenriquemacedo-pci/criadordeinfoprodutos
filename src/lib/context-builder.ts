@@ -90,6 +90,16 @@ ${JSON.stringify(strategicMemory, null, 2)}`
     : "";
 
   // Build previous outputs with explicit dependency markers
+  // Combine research from all engines for each module
+  const getModuleResearch = (m: any): string => {
+    const parts: string[] = [];
+    for (const col of ["research_perplexity", "research_gemini", "research_qwen", "research_result"]) {
+      const val = m[col];
+      if (val && !parts.includes(val)) parts.push(val);
+    }
+    return parts.join("\n\n---\n\n");
+  };
+
   const previousOutputs = (modules || [])
     .filter((m) => m.generated_content)
     .map((m) => `MÓDULO ${m.module_number} (${MODULE_CONFIG_LABELS[m.module_number] || ""}):\n${m.generated_content}`)

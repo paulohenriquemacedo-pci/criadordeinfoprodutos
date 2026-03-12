@@ -161,6 +161,26 @@ interface ResearchModuleData {
   module_number: number;
   research_result: string | null;
   research_citations: string[] | null;
+  research_perplexity?: string | null;
+  research_perplexity_citations?: string[] | null;
+  research_gemini?: string | null;
+  research_gemini_citations?: string[] | null;
+  research_qwen?: string | null;
+  research_qwen_citations?: string[] | null;
+}
+
+function combineModuleResearch(mod: ResearchModuleData): { text: string; citations: string[] } {
+  const parts: string[] = [];
+  const allCitations: string[] = [];
+  for (const col of ["research_perplexity", "research_gemini", "research_qwen", "research_result"] as const) {
+    const val = (mod as any)[col];
+    if (val && !parts.includes(val)) parts.push(val);
+  }
+  for (const col of ["research_perplexity_citations", "research_gemini_citations", "research_qwen_citations", "research_citations"] as const) {
+    const cits = (mod as any)[col] as string[] | null;
+    if (cits) allCitations.push(...cits.filter(c => !allCitations.includes(c)));
+  }
+  return { text: parts.join("\n\n---\n\n"), citations: allCitations };
 }
 
 export function exportResearchPdf(project: ProjectData, modules: ResearchModuleData[]) {
