@@ -210,6 +210,19 @@ export default function ResearchPanel({
             </Button>
             <Button
               size="sm"
+              variant="outline"
+              onClick={() => {
+                setResults([]);
+                setIsApplied(false);
+                onClearResearch?.();
+                toast.success("Pesquisa apagada!");
+              }}
+              className="gap-1 text-xs text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-3 w-3" /> Apagar
+            </Button>
+            <Button
+              size="sm"
               onClick={handleUseResearch}
               disabled={isApplied}
               className="gap-1 text-xs ml-auto"
