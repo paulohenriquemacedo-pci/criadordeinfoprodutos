@@ -229,8 +229,12 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
         <Brain className="h-12 w-12 text-muted-foreground/20 mb-4" />
         <h3 className="text-lg font-medium text-muted-foreground">Memória estratégica vazia</h3>
         <p className="text-sm text-muted-foreground/70 mt-1 max-w-md">
-          A memória será preenchida automaticamente conforme os módulos M1-M8 forem gerados. Execute a geração em lote para começar.
+          A memória será preenchida automaticamente conforme os módulos M1-M8 forem gerados. Se já possui módulos gerados, clique abaixo para reprocessar.
         </p>
+        <Button onClick={reprocessMemory} disabled={reprocessing} className="mt-4 gap-2">
+          {reprocessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+          {reprocessing ? "Reprocessando..." : "Reprocessar Memória dos Módulos"}
+        </Button>
       </div>
     );
   }
