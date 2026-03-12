@@ -41,7 +41,7 @@ Seja extremamente detalhado e analítico. Forneça dados concretos, nomes reais 
         "X-Title": "Orquestrador de Infoprodutos",
       },
       body: JSON.stringify({
-        model: "qwen/qwen3-235b-a22b",
+        model: "qwen/qwen3.5-plus-02-15",
         max_tokens: 16384,
         messages: [
           {
