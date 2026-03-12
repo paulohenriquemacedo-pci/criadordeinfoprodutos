@@ -19,7 +19,7 @@ import { ptBR } from "date-fns/locale";
 import { useBatchGeneration } from "@/hooks/useBatchGeneration";
 import { useProjectModules } from "@/hooks/useProjects";
 import BatchGenerationScreen from "@/components/workspace/BatchGenerationScreen";
-import { exportProjectPdf } from "@/lib/pdf-export";
+import { exportProjectPdf, exportResearchPdf } from "@/lib/pdf-export";
 
 type CreationMode = null | "scratch" | "existing";
 
