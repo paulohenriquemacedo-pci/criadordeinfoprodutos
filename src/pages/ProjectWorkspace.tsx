@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useBatchGeneration } from "@/hooks/useBatchGeneration";
-import { exportProjectPdf } from "@/lib/pdf-export";
+import { exportProjectPdf, exportResearchPdf } from "@/lib/pdf-export";
 import { supabase } from "@/integrations/supabase/client";
 import { AnimatePresence } from "framer-motion";
 
