@@ -234,7 +234,7 @@ export function useBatchGeneration() {
     return fullText;
   }, [streamOneCall]);
 
-  const runResearchOnly = useCallback(async (projectId: string, options?: { researchEngine?: ResearchEngine }) => {
+  const runResearchOnly = useCallback(async (projectId: string, options?: { researchEngine?: ResearchEngine; forceReResearch?: boolean }) => {
     abortRef.current = false;
     setState({
       isRunning: true,
@@ -279,8 +279,8 @@ export function useBatchGeneration() {
         const module = modules.find(m => m.module_number === num);
         if (!module) continue;
 
-        // Skip modules that already have research
-        if (module.research_result) {
+        // Skip modules that already have research (unless force re-research)
+        if (module.research_result && !options?.forceReResearch) {
           addLog(num, "done", `${moduleConfig.title} já possui pesquisa — pulando ✓`);
           setState(prev => ({
             ...prev,

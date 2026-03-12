@@ -3,11 +3,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Sparkles } from "lucide-react";
 
 export interface BatchEngineConfig {
   researchEngine: "perplexity" | "gemini" | "qwen";
   generationModel: string;
+  forceReResearch?: boolean;
 }
 
 const RESEARCH_ENGINES = [
@@ -33,6 +35,7 @@ export default function BatchConfigDialog({ open, onOpenChange, onConfirm, mode 
   const [config, setConfig] = useState<BatchEngineConfig>({
     researchEngine: "perplexity",
     generationModel: "google/gemini-2.5-flash",
+    forceReResearch: false,
   });
 
   const isResearch = mode === "research";
@@ -54,30 +57,43 @@ export default function BatchConfigDialog({ open, onOpenChange, onConfirm, mode 
 
         <div className="space-y-5 py-4">
           {isResearch ? (
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1.5 text-sm font-medium">
-                <Search className="h-3.5 w-3.5 text-muted-foreground" />
-                Motor de Pesquisa
-              </Label>
-              <Select
-                value={config.researchEngine}
-                onValueChange={(v) => setConfig(prev => ({ ...prev, researchEngine: v as BatchEngineConfig["researchEngine"] }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {RESEARCH_ENGINES.map(engine => (
-                    <SelectItem key={engine.value} value={engine.value}>
-                      <div className="flex flex-col">
-                        <span>{engine.label}</span>
-                        <span className="text-xs text-muted-foreground">{engine.description}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5 text-sm font-medium">
+                  <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                  Motor de Pesquisa
+                </Label>
+                <Select
+                  value={config.researchEngine}
+                  onValueChange={(v) => setConfig(prev => ({ ...prev, researchEngine: v as BatchEngineConfig["researchEngine"] }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RESEARCH_ENGINES.map(engine => (
+                      <SelectItem key={engine.value} value={engine.value}>
+                        <div className="flex flex-col">
+                          <span>{engine.label}</span>
+                          <span className="text-xs text-muted-foreground">{engine.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="force-research"
+                  checked={config.forceReResearch}
+                  onCheckedChange={(checked) => setConfig(prev => ({ ...prev, forceReResearch: checked === true }))}
+                />
+                <Label htmlFor="force-research" className="text-sm cursor-pointer">
+                  Forçar re-pesquisa em módulos já pesquisados
+                </Label>
+              </div>
+            </>
           ) : (
             <div className="space-y-2">
               <Label className="flex items-center gap-1.5 text-sm font-medium">
