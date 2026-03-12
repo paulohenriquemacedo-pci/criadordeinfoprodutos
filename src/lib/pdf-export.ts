@@ -253,7 +253,7 @@ export function exportResearchPdf(project: ProjectData, modules: ResearchModuleD
       y = ctx.y;
 
       // Citations
-      if (mod.research_citations && mod.research_citations.length > 0) {
+      if (combined.citations.length > 0) {
         y += 5;
         if (y + 20 > pageHeight - margin) {
           addPage();
@@ -266,7 +266,7 @@ export function exportResearchPdf(project: ProjectData, modules: ResearchModuleD
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(75, 85, 99);
-        mod.research_citations.forEach((citation, i) => {
+        combined.citations.forEach((citation, i) => {
           if (y + 5 > pageHeight - margin) {
             addPage();
           }
