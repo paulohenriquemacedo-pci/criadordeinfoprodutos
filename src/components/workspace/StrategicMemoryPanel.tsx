@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Brain, User, Package, Pen, Megaphone, TrendingUp, Zap, RefreshCw, Loader2 } from "lucide-react";
+import { Brain, User, Package, Pen, Megaphone, TrendingUp, Zap, RefreshCw, Loader2, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface Props {
   projectId: string;
@@ -133,6 +134,7 @@ function CategoryCard({ config, data }: { config: typeof CATEGORY_CONFIG[0]; dat
 export default function StrategicMemoryPanel({ projectId }: Props) {
   const [memory, setMemory] = useState<StrategicMemory | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reprocessing, setReprocessing] = useState(false);
 
   const fetchMemory = async () => {
     setLoading(true);
@@ -143,6 +145,70 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
       .single();
     setMemory((data as any)?.strategic_memory || null);
     setLoading(false);
+  };
+
+  const reprocessMemory = async () => {
+    setReprocessing(true);
+    try {
+      const { data: modules } = await supabase
+        .from("modules")
+        .select("module_number, generated_content")
+        .eq("project_id", projectId)
+        .order("module_number");
+
+      const modulesWithContent = (modules || []).filter(m => m.generated_content);
+      if (modulesWithContent.length === 0) {
+        toast.error("Nenhum módulo possui conteúdo gerado para processar.");
+        setReprocessing(false);
+        return;
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      let currentMemory: any = null;
+
+      for (const mod of modulesWithContent) {
+        toast.info(`Processando M${mod.module_number}...`);
+        const memResponse = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/strategic-memory`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            },
+            body: JSON.stringify({
+              moduleNumber: mod.module_number,
+              moduleContent: mod.generated_content,
+              existingMemory: currentMemory,
+            }),
+          }
+        );
+
+        if (memResponse.ok) {
+          const memData = await memResponse.json();
+          currentMemory = memData.memory;
+        } else {
+          console.error("Strategic memory error for M" + mod.module_number, memResponse.status);
+        }
+      }
+
+      if (currentMemory) {
+        const { error } = await supabase.from("projects").update({
+          strategic_memory: currentMemory,
+        } as any).eq("id", projectId);
+        if (error) {
+          toast.error("Erro ao salvar memória: " + error.message);
+        } else {
+          setMemory(currentMemory);
+          toast.success(`Memória estratégica reprocessada com ${modulesWithContent.length} módulo(s)!`);
+        }
+      }
+    } catch (err: any) {
+      toast.error("Erro ao reprocessar: " + (err.message || "Erro desconhecido"));
+    }
+    setReprocessing(false);
   };
 
   useEffect(() => {
@@ -163,8 +229,12 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
         <Brain className="h-12 w-12 text-muted-foreground/20 mb-4" />
         <h3 className="text-lg font-medium text-muted-foreground">Memória estratégica vazia</h3>
         <p className="text-sm text-muted-foreground/70 mt-1 max-w-md">
-          A memória será preenchida automaticamente conforme os módulos M1-M8 forem gerados. Execute a geração em lote para começar.
+          A memória será preenchida automaticamente conforme os módulos M1-M8 forem gerados. Se já possui módulos gerados, clique abaixo para reprocessar.
         </p>
+        <Button onClick={reprocessMemory} disabled={reprocessing} className="mt-4 gap-2">
+          {reprocessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+          {reprocessing ? "Reprocessando..." : "Reprocessar Memória dos Módulos"}
+        </Button>
       </div>
     );
   }
@@ -187,9 +257,15 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
             </span>
           )}
         </div>
-        <Button variant="ghost" size="sm" onClick={fetchMemory} className="h-7 gap-1 text-xs">
-          <RefreshCw className="h-3 w-3" /> Atualizar
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={reprocessMemory} disabled={reprocessing} className="h-7 gap-1 text-xs">
+            {reprocessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+            {reprocessing ? "Reprocessando..." : "Reprocessar"}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={fetchMemory} className="h-7 gap-1 text-xs">
+            <RefreshCw className="h-3 w-3" /> Atualizar
+          </Button>
+        </div>
       </div>
 
       {/* Category cards */}
