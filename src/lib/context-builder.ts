@@ -9,7 +9,9 @@ const MODULE_CONFIG_LABELS: Record<number, string> = {
   6: "E-mail Marketing",
   7: "Funil WhatsApp",
   8: "Funil de Vendas",
-  9: "Produção de Conteúdo",
+  9: "Definição de Oferta",
+  10: "Hub Criativo",
+  11: "Produção de Conteúdo",
 };
 
 export interface PdfPart {

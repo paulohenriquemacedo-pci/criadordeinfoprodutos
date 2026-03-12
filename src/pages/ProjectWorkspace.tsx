@@ -272,12 +272,17 @@ export default function ProjectWorkspace() {
             project={project}
           />
         ) : activeModule === 9 ? (
-          <ProductionWorkArea
+          <OfferWorkArea
             projectId={project.id}
             project={project}
           />
         ) : activeModule === 10 ? (
           <CreativeHubWorkArea
+            projectId={project.id}
+            project={project}
+          />
+        ) : activeModule === 11 ? (
+          <ProductionWorkArea
             projectId={project.id}
             project={project}
           />
