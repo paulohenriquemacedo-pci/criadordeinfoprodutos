@@ -21,6 +21,25 @@ import ResearchPanel from "./ResearchPanel";
 import ResearchChat from "./ResearchChat";
 import CustomResearchPanel from "./CustomResearchPanel";
 
+function combineEngineResearch(mod: any): string {
+  if (!mod) return "";
+  const parts: string[] = [];
+  for (const col of ["research_perplexity", "research_gemini", "research_qwen", "research_result"]) {
+    const val = mod[col];
+    if (val && !parts.includes(val)) parts.push(val);
+  }
+  return parts.join("\n\n---\n\n");
+}
+
+function combineEngineCitations(mod: any): string[] {
+  if (!mod) return [];
+  const all: string[] = [];
+  for (const col of ["research_perplexity_citations", "research_gemini_citations", "research_qwen_citations", "research_citations"]) {
+    const cits = mod[col] as string[] | null;
+    if (cits) all.push(...cits.filter(c => !all.includes(c)));
+  }
+  return all;
+}
 
 interface ModuleConfig {
   number: number;
