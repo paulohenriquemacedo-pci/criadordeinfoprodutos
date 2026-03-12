@@ -220,11 +220,15 @@ export function exportResearchPdf(project: ProjectData, modules: ResearchModuleD
 
   // === RESEARCH PAGES ===
   modules
-    .filter((m) => m.research_result)
+    .filter((m) => {
+      const combined = combineModuleResearch(m);
+      return combined.text.length > 0;
+    })
     .sort((a, b) => a.module_number - b.module_number)
     .forEach((mod) => {
       const config = MODULE_CONFIG.find((c) => c.number === mod.module_number);
-      if (!config || !mod.research_result) return;
+      const combined = combineModuleResearch(mod);
+      if (!config || !combined.text) return;
 
       addPage();
 
@@ -245,7 +249,7 @@ export function exportResearchPdf(project: ProjectData, modules: ResearchModuleD
 
       // Render research content
       const ctx = { doc, margin, contentWidth, y, pageHeight };
-      renderMarkdownToPdf(ctx, mod.research_result);
+      renderMarkdownToPdf(ctx, combined.text);
       y = ctx.y;
 
       // Citations
