@@ -10,6 +10,7 @@ No início do documento, inclua uma seção "## RESUMO EXECUTIVO" com:
 
 ### 2. FORMATAÇÃO ESTRUTURADA
 - Use **tabelas markdown** para comparações (concorrentes, personas lado a lado, precificação, métricas)
+- **REGRA DE TABELAS**: Cada célula deve ter no máximo 80 caracteres. Use frases curtas e objetivas. Detalhes extensos devem ir em sub-seções APÓS a tabela, não dentro das células.
 - Use **listas numeradas** para sequências e prioridades
 - Use **headers hierárquicos** (##, ###) para organização clara
 - Evite parágrafos com mais de 4 linhas — quebre em bullets ou sub-seções
@@ -336,6 +337,11 @@ No final, entregue:
 - Uma **versão premium** (oferta completa com todos os bônus)
 - **Recomendação** de qual lançar primeiro e por quê
 - **Cronograma de produção** sugerido (tabela com marcos e prazos)
+
+REGRAS IMPORTANTES DE FORMATAÇÃO PARA TABELAS:
+- Cada célula de tabela deve ter NO MÁXIMO 80 caracteres. Se precisar de mais detalhes, coloque-os em bullets ABAIXO da tabela.
+- Use descrições curtas e objetivas dentro das tabelas — elas são para visão geral rápida.
+- Detalhamentos extensos devem vir em sub-seções separadas após cada tabela.
 
 Baseie-se nos dados de mercado e nas DECISÕES-CHAVE do Módulo 1 (persona, posicionamento, ticket).`,
 
