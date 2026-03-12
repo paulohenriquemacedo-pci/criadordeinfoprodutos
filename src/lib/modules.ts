@@ -8,6 +8,7 @@ export const MODULE_CONFIG = [
   { number: 6, title: "E-mail Marketing", icon: "Mail", description: "Crie sequências de e-mail de alta conversão" },
   { number: 7, title: "Funil WhatsApp", icon: "MessageCircle", description: "Monte automações e scripts para WhatsApp" },
   { number: 8, title: "Funil de Vendas", icon: "TrendingUp", description: "Estruture seu funil de vendas completo" },
+  { number: 9, title: "Produção de Conteúdo", icon: "BookOpen", description: "Crie o produto final capítulo a capítulo" },
 ] as const;
 
-export type ModuleNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type ModuleNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
