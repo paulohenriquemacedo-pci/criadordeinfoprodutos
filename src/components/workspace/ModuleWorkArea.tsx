@@ -50,8 +50,8 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
   const [streamText, setStreamText] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [researchOpen, setResearchOpen] = useState(false);
-  const [researchContext, setResearchContext] = useState((module as any)?.research_result || "");
-  const [researchCitations, setResearchCitations] = useState<string[]>((module as any)?.research_citations || []);
+  const [researchContext, setResearchContext] = useState(() => combineEngineResearch(module));
+  const [researchCitations, setResearchCitations] = useState<string[]>(() => combineEngineCitations(module));
   const [projectData, setProjectData] = useState<{ niche: string; promise: string; target_audience: string } | null>(null);
   const [refinedContext, setRefinedContext] = useState("");
   const [customResearch, setCustomResearch] = useState((module as any)?.custom_research || "");
