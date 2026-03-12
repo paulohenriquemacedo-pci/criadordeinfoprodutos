@@ -6,6 +6,7 @@ import WorkflowSidebar from "@/components/workspace/WorkflowSidebar";
 import ModuleWorkArea from "@/components/workspace/ModuleWorkArea";
 import CoherenceWorkArea from "@/components/workspace/CoherenceWorkArea";
 import ProductionWorkArea from "@/components/workspace/ProductionWorkArea";
+import CreativeHubWorkArea from "@/components/workspace/CreativeHubWorkArea";
 import ContextSidebar from "@/components/workspace/ContextSidebar";
 import BatchGenerationScreen from "@/components/workspace/BatchGenerationScreen";
 import BatchConfigDialog, { BatchEngineConfig } from "@/components/workspace/BatchConfigDialog";
