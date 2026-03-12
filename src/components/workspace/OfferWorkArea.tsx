@@ -255,14 +255,21 @@ export default function OfferWorkArea({ projectId, project }: Props) {
   const [importing, setImporting] = useState(false);
   const [importingM2, setImportingM2] = useState(false);
 
-  const handleImportFromM2 = async () => {
+  const handleImportFromModules = async (moduleNumbers: number[]) => {
     setImportingM2(true);
     try {
-      const m2 = modules?.find(m => m.module_number === 2);
-      if (!m2?.generated_content) {
-        toast.error("O Módulo 2 (Estrutura do Produto) ainda não foi gerado. Complete o M2 primeiro.");
+      const relevantModules = modules?.filter(m => moduleNumbers.includes(m.module_number) && m.generated_content);
+      if (!relevantModules?.length) {
+        toast.error(`Os módulos selecionados ainda não foram gerados. Complete-os primeiro.`);
         return;
       }
+
+      const combinedText = relevantModules
+        .map(m => {
+          const labels: Record<number, string> = { 1: "Briefing", 2: "Estrutura do Produto", 3: "Copy e VSL", 6: "E-mail Marketing", 7: "Funil WhatsApp", 8: "Funil de Vendas" };
+          return `=== MÓDULO ${m.module_number} - ${labels[m.module_number] || `Módulo ${m.module_number}`} ===\n${m.generated_content}`;
+        })
+        .join("\n\n---\n\n");
 
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
@@ -276,7 +283,7 @@ export default function OfferWorkArea({ projectId, project }: Props) {
             Authorization: `Bearer ${accessToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
-          body: JSON.stringify({ filesText: `=== MÓDULO 2 - ESTRUTURA DO PRODUTO (gerado pela plataforma) ===\n${m2.generated_content}` }),
+          body: JSON.stringify({ filesText: combinedText }),
         }
       );
 
@@ -288,7 +295,7 @@ export default function OfferWorkArea({ projectId, project }: Props) {
       const result = await response.json();
 
       if (!result.products?.length) {
-        toast.error("Não foi possível identificar produtos no conteúdo do M2.");
+        toast.error("Não foi possível identificar produtos nos módulos selecionados.");
         return;
       }
 
@@ -335,9 +342,9 @@ export default function OfferWorkArea({ projectId, project }: Props) {
         setSelectedProduct(product);
       }
 
-      toast.success(`${result.products.length} produto(s) importado(s) do M2!`);
+      toast.success(`${result.products.length} produto(s) importado(s) com sucesso!`);
     } catch (err: any) {
-      toast.error("Erro ao importar do M2: " + err.message);
+      toast.error("Erro ao importar dos módulos: " + err.message);
     } finally {
       setImportingM2(false);
     }
