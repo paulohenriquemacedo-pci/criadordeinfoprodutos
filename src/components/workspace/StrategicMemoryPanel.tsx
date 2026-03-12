@@ -2,59 +2,23 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Brain, User, Package, Pen, Megaphone, TrendingUp, Zap, RefreshCw, Loader2, Wand2 } from "lucide-react";
+import { Brain, User, Package, Pen, Megaphone, TrendingUp, Zap, RefreshCw, Loader2, Wand2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { jsPDF } from "jspdf";
 
 interface Props {
   projectId: string;
 }
 
 interface StrategicMemory {
-  identidade_posicionamento?: {
-    nicho?: string;
-    subnicho?: string;
-    posicionamento?: string;
-    big_idea?: string;
-    promessa_principal?: string;
-  };
-  publico_alvo?: {
-    avatar_principal?: string;
-    dores_principais?: string[];
-    desejos_principais?: string[];
-    objecoes?: string[];
-  };
-  produto?: {
-    nome_produto?: string;
-    formato_produto?: string;
-    estrutura_modulos?: string[];
-    bonus?: string[];
-    preco?: string;
-    ticket_medio?: string;
-  };
-  copy_mensagem?: {
-    headline_principal?: string;
-    angulo_principal?: string;
-    mecanismo_unico?: string;
-    ctas?: string[];
-  };
-  marketing?: {
-    pilares_conteudo?: string[];
-    plataformas_prioritarias?: string[];
-    criativos_principais?: string[];
-  };
-  funil_monetizacao?: {
-    tipo_funil?: string;
-    escada_valor?: string[];
-    order_bump?: string;
-    upsell?: string;
-    downsell?: string;
-  };
-  automacoes?: {
-    sequencias_email?: string[];
-    funil_whatsapp?: string;
-    remarketing?: string[];
-  };
+  identidade_posicionamento?: Record<string, unknown>;
+  publico_alvo?: Record<string, unknown>;
+  produto?: Record<string, unknown>;
+  copy_mensagem?: Record<string, unknown>;
+  marketing?: Record<string, unknown>;
+  funil_monetizacao?: Record<string, unknown>;
+  automacoes?: Record<string, unknown>;
   _meta?: {
     last_updated?: string;
     last_module?: number;
@@ -72,6 +36,12 @@ const CATEGORY_CONFIG = [
   { key: "automacoes", label: "Automações", icon: Zap, color: "text-cyan-500" },
 ];
 
+function safeString(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
 function renderValue(value: unknown): React.ReactNode {
   if (value === null || value === undefined) return <span className="text-muted-foreground/50 italic">—</span>;
   if (Array.isArray(value)) {
@@ -81,7 +51,7 @@ function renderValue(value: unknown): React.ReactNode {
         {value.map((item, i) => (
           <li key={i} className="flex items-start gap-1.5 text-xs">
             <span className="text-primary mt-0.5">•</span>
-            <span>{String(item)}</span>
+            <span>{safeString(item)}</span>
           </li>
         ))}
       </ul>
@@ -99,7 +69,7 @@ function renderValue(value: unknown): React.ReactNode {
       </div>
     );
   }
-  return <span className="text-sm">{String(value)}</span>;
+  return <span className="text-sm">{safeString(value)}</span>;
 }
 
 function CategoryCard({ config, data }: { config: typeof CATEGORY_CONFIG[0]; data: Record<string, unknown> | undefined }) {
@@ -131,6 +101,86 @@ function CategoryCard({ config, data }: { config: typeof CATEGORY_CONFIG[0]; dat
   );
 }
 
+function generateMemoryPdf(memory: StrategicMemory) {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 15;
+  const maxWidth = pageWidth - margin * 2;
+  let y = 20;
+
+  const checkPage = (needed: number) => {
+    if (y + needed > doc.internal.pageSize.getHeight() - 15) {
+      doc.addPage();
+      y = 20;
+    }
+  };
+
+  // Title
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text("Memória Estratégica", margin, y);
+  y += 8;
+
+  if (memory._meta?.last_updated) {
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(120);
+    doc.text(`Atualizado: ${new Date(memory._meta.last_updated).toLocaleString("pt-BR")}`, margin, y);
+    doc.setTextColor(0);
+    y += 10;
+  }
+
+  for (const config of CATEGORY_CONFIG) {
+    const data = memory[config.key as keyof StrategicMemory] as Record<string, unknown> | undefined;
+    if (!data || typeof data !== "object") continue;
+    const entries = Object.entries(data).filter(([, v]) => v !== null && v !== undefined && !(Array.isArray(v) && v.length === 0));
+    if (entries.length === 0) continue;
+
+    checkPage(20);
+    doc.setFontSize(13);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(60, 60, 60);
+    doc.text(config.label, margin, y);
+    y += 2;
+    doc.setDrawColor(200);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 6;
+
+    for (const [key, value] of entries) {
+      checkPage(12);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(100);
+      doc.text(key.replace(/_/g, " ").toUpperCase(), margin + 2, y);
+      y += 4;
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(30);
+      doc.setFontSize(10);
+
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          checkPage(6);
+          const lines = doc.splitTextToSize(`• ${safeString(item)}`, maxWidth - 6);
+          doc.text(lines, margin + 4, y);
+          y += lines.length * 5;
+        }
+      } else {
+        const text = safeString(value);
+        const lines = doc.splitTextToSize(text, maxWidth - 4);
+        checkPage(lines.length * 5);
+        doc.text(lines, margin + 2, y);
+        y += lines.length * 5;
+      }
+      y += 3;
+    }
+    y += 4;
+  }
+
+  doc.save("memoria-estrategica.pdf");
+  toast.success("PDF da memória estratégica baixado!");
+}
+
 export default function StrategicMemoryPanel({ projectId }: Props) {
   const [memory, setMemory] = useState<StrategicMemory | null>(null);
   const [loading, setLoading] = useState(true);
@@ -156,8 +206,7 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
         .eq("project_id", projectId)
         .order("module_number");
 
-      // Build content from generated + research for each module
-      const modulesWithData = (modules || []).filter(m => 
+      const modulesWithData = (modules || []).filter(m =>
         m.generated_content || m.research_perplexity || m.research_gemini || m.research_qwen || m.research_result || m.custom_research
       );
 
@@ -172,7 +221,6 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
       let currentMemory: any = null;
 
       for (const mod of modulesWithData) {
-        // Combine all available content: generated first, then research
         const parts: string[] = [];
         if (mod.generated_content) parts.push(`[CONTEÚDO GERADO]\n${mod.generated_content}`);
         if (mod.research_perplexity) parts.push(`[PESQUISA PERPLEXITY]\n${mod.research_perplexity}`);
@@ -205,7 +253,7 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
           const memData = await memResponse.json();
           currentMemory = memData.memory;
         } else if (memResponse.status === 402) {
-          toast.error("Créditos de IA insuficientes. Aguarde a renovação dos créditos do Lovable Cloud e tente novamente.");
+          toast.error("Créditos de IA insuficientes. Aguarde a renovação ou configure uma chave Gemini.");
           break;
         } else if (memResponse.status === 429) {
           toast.error("Limite de requisições atingido. Aguarde alguns instantes e tente novamente.");
@@ -267,7 +315,6 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Meta info */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs gap-1">
@@ -281,6 +328,9 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
           )}
         </div>
         <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={() => generateMemoryPdf(memory)} className="h-7 gap-1 text-xs">
+            <Download className="h-3 w-3" /> PDF
+          </Button>
           <Button variant="ghost" size="sm" onClick={reprocessMemory} disabled={reprocessing} className="h-7 gap-1 text-xs">
             {reprocessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
             {reprocessing ? "Reprocessando..." : "Reprocessar"}
@@ -291,7 +341,6 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
         </div>
       </div>
 
-      {/* Category cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {CATEGORY_CONFIG.map((config) => (
           <CategoryCard
