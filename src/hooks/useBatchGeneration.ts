@@ -234,7 +234,7 @@ export function useBatchGeneration() {
     return fullText;
   }, [streamOneCall]);
 
-  const runResearchOnly = useCallback(async (projectId: string, options?: { researchEngine?: ResearchEngine }) => {
+  const runResearchOnly = useCallback(async (projectId: string, options?: { researchEngine?: ResearchEngine; forceReResearch?: boolean }) => {
     abortRef.current = false;
     setState({
       isRunning: true,
