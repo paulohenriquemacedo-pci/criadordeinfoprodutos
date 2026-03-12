@@ -201,7 +201,8 @@ function combineModuleResearch(mod: ResearchModuleData, includeCustom = true): {
   return { text: parts.join("\n\n---\n\n"), citations: allCitations };
 }
 
-export function exportResearchPdf(project: ProjectData, modules: ResearchModuleData[]) {
+export function exportResearchPdf(project: ProjectData, modules: ResearchModuleData[], options?: { includeCustomResearch?: boolean }) {
+  const includeCustom = options?.includeCustomResearch ?? false;
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
