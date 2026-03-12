@@ -116,6 +116,7 @@ ${JSON.stringify(strategicMemory, null, 2)}`
     files: files || [],
     fullContext: [
       briefing,
+      strategicMemoryBlock,
       keyDecisions && `RESUMO DE DECISÕES ESTRATÉGICAS DOS MÓDULOS ANTERIORES (USE COMO REFERÊNCIA OBRIGATÓRIA):\n${keyDecisions}`,
       previousOutputs && `CONTEÚDO GERADO ANTERIORMENTE:\n${previousOutputs}`,
       pdfContent && `MATERIAIS DE REFERÊNCIA (texto extraído):\n${pdfContent}`,
