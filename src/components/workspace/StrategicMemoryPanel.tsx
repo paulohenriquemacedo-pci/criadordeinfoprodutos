@@ -134,6 +134,7 @@ function CategoryCard({ config, data }: { config: typeof CATEGORY_CONFIG[0]; dat
 export default function StrategicMemoryPanel({ projectId }: Props) {
   const [memory, setMemory] = useState<StrategicMemory | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reprocessing, setReprocessing] = useState(false);
 
   const fetchMemory = async () => {
     setLoading(true);
@@ -144,6 +145,70 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
       .single();
     setMemory((data as any)?.strategic_memory || null);
     setLoading(false);
+  };
+
+  const reprocessMemory = async () => {
+    setReprocessing(true);
+    try {
+      const { data: modules } = await supabase
+        .from("modules")
+        .select("module_number, generated_content")
+        .eq("project_id", projectId)
+        .order("module_number");
+
+      const modulesWithContent = (modules || []).filter(m => m.generated_content);
+      if (modulesWithContent.length === 0) {
+        toast.error("Nenhum módulo possui conteúdo gerado para processar.");
+        setReprocessing(false);
+        return;
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      let currentMemory: any = null;
+
+      for (const mod of modulesWithContent) {
+        toast.info(`Processando M${mod.module_number}...`);
+        const memResponse = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/strategic-memory`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            },
+            body: JSON.stringify({
+              moduleNumber: mod.module_number,
+              moduleContent: mod.generated_content,
+              existingMemory: currentMemory,
+            }),
+          }
+        );
+
+        if (memResponse.ok) {
+          const memData = await memResponse.json();
+          currentMemory = memData.memory;
+        } else {
+          console.error("Strategic memory error for M" + mod.module_number, memResponse.status);
+        }
+      }
+
+      if (currentMemory) {
+        const { error } = await supabase.from("projects").update({
+          strategic_memory: currentMemory,
+        } as any).eq("id", projectId);
+        if (error) {
+          toast.error("Erro ao salvar memória: " + error.message);
+        } else {
+          setMemory(currentMemory);
+          toast.success(`Memória estratégica reprocessada com ${modulesWithContent.length} módulo(s)!`);
+        }
+      }
+    } catch (err: any) {
+      toast.error("Erro ao reprocessar: " + (err.message || "Erro desconhecido"));
+    }
+    setReprocessing(false);
   };
 
   useEffect(() => {
