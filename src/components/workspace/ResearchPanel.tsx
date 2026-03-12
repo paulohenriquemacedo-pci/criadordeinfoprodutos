@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { RefreshCw, Globe, Brain, Loader2, Plus, Send, Download, CheckCircle2, Zap } from "lucide-react";
+import { RefreshCw, Globe, Brain, Loader2, Plus, Send, Download, CheckCircle2, Zap, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DEFAULT_RESEARCH_PROMPTS } from "@/lib/default-prompts";
