@@ -475,9 +475,21 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
             <h2 className="text-lg font-semibold flex items-center gap-2"><Package className="h-5 w-5 text-primary" /> Definição de Oferta</h2>
             <p className="text-xs text-muted-foreground">Cadastre seus produtos, bônus e bumps</p>
           </div>
-          <Button size="sm" onClick={() => { setEditingProduct(undefined); setProductFormOpen(true); }} className="gap-1.5">
-            <Plus className="h-4 w-4" /> Novo Produto
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleImportFromFiles}
+              disabled={importing}
+              className="gap-1.5"
+            >
+              {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {importing ? "Importando..." : "Importar do Material"}
+            </Button>
+            <Button size="sm" onClick={() => { setEditingProduct(undefined); setProductFormOpen(true); }} className="gap-1.5">
+              <Plus className="h-4 w-4" /> Novo Produto
+            </Button>
+          </div>
         </div>
 
         <ScrollArea className="flex-1">
