@@ -42,6 +42,7 @@ Seja extremamente detalhado e analítico. Forneça dados concretos, nomes reais 
       },
       body: JSON.stringify({
         model: "qwen/qwen3-235b-a22b",
+        max_tokens: 16384,
         messages: [
           {
             role: "system",
@@ -49,6 +50,7 @@ Seja extremamente detalhado e analítico. Forneça dados concretos, nomes reais 
 Sua análise deve ser profunda, estratégica e fundamentada em dados reais.
 Estruture sua resposta com headers claros, tabelas markdown quando apropriado, e priorize insights acionáveis.
 Sempre inclua dados concretos: números, nomes de concorrentes, preços praticados, métricas de referência.
+REGRA OBRIGATÓRIA: NUNCA omita informações por brevidade. NUNCA use frases como "foram omitidas por brevidade", "resumido por questões de espaço", "entre outros" sem listar todos. Forneça TODAS as informações, análises e dados possíveis, sem qualquer corte ou resumo. A resposta deve ser completa e exaustiva.
 Responda em português do Brasil.`,
           },
           { role: "user", content: searchQuery },
