@@ -32,6 +32,7 @@ Faça uma pesquisa de mercado profunda e analítica sobre este nicho no Brasil:
 
 Seja extremamente detalhado e analítico. Forneça dados concretos, nomes reais de players, números e estatísticas quando possível.`;
 
+    // Use streaming to prevent edge function timeout
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -43,6 +44,7 @@ Seja extremamente detalhado e analítico. Forneça dados concretos, nomes reais 
       body: JSON.stringify({
         model: "qwen/qwen3.5-plus-02-15",
         max_tokens: 8192,
+        stream: true,
         messages: [
           {
             role: "system",
@@ -81,8 +83,40 @@ Responda em português do Brasil.`,
       });
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
+    // Read the streaming response and accumulate content
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("Stream não disponível");
+
+    const decoder = new TextDecoder();
+    let content = "";
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      let newlineIdx: number;
+      while ((newlineIdx = buffer.indexOf("\n")) !== -1) {
+        const line = buffer.slice(0, newlineIdx).trim();
+        buffer = buffer.slice(newlineIdx + 1);
+
+        if (!line || line.startsWith(":")) continue;
+        if (!line.startsWith("data: ")) continue;
+
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === "[DONE]") break;
+
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const delta = parsed.choices?.[0]?.delta?.content;
+          if (delta) content += delta;
+        } catch {
+          // skip malformed chunks
+        }
+      }
+    }
 
     return new Response(
       JSON.stringify({ research: content, citations: [] }),
