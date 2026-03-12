@@ -65,9 +65,16 @@ export default function ResearchPanel({
   // Load saved research from DB on mount
   useEffect(() => {
     if (savedResearch && results.length === 0) {
+      // Detect provider from saved content
+      let detectedProvider: ResearchProvider = "perplexity";
+      if (savedResearch.includes("[Pesquisa via Qwen") || savedResearch.includes("via Qwen")) {
+        detectedProvider = "qwen";
+      } else if (savedResearch.includes("[Pesquisa via Gemini") || savedResearch.includes("via Gemini")) {
+        detectedProvider = "lovable-ai";
+      }
       setResults([{
-        provider: "perplexity",
-        content: savedResearch.replace(/^\[Pesquisa via Perplexity \(web\)\]\n/, ""),
+        provider: detectedProvider,
+        content: savedResearch.replace(/^\[Pesquisa via [^\]]+\]\n/, ""),
         citations: savedCitations,
         timestamp: new Date(),
       }]);
