@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Shield,
@@ -22,8 +23,10 @@ import {
   RefreshCw,
   CheckCircle2,
   XCircle,
+  Brain,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import StrategicMemoryPanel from "./StrategicMemoryPanel";
 
 interface Contradiction {
   issue: string;
