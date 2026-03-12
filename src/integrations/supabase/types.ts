@@ -17,11 +17,15 @@ export type Database = {
       creative_tasks: {
         Row: {
           category: string
+          content_focus: string
           context_modules: number[] | null
           created_at: string
           description: string | null
           favorite_version_id: string | null
           id: string
+          offer_item_id: string | null
+          offer_item_type: string | null
+          product_id: string | null
           project_id: string
           prompt_input: string | null
           status: string
@@ -32,11 +36,15 @@ export type Database = {
         }
         Insert: {
           category?: string
+          content_focus?: string
           context_modules?: number[] | null
           created_at?: string
           description?: string | null
           favorite_version_id?: string | null
           id?: string
+          offer_item_id?: string | null
+          offer_item_type?: string | null
+          product_id?: string | null
           project_id: string
           prompt_input?: string | null
           status?: string
@@ -47,11 +55,15 @@ export type Database = {
         }
         Update: {
           category?: string
+          content_focus?: string
           context_modules?: number[] | null
           created_at?: string
           description?: string | null
           favorite_version_id?: string | null
           id?: string
+          offer_item_id?: string | null
+          offer_item_type?: string | null
+          product_id?: string | null
           project_id?: string
           prompt_input?: string | null
           status?: string
@@ -61,6 +73,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "creative_tasks_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "creative_tasks_project_id_fkey"
             columns: ["project_id"]
@@ -208,6 +227,126 @@ export type Database = {
           },
         ]
       }
+      offer_versions: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_versions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_bonuses: {
+        Row: {
+          created_at: string
+          delivery_type: string | null
+          description: string | null
+          id: string
+          name: string
+          perceived_value: number | null
+          product_id: string
+          sort_order: number
+          strategic_function: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivery_type?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          perceived_value?: number | null
+          product_id: string
+          sort_order?: number
+          strategic_function?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivery_type?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          perceived_value?: number | null
+          product_id?: string
+          sort_order?: number
+          strategic_function?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_bonuses_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_bumps: {
+        Row: {
+          bump_type: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          price: number | null
+          product_id: string
+          sort_order: number
+          trigger_point: string | null
+          value_proposition: string | null
+        }
+        Insert: {
+          bump_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          price?: number | null
+          product_id: string
+          sort_order?: number
+          trigger_point?: string | null
+          value_proposition?: string | null
+        }
+        Update: {
+          bump_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          price?: number | null
+          product_id?: string
+          sort_order?: number
+          trigger_point?: string | null
+          value_proposition?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_bumps_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       production_chapters: {
         Row: {
           chapter_order: number
@@ -242,6 +381,59 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "production_chapters_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          created_at: string
+          delivery_format: string | null
+          description: string | null
+          id: string
+          name: string
+          positioning: string | null
+          price: number | null
+          product_type: string
+          project_id: string
+          status: string
+          target_transformation: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_format?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          positioning?: string | null
+          price?: number | null
+          product_type?: string
+          project_id: string
+          status?: string
+          target_transformation?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delivery_format?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          positioning?: string | null
+          price?: number | null
+          product_type?: string
+          project_id?: string
+          status?: string
+          target_transformation?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
