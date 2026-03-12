@@ -101,7 +101,7 @@ export default function ProjectWorkspace() {
     toast.success("Todas as pesquisas exportadas (TXT)!");
   };
 
-  const handleBatchDownloadResearchPdf = async () => {
+  const handleBatchDownloadResearchPdf = async (includeCustom = false) => {
     if (!project) return;
     const { data: mods } = await supabase.from("modules").select("*").eq("project_id", project.id).order("module_number");
     if (!mods || mods.length === 0) {
@@ -113,7 +113,7 @@ export default function ProjectWorkspace() {
       toast.error("Nenhuma pesquisa encontrada para exportar.");
       return;
     }
-    exportResearchPdf(project, mods as any);
+    exportResearchPdf(project, mods as any, { includeCustomResearch: includeCustom });
     toast.success("Pesquisas exportadas em PDF!");
   };
 
