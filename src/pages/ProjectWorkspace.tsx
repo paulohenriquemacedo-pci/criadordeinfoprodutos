@@ -42,7 +42,7 @@ export default function ProjectWorkspace() {
     if (batchMode === "research") {
       batch.runResearchOnly(projectId, { researchEngine: config.researchEngine, forceReResearch: config.forceReResearch });
     } else {
-      batch.runGenerationOnly(projectId, { generationModel: config.generationModel });
+      batch.runGenerationOnly(projectId, { generationModel: config.generationModel, researchEngine: config.researchEngine });
     }
   };
 
