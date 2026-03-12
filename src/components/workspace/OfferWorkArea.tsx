@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Package, Gift, Zap, Sparkles, Loader2, Save } from "lucide-react";
+import { Plus, Trash2, Package, Gift, Zap, Sparkles, Loader2, Save, Upload, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { buildProjectContext } from "@/lib/context-builder";
@@ -242,12 +242,118 @@ export default function OfferWorkArea({ projectId, project }: Props) {
   const { data: products, isLoading } = useProducts(projectId);
   const deleteProduct = useDeleteProduct();
   const saveVersion = useSaveOfferVersion();
+  const createProduct = useCreateProduct();
+  const createBonus = useCreateBonus();
+  const createBump = useCreateBump();
   const { data: modules } = useProjectModules(projectId);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productFormOpen, setProductFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
   const [evaluating, setEvaluating] = useState(false);
   const [evaluation, setEvaluation] = useState<string>("");
+  const [importing, setImporting] = useState(false);
+
+  const handleImportFromFiles = async () => {
+    setImporting(true);
+    try {
+      // Fetch project files with extracted text
+      const { data: files, error } = await supabase
+        .from("project_files")
+        .select("file_name, extracted_text, file_type")
+        .eq("project_id", projectId)
+        .not("extracted_text", "is", null);
+
+      if (error) throw error;
+      if (!files?.length) {
+        toast.error("Nenhum material base encontrado. Envie seus arquivos primeiro na seção 'Material Base'.");
+        return;
+      }
+
+      const filesText = files
+        .map((f: any) => `=== ARQUIVO: ${f.file_name || "Sem nome"} (${f.file_type}) ===\n${f.extracted_text}`)
+        .join("\n\n");
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-offer-from-files`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ filesText }),
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `Erro ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.products?.length) {
+        toast.error("Não foi possível identificar produtos no material enviado.");
+        return;
+      }
+
+      // Create products, bonuses and bumps
+      for (const p of result.products) {
+        const product = await createProduct.mutateAsync({
+          project_id: projectId,
+          name: p.name,
+          description: p.description || undefined,
+          product_type: p.product_type || "digital",
+          positioning: p.positioning || undefined,
+          delivery_format: p.delivery_format || undefined,
+          target_transformation: p.target_transformation || undefined,
+        });
+
+        // Create bonuses
+        if (p.bonuses?.length) {
+          for (let i = 0; i < p.bonuses.length; i++) {
+            const b = p.bonuses[i];
+            await createBonus.mutateAsync({
+              product_id: product.id,
+              name: b.name,
+              description: b.description || undefined,
+              delivery_type: b.delivery_type || "imediato",
+              strategic_function: b.strategic_function || undefined,
+              sort_order: i,
+            });
+          }
+        }
+
+        // Create bumps
+        if (p.bumps?.length) {
+          for (let i = 0; i < p.bumps.length; i++) {
+            const b = p.bumps[i];
+            await createBump.mutateAsync({
+              product_id: product.id,
+              name: b.name,
+              description: b.description || undefined,
+              bump_type: b.bump_type || "order_bump",
+              trigger_point: b.trigger_point || "checkout",
+              value_proposition: b.value_proposition || undefined,
+              sort_order: i,
+            });
+          }
+        }
+
+        setSelectedProduct(product);
+      }
+
+      toast.success(`${result.products.length} produto(s) importado(s) com sucesso!`);
+    } catch (err: any) {
+      toast.error("Erro ao importar: " + err.message);
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const handleEvaluateOffer = async () => {
     if (!selectedProduct) { toast.error("Selecione um produto primeiro"); return; }
@@ -369,9 +475,21 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
             <h2 className="text-lg font-semibold flex items-center gap-2"><Package className="h-5 w-5 text-primary" /> Definição de Oferta</h2>
             <p className="text-xs text-muted-foreground">Cadastre seus produtos, bônus e bumps</p>
           </div>
-          <Button size="sm" onClick={() => { setEditingProduct(undefined); setProductFormOpen(true); }} className="gap-1.5">
-            <Plus className="h-4 w-4" /> Novo Produto
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleImportFromFiles}
+              disabled={importing}
+              className="gap-1.5"
+            >
+              {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {importing ? "Importando..." : "Importar do Material"}
+            </Button>
+            <Button size="sm" onClick={() => { setEditingProduct(undefined); setProductFormOpen(true); }} className="gap-1.5">
+              <Plus className="h-4 w-4" /> Novo Produto
+            </Button>
+          </div>
         </div>
 
         <ScrollArea className="flex-1">
