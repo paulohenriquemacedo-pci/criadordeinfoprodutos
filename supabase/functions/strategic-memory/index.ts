@@ -24,7 +24,93 @@ REGRAS:
 - Arrays vazios [] para listas sem dados
 - Mantenha valores concisos (máx 100 chars por campo de texto)
 - Para arrays, máximo 5 itens mais relevantes
+- Todos os valores devem ser strings ou arrays de strings, NUNCA objetos aninhados
 `;
+
+function extractJsonFromResponse(response: string): unknown {
+  let cleaned = response
+    .replace(/```json\s*/gi, "")
+    .replace(/```\s*/g, "")
+    .trim();
+
+  const jsonStart = cleaned.search(/[\{\[]/);
+  const jsonEnd = cleaned.lastIndexOf(jsonStart !== -1 && cleaned[jsonStart] === '[' ? ']' : '}');
+
+  if (jsonStart === -1 || jsonEnd === -1) {
+    throw new Error("No JSON object found in response");
+  }
+
+  cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    cleaned = cleaned
+      .replace(/,\s*}/g, "}")
+      .replace(/,\s*]/g, "]")
+      .replace(/[\x00-\x1F\x7F]/g, "");
+
+    try {
+      return JSON.parse(cleaned);
+    } catch {
+      const lastBrace = cleaned.lastIndexOf("}");
+      if (lastBrace > 0) {
+        const repaired = cleaned.substring(0, lastBrace + 1);
+        try {
+          return JSON.parse(repaired);
+        } catch {
+          throw new Error("Cannot repair truncated JSON");
+        }
+      }
+      throw new Error("Cannot parse JSON after repair attempts");
+    }
+  }
+}
+
+// Recursively flatten any nested objects into strings
+function flattenValues(obj: any): any {
+  if (obj === null || obj === undefined) return null;
+  if (Array.isArray(obj)) {
+    return obj.map(item => {
+      if (typeof item === "object" && item !== null) return JSON.stringify(item);
+      return String(item);
+    });
+  }
+  if (typeof obj === "object") {
+    const result: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (key === "_meta") {
+        result[key] = value;
+        continue;
+      }
+      if (Array.isArray(value)) {
+        result[key] = value.map(item => {
+          if (typeof item === "object" && item !== null) return JSON.stringify(item);
+          return String(item);
+        });
+      } else if (typeof value === "object" && value !== null) {
+        // Check if it's a category-level object (has string/array leaves)
+        const inner: any = {};
+        for (const [k, v] of Object.entries(value as any)) {
+          if (Array.isArray(v)) {
+            inner[k] = v.map((i: any) => typeof i === "object" && i !== null ? JSON.stringify(i) : String(i));
+          } else if (typeof v === "object" && v !== null) {
+            inner[k] = JSON.stringify(v);
+          } else if (v !== null && v !== undefined) {
+            inner[k] = String(v);
+          } else {
+            inner[k] = null;
+          }
+        }
+        result[key] = inner;
+      } else {
+        result[key] = value;
+      }
+    }
+    return result;
+  }
+  return obj;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -52,21 +138,18 @@ ${moduleContent.slice(0, 15000)}`;
       { role: "user", content: userPrompt },
     ];
 
-    // Helper to call Lovable AI Gateway
     const callLovable = () => fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, temperature: 0.1 }),
     });
 
-    // Helper to call Gemini directly
     const callGemini = () => fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({ model: "gemini-2.5-flash", messages, temperature: 0.1 }),
     });
 
-    // Try Lovable AI first, fallback to Gemini on 402/429
     let response: Response;
     if (LOVABLE_API_KEY) {
       response = await callLovable();
@@ -81,49 +164,37 @@ ${moduleContent.slice(0, 15000)}`;
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit excedido. Tente novamente em instantes." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes para Lovable AI." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "Créditos insuficientes para IA." }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
       return new Response(JSON.stringify({ error: "Erro no gateway AI" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const data = await response.json();
     const raw = data.choices?.[0]?.message?.content || "";
-    
-    // Extract JSON from response (handle markdown code blocks)
-    let jsonStr = raw;
-    const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (jsonMatch) {
-      jsonStr = jsonMatch[1].trim();
-    } else {
-      // Try to find raw JSON object
-      const objMatch = raw.match(/\{[\s\S]*\}/);
-      if (objMatch) jsonStr = objMatch[0];
-    }
 
     let memory;
     try {
-      memory = JSON.parse(jsonStr);
-    } catch {
-      console.error("Failed to parse memory JSON:", jsonStr.slice(0, 500));
-      // Return existing memory if parsing fails
+      memory = extractJsonFromResponse(raw);
+    } catch (e) {
+      console.error("Failed to parse memory JSON:", e, raw.slice(0, 500));
       memory = existingMemory || {};
     }
 
+    // Flatten any nested objects to prevent [object Object]
+    memory = flattenValues(memory);
+
     // Add metadata
-    memory._meta = {
+    (memory as any)._meta = {
       last_updated: new Date().toISOString(),
       last_module: moduleNumber,
       modules_processed: [
@@ -138,8 +209,7 @@ ${moduleContent.slice(0, 15000)}`;
   } catch (e) {
     console.error("strategic-memory error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
