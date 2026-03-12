@@ -28,6 +28,7 @@ interface Props {
   savedResearch: string;
   savedCitations: string[];
   onResearchReady: (research: string, citations: string[]) => void;
+  onClearResearch?: () => void;
 }
 
 const PROVIDER_CONFIG: Record<ResearchProvider, { label: string; edgeFunction: string; icon: "globe" | "brain" | "zap" }> = {
