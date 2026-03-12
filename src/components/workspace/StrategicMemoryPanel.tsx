@@ -152,13 +152,17 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
     try {
       const { data: modules } = await supabase
         .from("modules")
-        .select("module_number, generated_content")
+        .select("module_number, generated_content, research_perplexity, research_gemini, research_qwen, research_result, custom_research")
         .eq("project_id", projectId)
         .order("module_number");
 
-      const modulesWithContent = (modules || []).filter(m => m.generated_content);
-      if (modulesWithContent.length === 0) {
-        toast.error("Nenhum módulo possui conteúdo gerado para processar.");
+      // Build content from generated + research for each module
+      const modulesWithData = (modules || []).filter(m => 
+        m.generated_content || m.research_perplexity || m.research_gemini || m.research_qwen || m.research_result || m.custom_research
+      );
+
+      if (modulesWithData.length === 0) {
+        toast.error("Nenhum módulo possui conteúdo ou pesquisa para processar.");
         setReprocessing(false);
         return;
       }
@@ -167,7 +171,18 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
       const accessToken = sessionData?.session?.access_token;
       let currentMemory: any = null;
 
-      for (const mod of modulesWithContent) {
+      for (const mod of modulesWithData) {
+        // Combine all available content: generated first, then research
+        const parts: string[] = [];
+        if (mod.generated_content) parts.push(`[CONTEÚDO GERADO]\n${mod.generated_content}`);
+        if (mod.research_perplexity) parts.push(`[PESQUISA PERPLEXITY]\n${mod.research_perplexity}`);
+        if (mod.research_gemini) parts.push(`[PESQUISA GEMINI]\n${mod.research_gemini}`);
+        if (mod.research_qwen) parts.push(`[PESQUISA QWEN]\n${mod.research_qwen}`);
+        if (mod.research_result) parts.push(`[PESQUISA LEGADA]\n${mod.research_result}`);
+        if (mod.custom_research) parts.push(`[PESQUISA PERSONALIZADA]\n${mod.custom_research}`);
+
+        const combinedContent = parts.join("\n\n---\n\n");
+
         toast.info(`Processando M${mod.module_number}...`);
         const memResponse = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/strategic-memory`,
@@ -180,7 +195,7 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
             },
             body: JSON.stringify({
               moduleNumber: mod.module_number,
-              moduleContent: mod.generated_content,
+              moduleContent: combinedContent,
               existingMemory: currentMemory,
             }),
           }
@@ -190,7 +205,9 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
           const memData = await memResponse.json();
           currentMemory = memData.memory;
         } else {
-          console.error("Strategic memory error for M" + mod.module_number, memResponse.status);
+          const errText = await memResponse.text().catch(() => "");
+          console.error(`Strategic memory error for M${mod.module_number}:`, memResponse.status, errText);
+          toast.error(`Erro ao processar M${mod.module_number} (${memResponse.status})`);
         }
       }
 
@@ -202,7 +219,7 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
           toast.error("Erro ao salvar memória: " + error.message);
         } else {
           setMemory(currentMemory);
-          toast.success(`Memória estratégica reprocessada com ${modulesWithContent.length} módulo(s)!`);
+          toast.success(`Memória estratégica reprocessada com ${modulesWithData.length} módulo(s)!`);
         }
       }
     } catch (err: any) {
