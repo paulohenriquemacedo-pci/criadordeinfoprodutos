@@ -56,6 +56,7 @@ export default function ResearchPanel({
   savedResearch,
   savedCitations,
   onResearchReady,
+  onClearResearch,
 }: Props) {
   const [results, setResults] = useState<ResearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
