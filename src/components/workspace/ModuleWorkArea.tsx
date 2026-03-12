@@ -190,9 +190,11 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
           activeCitations = result.citations;
           setResearchContext(activeResearch);
           setResearchCitations(activeCitations);
-          // Persist to DB
+          // Persist to DB (engine-specific + legacy)
           if (module?.id) {
             await supabase.from("modules").update({
+              research_perplexity: activeResearch,
+              research_perplexity_citations: activeCitations,
               research_result: activeResearch,
               research_citations: activeCitations,
             } as any).eq("id", module.id);
