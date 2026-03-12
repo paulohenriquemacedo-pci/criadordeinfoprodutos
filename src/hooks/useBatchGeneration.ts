@@ -279,9 +279,11 @@ export function useBatchGeneration() {
         const module = modules.find(m => m.module_number === num);
         if (!module) continue;
 
-        // Skip modules that already have research (unless force re-research)
-        if (module.research_result && !options?.forceReResearch) {
-          addLog(num, "done", `${moduleConfig.title} já possui pesquisa — pulando ✓`);
+        // Skip modules that already have research for this engine (unless force re-research)
+        const engineColumn = researchEngine === "perplexity" ? "research_perplexity" : researchEngine === "gemini" ? "research_gemini" : "research_qwen";
+        const existingEngineResearch = (module as any)[engineColumn];
+        if (existingEngineResearch && !options?.forceReResearch) {
+          addLog(num, "done", `${moduleConfig.title} já possui pesquisa ${engineLabel} — pulando ✓`);
           setState(prev => ({
             ...prev,
             completedModules: [...prev.completedModules, num],
@@ -298,7 +300,11 @@ export function useBatchGeneration() {
 
         if (researchResult) {
           const researchText = `[Pesquisa via ${engineLabel}]\n${researchResult.research}`;
+          const citationsColumn = `${engineColumn}_citations`;
+          // Save to engine-specific column AND legacy research_result for backward compat
           await supabase.from("modules").update({
+            [engineColumn]: researchText,
+            [citationsColumn]: researchResult.citations,
             research_result: researchText,
             research_citations: researchResult.citations,
           } as any).eq("id", module.id);
