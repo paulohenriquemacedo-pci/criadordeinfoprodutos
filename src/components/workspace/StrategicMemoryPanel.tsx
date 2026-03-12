@@ -263,8 +263,9 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
             {reprocessing ? "Reprocessando..." : "Reprocessar"}
           </Button>
           <Button variant="ghost" size="sm" onClick={fetchMemory} className="h-7 gap-1 text-xs">
-          <RefreshCw className="h-3 w-3" /> Atualizar
-        </Button>
+            <RefreshCw className="h-3 w-3" /> Atualizar
+          </Button>
+        </div>
       </div>
 
       {/* Category cards */}
