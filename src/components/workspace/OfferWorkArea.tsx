@@ -253,6 +253,7 @@ export default function OfferWorkArea({ projectId, project }: Props) {
   const [evaluating, setEvaluating] = useState(false);
   const [evaluation, setEvaluation] = useState<string>("");
   const [importing, setImporting] = useState(false);
+  const [importingM2, setImportingM2] = useState(false);
 
   const handleImportFromFiles = async () => {
     setImporting(true);
