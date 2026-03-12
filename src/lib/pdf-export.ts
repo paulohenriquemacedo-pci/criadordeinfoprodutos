@@ -167,15 +167,33 @@ interface ResearchModuleData {
   research_gemini_citations?: string[] | null;
   research_qwen?: string | null;
   research_qwen_citations?: string[] | null;
+  custom_research?: string | null;
 }
 
 function combineModuleResearch(mod: ResearchModuleData): { text: string; citations: string[] } {
   const parts: string[] = [];
   const allCitations: string[] = [];
-  for (const col of ["research_perplexity", "research_gemini", "research_qwen", "research_result"] as const) {
+
+  // Add engine-specific research first (these are the authoritative sources)
+  for (const [col, label] of [
+    ["research_perplexity", "Perplexity"],
+    ["research_gemini", "Gemini"],
+    ["research_qwen", "Qwen"],
+  ] as const) {
     const val = (mod as any)[col];
-    if (val && !parts.includes(val)) parts.push(val);
+    if (val) parts.push(val);
   }
+
+  // Only add research_result if it's not already included via engine columns
+  if (mod.research_result && !parts.some(p => mod.research_result!.includes(p) || p.includes(mod.research_result!))) {
+    parts.push(mod.research_result);
+  }
+
+  // Add custom/manual research
+  if (mod.custom_research) {
+    parts.push(`[Pesquisa Manual]\n${mod.custom_research}`);
+  }
+
   for (const col of ["research_perplexity_citations", "research_gemini_citations", "research_qwen_citations", "research_citations"] as const) {
     const cits = (mod as any)[col] as string[] | null;
     if (cits) allCitations.push(...cits.filter(c => !allCitations.includes(c)));
