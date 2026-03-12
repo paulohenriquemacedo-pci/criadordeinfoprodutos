@@ -217,8 +217,11 @@ export default function ProjectWorkspace() {
               <DropdownMenuItem onClick={handleBatchDownloadResearchTxt} className="gap-2">
                 <Download className="h-4 w-4" /> Baixar pesquisas (TXT)
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleBatchDownloadResearchPdf} className="gap-2">
-                <Download className="h-4 w-4" /> Baixar pesquisas (PDF)
+              <DropdownMenuItem onClick={() => handleBatchDownloadResearchPdf(false)} className="gap-2">
+                <Download className="h-4 w-4" /> Pesquisa de mercado (PDF)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleBatchDownloadResearchPdf(true)} className="gap-2">
+                <Download className="h-4 w-4" /> Pesquisa completa (PDF)
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleBatchDownloadPdf} className="gap-2">
                 <Download className="h-4 w-4" /> Baixar projeto (PDF)
