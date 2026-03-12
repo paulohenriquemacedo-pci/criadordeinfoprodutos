@@ -52,7 +52,12 @@ export default function WorkflowSidebar({ activeModule, onSelectModule, modules 
                       <span className="text-xs font-medium text-muted-foreground">M{config.number}</span>
                       {isOutdated && <AlertTriangle className="h-3 w-3 text-destructive" />}
                     </div>
-                    <span className="block truncate text-xs">{config.title}</span>
+                    <div className="flex items-center gap-1">
+                      <span className="block truncate text-xs">{config.title}</span>
+                      {config.number === 9 && (
+                        <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/30 text-primary/70 font-normal">em breve</Badge>
+                      )}
+                    </div>
                   </div>
                   {hasContent && !isOutdated && (
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-0">✓</Badge>
