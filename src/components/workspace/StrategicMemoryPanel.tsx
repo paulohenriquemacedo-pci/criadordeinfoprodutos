@@ -257,7 +257,12 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
             </span>
           )}
         </div>
-        <Button variant="ghost" size="sm" onClick={fetchMemory} className="h-7 gap-1 text-xs">
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={reprocessMemory} disabled={reprocessing} className="h-7 gap-1 text-xs">
+            {reprocessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+            {reprocessing ? "Reprocessando..." : "Reprocessar"}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={fetchMemory} className="h-7 gap-1 text-xs">
           <RefreshCw className="h-3 w-3" /> Atualizar
         </Button>
       </div>
