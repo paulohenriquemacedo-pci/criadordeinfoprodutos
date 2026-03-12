@@ -42,7 +42,7 @@ Seja extremamente detalhado e analítico. Forneça dados concretos, nomes reais 
       },
       body: JSON.stringify({
         model: "qwen/qwen3.5-plus-02-15",
-        max_tokens: 16384,
+        max_tokens: 8192,
         messages: [
           {
             role: "system",

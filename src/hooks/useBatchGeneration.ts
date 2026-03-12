@@ -68,27 +68,40 @@ export function useBatchGeneration() {
     
     const functionName = engine === "qwen" ? "qwen-research" : engine === "gemini" ? "ai-research" : "market-research";
     
-    const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({
-          niche,
-          promise,
-          targetAudience,
-          moduleTitle,
-          moduleNumber,
-          customPrompt: researchPrompt,
-        }),
-      }
-    );
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 180_000); // 3 min timeout
+
+    let response: Response;
+    try {
+      response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            niche,
+            promise,
+            targetAudience,
+            moduleTitle,
+            moduleNumber,
+            customPrompt: researchPrompt,
+          }),
+          signal: controller.signal,
+        }
+      );
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      console.warn("Auto-research failed for module", moduleNumber, err.name === "AbortError" ? "(timeout)" : err.message);
+      return null;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
-      console.warn("Auto-research failed for module", moduleNumber);
+      console.warn("Auto-research failed for module", moduleNumber, response.status);
       return null;
     }
 
