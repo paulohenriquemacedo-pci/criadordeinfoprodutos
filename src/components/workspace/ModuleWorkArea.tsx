@@ -375,20 +375,26 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
       setStreamText(fullText);
 
       // Auto-continuation robusta para limites de token e streams interrompidos
-      const MAX_CONTINUATIONS = 3;
+      const MAX_CONTINUATIONS = 6;
       let continuations = 0;
       let lastFinishReason = result.finishReason;
       let sawDone = result.sawDone;
 
       while (shouldAutoContinue(lastFinishReason, sawDone, fullText) && continuations < MAX_CONTINUATIONS) {
         continuations++;
-        console.log(`[Auto-continuation ${continuations}] finish_reason: ${lastFinishReason || "(vazio)"}, sawDone: ${sawDone}.`);
+        console.log(`[Auto-continuation ${continuations}] finish_reason: ${lastFinishReason || "(vazio)"}, sawDone: ${sawDone}, chars: ${fullText.length}.`);
         toast.info(`Conteúdo extenso — continuando geração (parte ${continuations + 1})...`);
+        
+        // Send only the TAIL of previous content to avoid filling the context window
+        const TAIL_SIZE = 8000;
+        const contentTail = fullText.length > TAIL_SIZE
+          ? `[...conteúdo anterior omitido por brevidade — ${fullText.length} caracteres já gerados...]\n\n${fullText.slice(-TAIL_SIZE)}`
+          : fullText;
         
         const contMessages = [
           { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
-          { role: "assistant", content: fullText },
+          { role: "assistant", content: contentTail },
           { role: "user", content: "Continue EXATAMENTE de onde parou, sem repetir nenhum conteúdo anterior. Continue a geração do ponto exato onde foi interrompida." },
         ];
         
