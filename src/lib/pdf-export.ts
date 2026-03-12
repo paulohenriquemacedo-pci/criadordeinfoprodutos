@@ -312,7 +312,8 @@ export function exportResearchPdf(project: ProjectData, modules: ResearchModuleD
     );
   }
 
-  doc.save(`${project.name.replace(/[^a-zA-Z0-9]/g, "_")}_pesquisa.pdf`);
+  const suffix = includeCustom ? "_pesquisa_completa" : "_pesquisa_mercado";
+  doc.save(`${project.name.replace(/[^a-zA-Z0-9]/g, "_")}${suffix}.pdf`);
 }
 
 export function exportModulePdf(project: ProjectData, mod: ModuleData) {
