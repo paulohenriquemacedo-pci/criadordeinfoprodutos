@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.evaluate-offer]
 verify_jwt = false
+
+[functions.extract-offer-from-files]
+verify_jwt = false
