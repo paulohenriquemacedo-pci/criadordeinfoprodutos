@@ -333,7 +333,7 @@ export function useBatchGeneration() {
     }
   }, [addLog, autoResearch]);
 
-  const runGenerationOnly = useCallback(async (projectId: string, options?: { generationModel?: string }) => {
+  const runGenerationOnly = useCallback(async (projectId: string, options?: { generationModel?: string; researchEngine?: ResearchEngine }) => {
     abortRef.current = false;
     setState({
       isRunning: true,
