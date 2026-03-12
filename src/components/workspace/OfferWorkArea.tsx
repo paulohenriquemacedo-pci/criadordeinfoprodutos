@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Package, Gift, Zap, Sparkles, Loader2, Save, Upload, FileText } from "lucide-react";
+import { Plus, Trash2, Package, Gift, Zap, Sparkles, Loader2, Save, Upload, FileText, BookOpen, LayoutGrid } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { buildProjectContext } from "@/lib/context-builder";
@@ -252,11 +253,99 @@ export default function OfferWorkArea({ projectId, project }: Props) {
   const [evaluating, setEvaluating] = useState(false);
   const [evaluation, setEvaluation] = useState<string>("");
   const [importing, setImporting] = useState(false);
+  const [importingM2, setImportingM2] = useState(false);
+
+  const handleImportFromM2 = async () => {
+    setImportingM2(true);
+    try {
+      const m2 = modules?.find(m => m.module_number === 2);
+      if (!m2?.generated_content) {
+        toast.error("O Módulo 2 (Estrutura do Produto) ainda não foi gerado. Complete o M2 primeiro.");
+        return;
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-offer-from-files`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ filesText: `=== MÓDULO 2 - ESTRUTURA DO PRODUTO (gerado pela plataforma) ===\n${m2.generated_content}` }),
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `Erro ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.products?.length) {
+        toast.error("Não foi possível identificar produtos no conteúdo do M2.");
+        return;
+      }
+
+      for (const p of result.products) {
+        const product = await createProduct.mutateAsync({
+          project_id: projectId,
+          name: p.name,
+          description: p.description || undefined,
+          product_type: p.product_type || "digital",
+          positioning: p.positioning || undefined,
+          delivery_format: p.delivery_format || undefined,
+          target_transformation: p.target_transformation || undefined,
+        });
+
+        if (p.bonuses?.length) {
+          for (let i = 0; i < p.bonuses.length; i++) {
+            const b = p.bonuses[i];
+            await createBonus.mutateAsync({
+              product_id: product.id,
+              name: b.name,
+              description: b.description || undefined,
+              delivery_type: b.delivery_type || "imediato",
+              strategic_function: b.strategic_function || undefined,
+              sort_order: i,
+            });
+          }
+        }
+
+        if (p.bumps?.length) {
+          for (let i = 0; i < p.bumps.length; i++) {
+            const b = p.bumps[i];
+            await createBump.mutateAsync({
+              product_id: product.id,
+              name: b.name,
+              description: b.description || undefined,
+              bump_type: b.bump_type || "order_bump",
+              trigger_point: b.trigger_point || "checkout",
+              value_proposition: b.value_proposition || undefined,
+              sort_order: i,
+            });
+          }
+        }
+
+        setSelectedProduct(product);
+      }
+
+      toast.success(`${result.products.length} produto(s) importado(s) do M2!`);
+    } catch (err: any) {
+      toast.error("Erro ao importar do M2: " + err.message);
+    } finally {
+      setImportingM2(false);
+    }
+  };
 
   const handleImportFromFiles = async () => {
     setImporting(true);
     try {
-      // Fetch project files with extracted text
       const { data: files, error } = await supabase
         .from("project_files")
         .select("file_name, extracted_text, file_type")
@@ -301,7 +390,6 @@ export default function OfferWorkArea({ projectId, project }: Props) {
         return;
       }
 
-      // Create products, bonuses and bumps
       for (const p of result.products) {
         const product = await createProduct.mutateAsync({
           project_id: projectId,
@@ -313,7 +401,6 @@ export default function OfferWorkArea({ projectId, project }: Props) {
           target_transformation: p.target_transformation || undefined,
         });
 
-        // Create bonuses
         if (p.bonuses?.length) {
           for (let i = 0; i < p.bonuses.length; i++) {
             const b = p.bonuses[i];
@@ -328,7 +415,6 @@ export default function OfferWorkArea({ projectId, project }: Props) {
           }
         }
 
-        // Create bumps
         if (p.bumps?.length) {
           for (let i = 0; i < p.bumps.length; i++) {
             const b = p.bumps[i];
@@ -476,16 +562,32 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
             <p className="text-xs text-muted-foreground">Cadastre seus produtos, bônus e bumps</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleImportFromFiles}
-              disabled={importing}
-              className="gap-1.5"
-            >
-              {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-              {importing ? "Importando..." : "Importar do Material"}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5" disabled={importing || importingM2}>
+                  {(importing || importingM2) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {importing ? "Importando materiais..." : importingM2 ? "Importando do M2..." : "Importar Produto"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-72">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Escolha a origem do produto</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleImportFromFiles} className="gap-2 cursor-pointer">
+                  <FileText className="h-4 w-4 text-primary" />
+                  <div>
+                    <p className="text-sm font-medium">Material Base (arquivos)</p>
+                    <p className="text-xs text-muted-foreground">Extrair produto dos arquivos enviados pelo usuário</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleImportFromM2} className="gap-2 cursor-pointer">
+                  <BookOpen className="h-4 w-4 text-primary" />
+                  <div>
+                    <p className="text-sm font-medium">Módulo 2 (Estrutura)</p>
+                    <p className="text-xs text-muted-foreground">Importar produto estruturado pela plataforma no M2</p>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button size="sm" onClick={() => { setEditingProduct(undefined); setProductFormOpen(true); }} className="gap-1.5">
               <Plus className="h-4 w-4" /> Novo Produto
             </Button>
