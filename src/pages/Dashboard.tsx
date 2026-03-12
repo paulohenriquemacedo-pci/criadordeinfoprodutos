@@ -38,7 +38,7 @@ export default function Dashboard() {
   const handleBatchGenerate = (e: React.MouseEvent, projectId: string) => {
     e.stopPropagation();
     setBatchProjectId(projectId);
-    batch.runBatch(projectId);
+    batch.runGenerationOnly(projectId);
   };
 
   const handleDeleteProject = async (e: React.MouseEvent, projectId: string) => {

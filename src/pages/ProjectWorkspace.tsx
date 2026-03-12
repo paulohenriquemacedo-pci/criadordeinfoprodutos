@@ -10,7 +10,7 @@ import BatchGenerationScreen from "@/components/workspace/BatchGenerationScreen"
 import BatchConfigDialog, { BatchEngineConfig } from "@/components/workspace/BatchConfigDialog";
 import PromptExportImport from "@/components/workspace/PromptExportImport";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Settings, Zap } from "lucide-react";
+import { ArrowLeft, Settings, Search, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,12 +33,15 @@ export default function ProjectWorkspace() {
   const [editForm, setEditForm] = useState({ name: "", niche: "", promise: "", target_audience: "" });
   const batch = useBatchGeneration();
 
-  const handleBatchGenerate = (config: BatchEngineConfig) => {
+  const [batchMode, setBatchMode] = useState<"research" | "generation">("research");
+
+  const handleBatchConfirm = (config: BatchEngineConfig) => {
     if (!projectId) return;
-    batch.runBatch(projectId, {
-      researchEngine: config.researchEngine,
-      generationModel: config.generationModel,
-    });
+    if (batchMode === "research") {
+      batch.runResearchOnly(projectId, { researchEngine: config.researchEngine });
+    } else {
+      batch.runGenerationOnly(projectId, { generationModel: config.generationModel });
+    }
   };
 
   const handleBatchDownloadPdf = async () => {
@@ -111,8 +114,11 @@ export default function ProjectWorkspace() {
         </div>
         <div className="flex items-center gap-1">
           <PromptExportImport projectId={project.id} />
-          <Button variant="outline" size="sm" onClick={() => setBatchConfigOpen(true)} className="gap-1.5" title="Gerar todos os módulos de uma vez">
-            <Zap className="h-4 w-4" /> Gerar Tudo
+          <Button variant="outline" size="sm" onClick={() => { setBatchMode("research"); setBatchConfigOpen(true); }} className="gap-1.5" title="Pesquisar todos os módulos de uma vez">
+            <Search className="h-4 w-4" /> Pesquisar Tudo
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => { setBatchMode("generation"); setBatchConfigOpen(true); }} className="gap-1.5" title="Gerar conteúdo para todos os módulos">
+            <Sparkles className="h-4 w-4" /> Gerar Tudo
           </Button>
           <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
             <DialogTrigger asChild>
@@ -169,7 +175,8 @@ export default function ProjectWorkspace() {
       <BatchConfigDialog
         open={batchConfigOpen}
         onOpenChange={setBatchConfigOpen}
-        onConfirm={handleBatchGenerate}
+        onConfirm={handleBatchConfirm}
+        mode={batchMode}
       />
 
       {/* Batch generation fullscreen */}
