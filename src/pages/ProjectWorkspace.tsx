@@ -175,7 +175,8 @@ export default function ProjectWorkspace() {
       <BatchConfigDialog
         open={batchConfigOpen}
         onOpenChange={setBatchConfigOpen}
-        onConfirm={handleBatchGenerate}
+        onConfirm={handleBatchConfirm}
+        mode={batchMode}
       />
 
       {/* Batch generation fullscreen */}
