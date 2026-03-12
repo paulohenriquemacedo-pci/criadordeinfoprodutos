@@ -112,12 +112,26 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
   const handleResearchReady = async (research: string, citations: string[]) => {
     setResearchContext(research);
     setResearchCitations(citations);
-    // Persist to DB
+    // Persist to DB — save to engine-specific columns to avoid overwrites
     if (module?.id) {
-      await supabase.from("modules").update({
+      const updateData: Record<string, any> = {
         research_result: research,
         research_citations: citations,
-      } as any).eq("id", module.id);
+      };
+      // Detect engines present in the combined text and save to their specific columns
+      if (research.includes("[Pesquisa via Perplexity")) {
+        updateData.research_perplexity = research;
+        updateData.research_perplexity_citations = citations;
+      }
+      if (research.includes("[Pesquisa via Gemini")) {
+        updateData.research_gemini = research;
+        updateData.research_gemini_citations = citations;
+      }
+      if (research.includes("[Pesquisa via Qwen")) {
+        updateData.research_qwen = research;
+        updateData.research_qwen_citations = citations;
+      }
+      await supabase.from("modules").update(updateData as any).eq("id", module.id);
     }
   };
 
