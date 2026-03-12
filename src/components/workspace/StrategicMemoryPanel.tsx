@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Brain, User, Package, Pen, Megaphone, TrendingUp, Zap, RefreshCw, Loader2 } from "lucide-react";
+import { Brain, User, Package, Pen, Megaphone, TrendingUp, Zap, RefreshCw, Loader2, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface Props {
   projectId: string;
