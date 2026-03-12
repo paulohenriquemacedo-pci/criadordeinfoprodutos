@@ -271,6 +271,24 @@ export default function ProjectWorkspace() {
           />
         )}
       </AnimatePresence>
+
+      {/* Clear research confirmation */}
+      <AlertDialog open={clearResearchConfirm} onOpenChange={setClearResearchConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apagar todas as pesquisas?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso removerá todas as pesquisas (Perplexity, Gemini e Qwen) de todos os módulos. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBatchClearResearch} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Apagar tudo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
