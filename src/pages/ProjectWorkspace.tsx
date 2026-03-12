@@ -38,7 +38,7 @@ export default function ProjectWorkspace() {
   const handleBatchConfirm = (config: BatchEngineConfig) => {
     if (!projectId) return;
     if (batchMode === "research") {
-      batch.runResearchOnly(projectId, { researchEngine: config.researchEngine });
+      batch.runResearchOnly(projectId, { researchEngine: config.researchEngine, forceReResearch: config.forceReResearch });
     } else {
       batch.runGenerationOnly(projectId, { generationModel: config.generationModel });
     }
