@@ -59,6 +59,59 @@ export default function ProjectWorkspace() {
     }
   };
 
+  const handleBatchDownloadResearch = async () => {
+    if (!project) return;
+    const { data: mods } = await supabase.from("modules").select("*").eq("project_id", project.id).order("module_number");
+    if (!mods) return;
+    
+    const blocks: string[] = [];
+    for (const mod of mods) {
+      const parts: string[] = [];
+      for (const col of ["research_perplexity", "research_gemini", "research_qwen", "research_result"] as const) {
+        const val = (mod as any)[col];
+        if (val && !parts.includes(val)) parts.push(val);
+      }
+      if (parts.length === 0) continue;
+      const config = MODULE_CONFIG.find(c => c.number === mod.module_number);
+      blocks.push(`${"=".repeat(60)}\nM${mod.module_number} — ${config?.title || ""}\n${"=".repeat(60)}\n\n${parts.join("\n\n---\n\n")}`);
+    }
+    
+    if (blocks.length === 0) {
+      toast.error("Nenhuma pesquisa encontrada para exportar.");
+      return;
+    }
+
+    const text = blocks.join("\n\n\n");
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${project.name.replace(/[^a-zA-Z0-9]/g, "_")}_pesquisas_completas.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Todas as pesquisas exportadas!");
+  };
+
+  const handleBatchClearResearch = async () => {
+    if (!project) return;
+    const { data: mods } = await supabase.from("modules").select("id").eq("project_id", project.id);
+    if (!mods) return;
+    for (const mod of mods) {
+      await supabase.from("modules").update({
+        research_result: null,
+        research_citations: null,
+        research_perplexity: null,
+        research_perplexity_citations: null,
+        research_gemini: null,
+        research_gemini_citations: null,
+        research_qwen: null,
+        research_qwen_citations: null,
+      } as any).eq("id", mod.id);
+    }
+    setClearResearchConfirm(false);
+    toast.success("Todas as pesquisas foram apagadas!");
+  };
+
   const openSettings = () => {
     if (project) {
       setEditForm({
