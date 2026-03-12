@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Shield,
@@ -22,8 +23,10 @@ import {
   RefreshCw,
   CheckCircle2,
   XCircle,
+  Brain,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import StrategicMemoryPanel from "./StrategicMemoryPanel";
 
 interface Contradiction {
   issue: string;
@@ -171,109 +174,137 @@ export default function CoherenceWorkArea({ projectId, project }: Props) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="border-b border-border/50 p-4 flex items-center justify-between shrink-0">
-        <div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">M0</Badge>
-            <h2 className="text-lg font-semibold">Orquestrador de Coerência</h2>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Validação cruzada de integridade entre briefing e todos os módulos do projeto
-          </p>
+      <div className="border-b border-border/50 p-4 shrink-0">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-xs">M0</Badge>
+          <h2 className="text-lg font-semibold">Central Estratégica</h2>
         </div>
-        <Button
-          onClick={runAllChecks}
-          disabled={isRunningAll || generatedModules.length === 0}
-          className="gap-2"
-        >
-          {isRunningAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
-          {isRunningAll ? "Validando..." : "Validar Tudo"}
-        </Button>
+        <p className="text-sm text-muted-foreground mt-1">
+          Memória estratégica consolidada e validação de coerência entre módulos
+        </p>
       </div>
 
-      {/* Overview cards */}
-      {avgScore !== null && (
-        <div className="border-b border-border/50 p-4 grid grid-cols-4 gap-3">
-          <div
-            className={`rounded-lg border p-3 text-center ${
-              overallStatus === "coerente"
-                ? "bg-green-500/10 border-green-500/30"
-                : overallStatus === "atencao"
-                ? "bg-yellow-500/10 border-yellow-500/30"
-                : "bg-destructive/10 border-destructive/30"
-            }`}
-          >
-            <p className="text-2xl font-bold">{avgScore}</p>
-            <p className="text-xs text-muted-foreground">Score Médio</p>
-          </div>
-          <div className="rounded-lg border border-border/50 p-3 text-center">
-            <p className="text-2xl font-bold">{completedResults.length}/{generatedModules.length}</p>
-            <p className="text-xs text-muted-foreground">Módulos Validados</p>
-          </div>
-          <div className="rounded-lg border border-border/50 p-3 text-center">
-            <p className="text-2xl font-bold text-destructive">{totalContradictions}</p>
-            <p className="text-xs text-muted-foreground">Contradições</p>
-          </div>
-          <div className="rounded-lg border border-border/50 p-3 text-center">
-            <p className="text-2xl font-bold text-yellow-500">{totalGlossaryIssues}</p>
-            <p className="text-xs text-muted-foreground">Termos Inconsistentes</p>
-          </div>
+      <Tabs defaultValue="memory" className="flex-1 flex flex-col overflow-hidden">
+        <div className="border-b border-border/50 px-4">
+          <TabsList className="h-9 bg-transparent p-0 gap-4">
+            <TabsTrigger value="memory" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-1 pb-2 text-sm gap-1.5">
+              <Brain className="h-3.5 w-3.5" /> Memória Estratégica
+            </TabsTrigger>
+            <TabsTrigger value="coherence" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-1 pb-2 text-sm gap-1.5">
+              <Shield className="h-3.5 w-3.5" /> Validação de Coerência
+            </TabsTrigger>
+          </TabsList>
         </div>
-      )}
 
-      {/* Progress bar when running all */}
-      {isRunningAll && (
-        <div className="border-b border-border/50 px-4 py-3 flex items-center gap-3 bg-accent/10">
-          <Shield className="h-4 w-4 text-primary animate-pulse" />
-          <div className="flex-1">
-            <p className="text-sm font-medium">Validando módulos...</p>
-            <Progress
-              value={
-                (Object.values(moduleResults).filter((r) => !r.isChecking).length /
-                  Math.max(generatedModules.length, 1)) *
-                100
-              }
-              className="mt-2 h-1.5"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Module results */}
-      <ScrollArea className="flex-1">
-        <div className="p-4 space-y-3">
-          {generatedModules.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <Shield className="h-12 w-12 text-muted-foreground/20 mb-4" />
-              <h3 className="text-lg font-medium text-muted-foreground">Nenhum módulo gerado</h3>
-              <p className="text-sm text-muted-foreground/70 mt-1 max-w-md">
-                Gere conteúdo nos módulos M1-M8 primeiro. O Orquestrador validará a coerência entre eles.
-              </p>
+        <TabsContent value="memory" className="flex-1 overflow-hidden mt-0">
+          <ScrollArea className="h-full">
+            <div className="p-4">
+              <StrategicMemoryPanel projectId={projectId} />
             </div>
-          ) : (
-            generatedModules.map((mod) => {
-              const mr = moduleResults[mod.module_number];
-              const title =
-                MODULE_CONFIG.find((c) => c.number === mod.module_number)?.title ||
-                `Módulo ${mod.module_number}`;
-              const result = mr?.result;
-              const isChecking = mr?.isChecking;
+          </ScrollArea>
+        </TabsContent>
 
-              return (
-                <ModuleCoherenceCard
-                  key={mod.module_number}
-                  moduleNumber={mod.module_number}
-                  title={title}
-                  result={result}
-                  isChecking={isChecking}
-                  error={mr?.error}
-                  onCheck={() => checkModule(mod.module_number)}
-                />
-              );
-            })
+        <TabsContent value="coherence" className="flex-1 flex flex-col overflow-hidden mt-0">
+          {/* Coherence controls */}
+          <div className="border-b border-border/50 p-4 flex items-center justify-between shrink-0">
+            <p className="text-sm text-muted-foreground">
+              Validação cruzada de integridade entre briefing e todos os módulos
+            </p>
+            <Button
+              onClick={runAllChecks}
+              disabled={isRunningAll || generatedModules.length === 0}
+              className="gap-2"
+            >
+              {isRunningAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
+              {isRunningAll ? "Validando..." : "Validar Tudo"}
+            </Button>
+          </div>
+
+          {/* Overview cards */}
+          {avgScore !== null && (
+            <div className="border-b border-border/50 p-4 grid grid-cols-4 gap-3">
+              <div
+                className={`rounded-lg border p-3 text-center ${
+                  overallStatus === "coerente"
+                    ? "bg-green-500/10 border-green-500/30"
+                    : overallStatus === "atencao"
+                    ? "bg-yellow-500/10 border-yellow-500/30"
+                    : "bg-destructive/10 border-destructive/30"
+                }`}
+              >
+                <p className="text-2xl font-bold">{avgScore}</p>
+                <p className="text-xs text-muted-foreground">Score Médio</p>
+              </div>
+              <div className="rounded-lg border border-border/50 p-3 text-center">
+                <p className="text-2xl font-bold">{completedResults.length}/{generatedModules.length}</p>
+                <p className="text-xs text-muted-foreground">Módulos Validados</p>
+              </div>
+              <div className="rounded-lg border border-border/50 p-3 text-center">
+                <p className="text-2xl font-bold text-destructive">{totalContradictions}</p>
+                <p className="text-xs text-muted-foreground">Contradições</p>
+              </div>
+              <div className="rounded-lg border border-border/50 p-3 text-center">
+                <p className="text-2xl font-bold text-yellow-500">{totalGlossaryIssues}</p>
+                <p className="text-xs text-muted-foreground">Termos Inconsistentes</p>
+              </div>
+            </div>
           )}
-        </div>
-      </ScrollArea>
+
+          {/* Progress bar when running all */}
+          {isRunningAll && (
+            <div className="border-b border-border/50 px-4 py-3 flex items-center gap-3 bg-accent/10">
+              <Shield className="h-4 w-4 text-primary animate-pulse" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">Validando módulos...</p>
+                <Progress
+                  value={
+                    (Object.values(moduleResults).filter((r) => !r.isChecking).length /
+                      Math.max(generatedModules.length, 1)) *
+                    100
+                  }
+                  className="mt-2 h-1.5"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Module results */}
+          <ScrollArea className="flex-1">
+            <div className="p-4 space-y-3">
+              {generatedModules.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <Shield className="h-12 w-12 text-muted-foreground/20 mb-4" />
+                  <h3 className="text-lg font-medium text-muted-foreground">Nenhum módulo gerado</h3>
+                  <p className="text-sm text-muted-foreground/70 mt-1 max-w-md">
+                    Gere conteúdo nos módulos M1-M8 primeiro. O Orquestrador validará a coerência entre eles.
+                  </p>
+                </div>
+              ) : (
+                generatedModules.map((mod) => {
+                  const mr = moduleResults[mod.module_number];
+                  const title =
+                    MODULE_CONFIG.find((c) => c.number === mod.module_number)?.title ||
+                    `Módulo ${mod.module_number}`;
+                  const result = mr?.result;
+                  const isChecking = mr?.isChecking;
+
+                  return (
+                    <ModuleCoherenceCard
+                      key={mod.module_number}
+                      moduleNumber={mod.module_number}
+                      title={title}
+                      result={result}
+                      isChecking={isChecking}
+                      error={mr?.error}
+                      onCheck={() => checkModule(mod.module_number)}
+                    />
+                  );
+                })
+              )}
+            </div>
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
