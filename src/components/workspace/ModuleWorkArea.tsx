@@ -64,8 +64,8 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
     setPrevModuleId(module?.id);
     setContent(module?.generated_content || "");
     // Load persisted research from DB for the new module
-    setResearchContext((module as any)?.research_result || "");
-    setResearchCitations((module as any)?.research_citations || []);
+    setResearchContext(combineEngineResearch(module));
+    setResearchCitations(combineEngineCitations(module));
     setCustomResearch((module as any)?.custom_research || "");
     setResearchOpen(false);
   }
