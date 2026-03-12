@@ -1,1 +1,4 @@
 project_id = "xelrutazncasjdenrzyz"
+
+[functions.strategic-memory]
+verify_jwt = false
