@@ -227,7 +227,8 @@ export function exportResearchPdf(project: ProjectData, modules: ResearchModuleD
 
   doc.setFontSize(16);
   doc.setTextColor(100, 149, 237);
-  doc.text("Relatório de Pesquisa", pageWidth / 2, 100 + titleLines.length * 10, { align: "center" });
+  const subtitle = includeCustom ? "Relatório Completo de Pesquisa" : "Relatório de Pesquisa de Mercado";
+  doc.text(subtitle, pageWidth / 2, 100 + titleLines.length * 10, { align: "center" });
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
