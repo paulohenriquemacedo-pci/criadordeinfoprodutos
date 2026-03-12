@@ -56,7 +56,7 @@ export default function BatchGenerationScreen({ state, onCancel, onClose, onDown
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-lg font-bold">Geração em Lote</h1>
+            <h1 className="text-lg font-bold">Processamento em Lote</h1>
             <p className="text-xs text-muted-foreground">
               {state.isDone
                 ? "Todos os módulos foram gerados!"
