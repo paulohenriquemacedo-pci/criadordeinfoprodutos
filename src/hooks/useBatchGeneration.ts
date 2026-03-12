@@ -401,14 +401,25 @@ export function useBatchGeneration() {
         systemPrompt += QUALITY_DIRECTIVES;
 
         let userMessage = context.fullContext;
-        const activeResearch = module.research_result || "";
-        const activeCitations = module.research_citations || [];
+        
+        // Combine research from all engines
+        const engineResearches: string[] = [];
+        const allCitations: string[] = [];
+        for (const eng of ["research_perplexity", "research_gemini", "research_qwen", "research_result"] as const) {
+          const val = (module as any)[eng];
+          if (val && !engineResearches.includes(val)) engineResearches.push(val);
+        }
+        for (const eng of ["research_perplexity_citations", "research_gemini_citations", "research_qwen_citations", "research_citations"] as const) {
+          const cits = (module as any)[eng] as string[] | null;
+          if (cits) allCitations.push(...cits.filter(c => !allCitations.includes(c)));
+        }
+        const activeResearch = engineResearches.join("\n\n---\n\n");
 
         if (activeResearch) {
-          userMessage += `\n\n========\n\nPESQUISA DE MERCADO (DADOS EXTERNOS ATUALIZADOS):\n${activeResearch}`;
+          userMessage += `\n\n========\n\nPESQUISA DE MERCADO (DADOS EXTERNOS ATUALIZADOS — MÚLTIPLAS FONTES):\n${activeResearch}`;
           userMessage += `\n\nINSTRUÇÃO CRÍTICA: Você DEVE integrar os dados da pesquisa de mercado acima com o material do projeto.`;
-          if (activeCitations.length > 0) {
-            userMessage += `\n\nFONTES DA PESQUISA:\n${activeCitations.map((c, i) => `[${i + 1}] ${c}`).join("\n")}`;
+          if (allCitations.length > 0) {
+            userMessage += `\n\nFONTES DA PESQUISA:\n${allCitations.map((c, i) => `[${i + 1}] ${c}`).join("\n")}`;
           }
         }
 
