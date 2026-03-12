@@ -7,6 +7,7 @@ import ModuleWorkArea from "@/components/workspace/ModuleWorkArea";
 import CoherenceWorkArea from "@/components/workspace/CoherenceWorkArea";
 import ProductionWorkArea from "@/components/workspace/ProductionWorkArea";
 import CreativeHubWorkArea from "@/components/workspace/CreativeHubWorkArea";
+import OfferWorkArea from "@/components/workspace/OfferWorkArea";
 import ContextSidebar from "@/components/workspace/ContextSidebar";
 import BatchGenerationScreen from "@/components/workspace/BatchGenerationScreen";
 import BatchConfigDialog, { BatchEngineConfig } from "@/components/workspace/BatchConfigDialog";
@@ -271,12 +272,17 @@ export default function ProjectWorkspace() {
             project={project}
           />
         ) : activeModule === 9 ? (
-          <ProductionWorkArea
+          <OfferWorkArea
             projectId={project.id}
             project={project}
           />
         ) : activeModule === 10 ? (
           <CreativeHubWorkArea
+            projectId={project.id}
+            project={project}
+          />
+        ) : activeModule === 11 ? (
+          <ProductionWorkArea
             projectId={project.id}
             project={project}
           />
