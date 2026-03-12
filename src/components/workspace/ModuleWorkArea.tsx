@@ -124,12 +124,20 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
   const [generationPhase, setGenerationPhase] = useState<string>("");
 
   const autoResearch = useCallback(async (niche: string, promise: string, targetAudience: string): Promise<{ research: string; citations: string[] } | null> => {
+    // Use Perplexity as default for individual module auto-research
+    const engineMap: Record<string, { fn: string; label: string }> = {
+      perplexity: { fn: "market-research", label: "Perplexity" },
+      gemini: { fn: "ai-research", label: "Gemini" },
+      qwen: { fn: "qwen-research", label: "Qwen" },
+    };
+    // Detect preferred engine from existing research pattern or default to perplexity
+    const engine = engineMap["perplexity"];
     try {
-      setGenerationPhase("Pesquisando mercado via Perplexity...");
+      setGenerationPhase(`Pesquisando mercado via ${engine.label}...`);
       const researchPrompt = module?.research_prompt || DEFAULT_RESEARCH_PROMPTS[moduleConfig.number] || "";
       
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/market-research`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${engine.fn}`,
         {
           method: "POST",
           headers: {
@@ -182,9 +190,11 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
           activeCitations = result.citations;
           setResearchContext(activeResearch);
           setResearchCitations(activeCitations);
-          // Persist to DB
+          // Persist to DB (engine-specific + legacy)
           if (module?.id) {
             await supabase.from("modules").update({
+              research_perplexity: activeResearch,
+              research_perplexity_citations: activeCitations,
               research_result: activeResearch,
               research_citations: activeCitations,
             } as any).eq("id", module.id);

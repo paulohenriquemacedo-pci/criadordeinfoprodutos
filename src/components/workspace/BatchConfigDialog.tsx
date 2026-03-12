@@ -95,30 +95,57 @@ export default function BatchConfigDialog({ open, onOpenChange, onConfirm, mode 
               </div>
             </>
           ) : (
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1.5 text-sm font-medium">
-                <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
-                Modelo de Geração
-              </Label>
-              <Select
-                value={config.generationModel}
-                onValueChange={(v) => setConfig(prev => ({ ...prev, generationModel: v }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {GENERATION_MODELS.map(model => (
-                    <SelectItem key={model.value} value={model.value}>
-                      <div className="flex flex-col">
-                        <span>{model.label}</span>
-                        <span className="text-xs text-muted-foreground">{model.description}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5 text-sm font-medium">
+                  <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
+                  Modelo de Geração
+                </Label>
+                <Select
+                  value={config.generationModel}
+                  onValueChange={(v) => setConfig(prev => ({ ...prev, generationModel: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GENERATION_MODELS.map(model => (
+                      <SelectItem key={model.value} value={model.value}>
+                        <div className="flex flex-col">
+                          <span>{model.label}</span>
+                          <span className="text-xs text-muted-foreground">{model.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5 text-sm font-medium">
+                  <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                  Motor de Pesquisa (auto-pesquisa para módulos sem dados)
+                </Label>
+                <Select
+                  value={config.researchEngine}
+                  onValueChange={(v) => setConfig(prev => ({ ...prev, researchEngine: v as BatchEngineConfig["researchEngine"] }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RESEARCH_ENGINES.map(engine => (
+                      <SelectItem key={engine.value} value={engine.value}>
+                        <div className="flex flex-col">
+                          <span>{engine.label}</span>
+                          <span className="text-xs text-muted-foreground">{engine.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
           )}
         </div>
 

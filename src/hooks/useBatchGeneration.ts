@@ -333,7 +333,7 @@ export function useBatchGeneration() {
     }
   }, [addLog, autoResearch]);
 
-  const runGenerationOnly = useCallback(async (projectId: string, options?: { generationModel?: string }) => {
+  const runGenerationOnly = useCallback(async (projectId: string, options?: { generationModel?: string; researchEngine?: ResearchEngine }) => {
     abortRef.current = false;
     setState({
       isRunning: true,
@@ -382,6 +382,44 @@ export function useBatchGeneration() {
         }
 
         setState(prev => ({ ...prev, currentModule: num }));
+
+        // Auto-research if no research exists for this module
+        const hasAnyResearch = (module as any).research_perplexity || (module as any).research_gemini || (module as any).research_qwen || module.research_result;
+        if (!hasAnyResearch) {
+          const researchEngine = options?.researchEngine || "perplexity";
+          const engineLabel = researchEngine === "perplexity" ? "Perplexity" : researchEngine === "gemini" ? "Gemini" : "Qwen";
+          addLog(num, "research", `Sem pesquisa — pesquisando via ${engineLabel}...`);
+
+          const niche = project.niche || "";
+          const promise = project.promise || "";
+          const targetAudience = project.target_audience || "";
+
+          const researchResult = await autoResearch(
+            num, moduleConfig.title, niche, promise, targetAudience, module.research_prompt, researchEngine
+          );
+
+          if (researchResult) {
+            const researchText = `[Pesquisa via ${engineLabel}]\n${researchResult.research}`;
+            const engineColumn = researchEngine === "perplexity" ? "research_perplexity" : researchEngine === "gemini" ? "research_gemini" : "research_qwen";
+            const citationsColumn = `${engineColumn}_citations`;
+            await supabase.from("modules").update({
+              [engineColumn]: researchText,
+              [citationsColumn]: researchResult.citations,
+              research_result: researchText,
+              research_citations: researchResult.citations,
+            } as any).eq("id", module.id);
+
+            // Update local module object for context building
+            (module as any)[engineColumn] = researchText;
+            (module as any)[citationsColumn] = researchResult.citations;
+            (module as any).research_result = researchText;
+            (module as any).research_citations = researchResult.citations;
+
+            addLog(num, "done", `Pesquisa para ${moduleConfig.title} concluída ✓`);
+          } else {
+            addLog(num, "error", `Pesquisa indisponível — gerando sem dados externos`);
+          }
+        }
 
         // Build context
         addLog(num, "context", "Construindo contexto do projeto...");
