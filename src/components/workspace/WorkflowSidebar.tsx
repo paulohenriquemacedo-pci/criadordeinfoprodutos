@@ -4,7 +4,7 @@ import { FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, Trend
 import { Badge } from "@/components/ui/badge";
 
 const iconMap: Record<string, any> = {
-  FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, TrendingUp, Shield,
+  FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, TrendingUp, Shield, BookOpen,
 };
 
 interface Props {
