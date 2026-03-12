@@ -423,6 +423,8 @@ export function useBatchGeneration() {
 
         // Build context
         addLog(num, "context", "Construindo contexto do projeto...");
+        const context = await buildProjectContext(projectId);
+        const pdfParts = await buildPdfParts(context.files);
 
         // Build prompt
         let systemPrompt = module.generation_prompt || DEFAULT_GENERATION_PROMPTS[num] || "";
