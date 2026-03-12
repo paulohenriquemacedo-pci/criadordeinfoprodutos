@@ -20,6 +20,7 @@ import PromptEditor from "./PromptEditor";
 import ResearchPanel from "./ResearchPanel";
 import ResearchChat from "./ResearchChat";
 import CustomResearchPanel from "./CustomResearchPanel";
+import ResearchViewPanel from "./ResearchViewPanel";
 
 function combineEngineResearch(mod: any): string {
   if (!mod) return "";
@@ -496,6 +497,7 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
   };
 
   const [researchPanelOpen, setResearchPanelOpen] = useState(false);
+  const [researchViewOpen, setResearchViewOpen] = useState(false);
   const [customResearchOpen, setCustomResearchOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
 
@@ -719,6 +721,21 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
                 savedCustomResearch={customResearch}
                 onCustomResearchChange={setCustomResearch}
               />
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+
+        {/* Research viewer panel - view saved research by engine */}
+        {module && (researchContext || customResearch) && (
+          <Collapsible open={researchViewOpen} onOpenChange={setResearchViewOpen}>
+            <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-2 border-b border-border/50 hover:bg-muted/30 transition-colors text-left">
+              {researchViewOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+              <Search className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Visualizar Pesquisas por IA</span>
+              <Badge variant="secondary" className="text-xs ml-auto">Salvas</Badge>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <ResearchViewPanel moduleId={module.id} />
             </CollapsibleContent>
           </Collapsible>
         )}
