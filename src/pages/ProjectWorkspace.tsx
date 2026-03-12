@@ -59,7 +59,7 @@ export default function ProjectWorkspace() {
     }
   };
 
-  const handleBatchDownloadResearch = async () => {
+  const handleBatchDownloadResearchTxt = async () => {
     if (!project) return;
     const { data: mods } = await supabase.from("modules").select("*").eq("project_id", project.id).order("module_number");
     if (!mods) return;
@@ -89,7 +89,23 @@ export default function ProjectWorkspace() {
     a.download = `${project.name.replace(/[^a-zA-Z0-9]/g, "_")}_pesquisas_completas.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Todas as pesquisas exportadas!");
+    toast.success("Todas as pesquisas exportadas (TXT)!");
+  };
+
+  const handleBatchDownloadResearchPdf = async () => {
+    if (!project) return;
+    const { data: mods } = await supabase.from("modules").select("*").eq("project_id", project.id).order("module_number");
+    if (!mods || mods.length === 0) {
+      toast.error("Nenhuma pesquisa encontrada para exportar.");
+      return;
+    }
+    const hasResearch = mods.some((m: any) => m.research_perplexity || m.research_gemini || m.research_qwen || m.research_result);
+    if (!hasResearch) {
+      toast.error("Nenhuma pesquisa encontrada para exportar.");
+      return;
+    }
+    exportResearchPdf(project, mods as any);
+    toast.success("Pesquisas exportadas em PDF!");
   };
 
   const handleBatchClearResearch = async () => {
