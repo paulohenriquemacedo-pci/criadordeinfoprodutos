@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Zap, Search, Sparkles } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 
 export interface BatchEngineConfig {
   researchEngine: "perplexity" | "gemini" | "qwen";
@@ -26,83 +26,91 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (config: BatchEngineConfig) => void;
+  mode: "research" | "generation";
 }
 
-export default function BatchConfigDialog({ open, onOpenChange, onConfirm }: Props) {
+export default function BatchConfigDialog({ open, onOpenChange, onConfirm, mode }: Props) {
   const [config, setConfig] = useState<BatchEngineConfig>({
     researchEngine: "perplexity",
     generationModel: "google/gemini-2.5-flash",
   });
+
+  const isResearch = mode === "research";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" />
-            Configurar Geração em Lote
+            {isResearch ? <Search className="h-5 w-5 text-primary" /> : <Sparkles className="h-5 w-5 text-primary" />}
+            {isResearch ? "Pesquisa em Lote" : "Geração em Lote"}
           </DialogTitle>
           <DialogDescription>
-            Escolha os motores de IA para pesquisa e geração de conteúdo. Módulos já preenchidos serão pulados.
+            {isResearch
+              ? "Escolha o motor de IA para pesquisar todos os módulos. Módulos já pesquisados serão pulados."
+              : "Escolha o modelo de IA para gerar conteúdo. Módulos já preenchidos serão pulados. As pesquisas realizadas serão utilizadas automaticamente."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 py-4">
-          <div className="space-y-2">
-            <Label className="flex items-center gap-1.5 text-sm font-medium">
-              <Search className="h-3.5 w-3.5 text-muted-foreground" />
-              Motor de Pesquisa
-            </Label>
-            <Select
-              value={config.researchEngine}
-              onValueChange={(v) => setConfig(prev => ({ ...prev, researchEngine: v as BatchEngineConfig["researchEngine"] }))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {RESEARCH_ENGINES.map(engine => (
-                  <SelectItem key={engine.value} value={engine.value}>
-                    <div className="flex flex-col">
-                      <span>{engine.label}</span>
-                      <span className="text-xs text-muted-foreground">{engine.description}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="flex items-center gap-1.5 text-sm font-medium">
-              <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
-              Modelo de Geração
-            </Label>
-            <Select
-              value={config.generationModel}
-              onValueChange={(v) => setConfig(prev => ({ ...prev, generationModel: v }))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {GENERATION_MODELS.map(model => (
-                  <SelectItem key={model.value} value={model.value}>
-                    <div className="flex flex-col">
-                      <span>{model.label}</span>
-                      <span className="text-xs text-muted-foreground">{model.description}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {isResearch ? (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5 text-sm font-medium">
+                <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                Motor de Pesquisa
+              </Label>
+              <Select
+                value={config.researchEngine}
+                onValueChange={(v) => setConfig(prev => ({ ...prev, researchEngine: v as BatchEngineConfig["researchEngine"] }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RESEARCH_ENGINES.map(engine => (
+                    <SelectItem key={engine.value} value={engine.value}>
+                      <div className="flex flex-col">
+                        <span>{engine.label}</span>
+                        <span className="text-xs text-muted-foreground">{engine.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5 text-sm font-medium">
+                <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
+                Modelo de Geração
+              </Label>
+              <Select
+                value={config.generationModel}
+                onValueChange={(v) => setConfig(prev => ({ ...prev, generationModel: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {GENERATION_MODELS.map(model => (
+                    <SelectItem key={model.value} value={model.value}>
+                      <div className="flex flex-col">
+                        <span>{model.label}</span>
+                        <span className="text-xs text-muted-foreground">{model.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={() => { onConfirm(config); onOpenChange(false); }} className="gap-1.5">
-            <Zap className="h-4 w-4" /> Iniciar Geração
+            {isResearch ? <Search className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+            {isResearch ? "Iniciar Pesquisa" : "Iniciar Geração"}
           </Button>
         </DialogFooter>
       </DialogContent>
