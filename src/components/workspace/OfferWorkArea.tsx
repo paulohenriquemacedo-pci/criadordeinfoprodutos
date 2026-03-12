@@ -562,16 +562,32 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
             <p className="text-xs text-muted-foreground">Cadastre seus produtos, bônus e bumps</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleImportFromFiles}
-              disabled={importing}
-              className="gap-1.5"
-            >
-              {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-              {importing ? "Importando..." : "Importar do Material"}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5" disabled={importing || importingM2}>
+                  {(importing || importingM2) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {importing ? "Importando materiais..." : importingM2 ? "Importando do M2..." : "Importar Produto"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-72">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Escolha a origem do produto</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleImportFromFiles} className="gap-2 cursor-pointer">
+                  <FileText className="h-4 w-4 text-primary" />
+                  <div>
+                    <p className="text-sm font-medium">Material Base (arquivos)</p>
+                    <p className="text-xs text-muted-foreground">Extrair produto dos arquivos enviados pelo usuário</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleImportFromM2} className="gap-2 cursor-pointer">
+                  <BookOpen className="h-4 w-4 text-primary" />
+                  <div>
+                    <p className="text-sm font-medium">Módulo 2 (Estrutura)</p>
+                    <p className="text-xs text-muted-foreground">Importar produto estruturado pela plataforma no M2</p>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button size="sm" onClick={() => { setEditingProduct(undefined); setProductFormOpen(true); }} className="gap-1.5">
               <Plus className="h-4 w-4" /> Novo Produto
             </Button>
