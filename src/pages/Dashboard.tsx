@@ -60,7 +60,14 @@ export default function Dashboard() {
     const project = projects?.find(p => p.id === batchProjectId);
     if (!project) return;
     const { data: modules } = await supabase.from("modules").select("*").eq("project_id", batchProjectId).order("module_number");
-    if (modules) exportProjectPdf(project, modules);
+    if (!modules) return;
+    const hasGenerated = modules.some(m => m.generated_content);
+    const hasResearch = modules.some(m => m.research_result);
+    if (hasGenerated) {
+      exportProjectPdf(project, modules);
+    } else if (hasResearch) {
+      exportResearchPdf(project, modules);
+    }
   };
 
   const handleBatchClose = () => {

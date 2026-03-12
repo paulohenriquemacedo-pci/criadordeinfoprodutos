@@ -47,7 +47,14 @@ export default function ProjectWorkspace() {
   const handleBatchDownloadPdf = async () => {
     if (!project) return;
     const { data: mods } = await supabase.from("modules").select("*").eq("project_id", project.id).order("module_number");
-    if (mods) exportProjectPdf(project, mods);
+    if (!mods) return;
+    const hasGenerated = mods.some(m => m.generated_content);
+    const hasResearch = mods.some(m => m.research_result);
+    if (hasGenerated) {
+      exportProjectPdf(project, mods);
+    } else if (hasResearch) {
+      exportResearchPdf(project, mods);
+    }
   };
 
   const openSettings = () => {
