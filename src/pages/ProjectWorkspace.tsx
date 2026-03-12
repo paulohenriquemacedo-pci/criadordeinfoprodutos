@@ -33,12 +33,15 @@ export default function ProjectWorkspace() {
   const [editForm, setEditForm] = useState({ name: "", niche: "", promise: "", target_audience: "" });
   const batch = useBatchGeneration();
 
-  const handleBatchGenerate = (config: BatchEngineConfig) => {
+  const [batchMode, setBatchMode] = useState<"research" | "generation">("research");
+
+  const handleBatchConfirm = (config: BatchEngineConfig) => {
     if (!projectId) return;
-    batch.runBatch(projectId, {
-      researchEngine: config.researchEngine,
-      generationModel: config.generationModel,
-    });
+    if (batchMode === "research") {
+      batch.runResearchOnly(projectId, { researchEngine: config.researchEngine });
+    } else {
+      batch.runGenerationOnly(projectId, { generationModel: config.generationModel });
+    }
   };
 
   const handleBatchDownloadPdf = async () => {
