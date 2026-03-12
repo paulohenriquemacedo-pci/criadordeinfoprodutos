@@ -20,6 +20,7 @@ import PromptEditor from "./PromptEditor";
 import ResearchPanel from "./ResearchPanel";
 import ResearchChat from "./ResearchChat";
 import CustomResearchPanel from "./CustomResearchPanel";
+import ResearchViewPanel from "./ResearchViewPanel";
 
 function combineEngineResearch(mod: any): string {
   if (!mod) return "";
