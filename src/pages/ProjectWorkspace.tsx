@@ -101,7 +101,7 @@ export default function ProjectWorkspace() {
     toast.success("Todas as pesquisas exportadas (TXT)!");
   };
 
-  const handleBatchDownloadResearchPdf = async () => {
+  const handleBatchDownloadResearchPdf = async (includeCustom = false) => {
     if (!project) return;
     const { data: mods } = await supabase.from("modules").select("*").eq("project_id", project.id).order("module_number");
     if (!mods || mods.length === 0) {
@@ -113,7 +113,7 @@ export default function ProjectWorkspace() {
       toast.error("Nenhuma pesquisa encontrada para exportar.");
       return;
     }
-    exportResearchPdf(project, mods as any);
+    exportResearchPdf(project, mods as any, { includeCustomResearch: includeCustom });
     toast.success("Pesquisas exportadas em PDF!");
   };
 
@@ -217,8 +217,11 @@ export default function ProjectWorkspace() {
               <DropdownMenuItem onClick={handleBatchDownloadResearchTxt} className="gap-2">
                 <Download className="h-4 w-4" /> Baixar pesquisas (TXT)
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleBatchDownloadResearchPdf} className="gap-2">
-                <Download className="h-4 w-4" /> Baixar pesquisas (PDF)
+              <DropdownMenuItem onClick={() => handleBatchDownloadResearchPdf(false)} className="gap-2">
+                <Download className="h-4 w-4" /> Pesquisa de mercado (PDF)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleBatchDownloadResearchPdf(true)} className="gap-2">
+                <Download className="h-4 w-4" /> Pesquisa completa (PDF)
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleBatchDownloadPdf} className="gap-2">
                 <Download className="h-4 w-4" /> Baixar projeto (PDF)

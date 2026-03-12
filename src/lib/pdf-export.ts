@@ -170,7 +170,7 @@ interface ResearchModuleData {
   custom_research?: string | null;
 }
 
-function combineModuleResearch(mod: ResearchModuleData): { text: string; citations: string[] } {
+function combineModuleResearch(mod: ResearchModuleData, includeCustom = true): { text: string; citations: string[] } {
   const parts: string[] = [];
   const allCitations: string[] = [];
 
@@ -189,8 +189,8 @@ function combineModuleResearch(mod: ResearchModuleData): { text: string; citatio
     parts.push(mod.research_result);
   }
 
-  // Add custom/manual research
-  if (mod.custom_research) {
+  // Add custom/manual research only if requested
+  if (includeCustom && mod.custom_research) {
     parts.push(`[Pesquisa Manual]\n${mod.custom_research}`);
   }
 
@@ -201,7 +201,8 @@ function combineModuleResearch(mod: ResearchModuleData): { text: string; citatio
   return { text: parts.join("\n\n---\n\n"), citations: allCitations };
 }
 
-export function exportResearchPdf(project: ProjectData, modules: ResearchModuleData[]) {
+export function exportResearchPdf(project: ProjectData, modules: ResearchModuleData[], options?: { includeCustomResearch?: boolean }) {
+  const includeCustom = options?.includeCustomResearch ?? false;
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -226,7 +227,8 @@ export function exportResearchPdf(project: ProjectData, modules: ResearchModuleD
 
   doc.setFontSize(16);
   doc.setTextColor(100, 149, 237);
-  doc.text("Relatório de Pesquisa", pageWidth / 2, 100 + titleLines.length * 10, { align: "center" });
+  const subtitle = includeCustom ? "Relatório Completo de Pesquisa" : "Relatório de Pesquisa de Mercado";
+  doc.text(subtitle, pageWidth / 2, 100 + titleLines.length * 10, { align: "center" });
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
@@ -239,13 +241,13 @@ export function exportResearchPdf(project: ProjectData, modules: ResearchModuleD
   // === RESEARCH PAGES ===
   modules
     .filter((m) => {
-      const combined = combineModuleResearch(m);
+      const combined = combineModuleResearch(m, includeCustom);
       return combined.text.length > 0;
     })
     .sort((a, b) => a.module_number - b.module_number)
     .forEach((mod) => {
       const config = MODULE_CONFIG.find((c) => c.number === mod.module_number);
-      const combined = combineModuleResearch(mod);
+      const combined = combineModuleResearch(mod, includeCustom);
       if (!config || !combined.text) return;
 
       addPage();
@@ -310,7 +312,8 @@ export function exportResearchPdf(project: ProjectData, modules: ResearchModuleD
     );
   }
 
-  doc.save(`${project.name.replace(/[^a-zA-Z0-9]/g, "_")}_pesquisa.pdf`);
+  const suffix = includeCustom ? "_pesquisa_completa" : "_pesquisa_mercado";
+  doc.save(`${project.name.replace(/[^a-zA-Z0-9]/g, "_")}${suffix}.pdf`);
 }
 
 export function exportModulePdf(project: ProjectData, mod: ModuleData) {
