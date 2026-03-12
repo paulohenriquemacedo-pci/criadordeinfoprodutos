@@ -234,7 +234,7 @@ export function useBatchGeneration() {
     return fullText;
   }, [streamOneCall]);
 
-  const runBatch = useCallback(async (projectId: string, options?: { researchEngine?: ResearchEngine; generationModel?: string }) => {
+  const runResearchOnly = useCallback(async (projectId: string, options?: { researchEngine?: ResearchEngine }) => {
     abortRef.current = false;
     setState({
       isRunning: true,
@@ -248,7 +248,6 @@ export function useBatchGeneration() {
     });
 
     try {
-      // Fetch project data
       const { data: project } = await supabase
         .from("projects")
         .select("*")
@@ -260,7 +259,95 @@ export function useBatchGeneration() {
       const promise = project.promise || "";
       const targetAudience = project.target_audience || "";
 
-      // Fetch all modules
+      const { data: modules } = await supabase
+        .from("modules")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("module_number");
+      if (!modules) throw new Error("Módulos não encontrados");
+
+      const researchEngine = options?.researchEngine || "perplexity";
+      const engineLabel = researchEngine === "perplexity" ? "Perplexity" : researchEngine === "gemini" ? "Gemini" : "Qwen";
+
+      for (let num = 1; num <= 8; num++) {
+        if (abortRef.current) {
+          addLog(num, "error", "Execução cancelada pelo usuário");
+          throw new Error("Cancelado pelo usuário");
+        }
+
+        const moduleConfig = MODULE_CONFIG.find(m => m.number === num)!;
+        const module = modules.find(m => m.module_number === num);
+        if (!module) continue;
+
+        // Skip modules that already have research
+        if (module.research_result) {
+          addLog(num, "done", `${moduleConfig.title} já possui pesquisa — pulando ✓`);
+          setState(prev => ({
+            ...prev,
+            completedModules: [...prev.completedModules, num],
+          }));
+          continue;
+        }
+
+        setState(prev => ({ ...prev, currentModule: num }));
+        addLog(num, "research", `Pesquisando via ${engineLabel} para ${moduleConfig.title}...`);
+
+        const researchResult = await autoResearch(
+          num, moduleConfig.title, niche, promise, targetAudience, module.research_prompt, researchEngine
+        );
+
+        if (researchResult) {
+          const researchText = `[Pesquisa via ${engineLabel}]\n${researchResult.research}`;
+          await supabase.from("modules").update({
+            research_result: researchText,
+            research_citations: researchResult.citations,
+          } as any).eq("id", module.id);
+          addLog(num, "done", `Pesquisa para ${moduleConfig.title} concluída ✓`);
+        } else {
+          addLog(num, "error", `Pesquisa indisponível para ${moduleConfig.title}`);
+        }
+
+        setState(prev => ({
+          ...prev,
+          completedModules: [...prev.completedModules, num],
+        }));
+      }
+
+      addLog(0, "done", "🎉 Pesquisa em lote concluída para todos os módulos!");
+      setState(prev => ({ ...prev, isRunning: false, isDone: true }));
+    } catch (err: any) {
+      const errorMsg = err.message || "Erro desconhecido";
+      setState(prev => ({
+        ...prev,
+        isRunning: false,
+        failedModule: prev.currentModule,
+        error: errorMsg,
+      }));
+      addLog(0, "error", `❌ Erro: ${errorMsg}`);
+    }
+  }, [addLog, autoResearch]);
+
+  const runGenerationOnly = useCallback(async (projectId: string, options?: { generationModel?: string }) => {
+    abortRef.current = false;
+    setState({
+      isRunning: true,
+      currentModule: 1,
+      completedModules: [],
+      failedModule: null,
+      logs: [],
+      totalModules: 8,
+      isDone: false,
+      error: null,
+    });
+
+    try {
+      const { data: project } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("id", projectId)
+        .single();
+      if (!project) throw new Error("Projeto não encontrado");
+
       const { data: modules } = await supabase
         .from("modules")
         .select("*")
@@ -289,39 +376,13 @@ export function useBatchGeneration() {
         }
 
         setState(prev => ({ ...prev, currentModule: num }));
-        const researchEngine = options?.researchEngine || "perplexity";
-        const engineLabel = researchEngine === "perplexity" ? "Perplexity" : researchEngine === "gemini" ? "Gemini" : "Qwen";
-        addLog(num, "research", `Iniciando pesquisa via ${engineLabel} para ${moduleConfig.title}...`);
 
-        // Step 1: Auto-research
-        let activeResearch = "";
-        let activeCitations: string[] = [];
-
-        const researchResult = await autoResearch(
-          num, moduleConfig.title, niche, promise, targetAudience, module.research_prompt, researchEngine
-        );
-        if (researchResult) {
-          activeResearch = `[Pesquisa via ${engineLabel}]\n${researchResult.research}`;
-          activeCitations = researchResult.citations;
-          addLog(num, "research", "Pesquisa de mercado concluída ✓");
-          
-          // Persist research
-          await supabase.from("modules").update({
-            research_result: activeResearch,
-            research_citations: activeCitations,
-          } as any).eq("id", module.id);
-        } else {
-          addLog(num, "research", "Pesquisa indisponível — continuando sem dados externos");
-        }
-
-        if (abortRef.current) throw new Error("Cancelado pelo usuário");
-
-        // Step 2: Build context (refreshes each iteration to include previous module outputs)
+        // Build context
         addLog(num, "context", "Construindo contexto do projeto...");
         const context = await buildProjectContext(projectId);
         const pdfParts = await buildPdfParts(context.files);
 
-        // Step 3: Build prompt
+        // Build prompt
         let systemPrompt = module.generation_prompt || DEFAULT_GENERATION_PROMPTS[num] || "";
         if (!systemPrompt) {
           const { data: promptData } = await supabase
@@ -334,28 +395,29 @@ export function useBatchGeneration() {
         systemPrompt += QUALITY_DIRECTIVES;
 
         let userMessage = context.fullContext;
+        const activeResearch = module.research_result || "";
+        const activeCitations = module.research_citations || [];
+
         if (activeResearch) {
           userMessage += `\n\n========\n\nPESQUISA DE MERCADO (DADOS EXTERNOS ATUALIZADOS):\n${activeResearch}`;
-          userMessage += `\n\nINSTRUÇÃO CRÍTICA: Você DEVE integrar os dados da pesquisa de mercado acima com o material do projeto. Compare, contraste e enriqueça suas recomendações com dados reais de mercado.`;
+          userMessage += `\n\nINSTRUÇÃO CRÍTICA: Você DEVE integrar os dados da pesquisa de mercado acima com o material do projeto.`;
           if (activeCitations.length > 0) {
             userMessage += `\n\nFONTES DA PESQUISA:\n${activeCitations.map((c, i) => `[${i + 1}] ${c}`).join("\n")}`;
           }
         }
 
         const interdependency = INTERDEPENDENCY_MAP[num] || "";
-        userMessage += `\n\n---\n\n${interdependency ? interdependency + "\n\n" : ""}Com base em todo o contexto acima${activeResearch ? " (incluindo a pesquisa de mercado com dados reais e atualizados)" : ""}, execute a tarefa do módulo ${num} - ${moduleConfig.title}. ${activeResearch ? "OBRIGATÓRIO: Incorpore e cruze os dados da pesquisa de mercado com o material do projeto." : ""} Garanta coerência e continuidade com os módulos anteriores já gerados.`;
+        userMessage += `\n\n---\n\n${interdependency ? interdependency + "\n\n" : ""}Com base em todo o contexto acima${activeResearch ? " (incluindo a pesquisa de mercado)" : ""}, execute a tarefa do módulo ${num} - ${moduleConfig.title}. ${activeResearch ? "OBRIGATÓRIO: Incorpore os dados da pesquisa de mercado." : ""} Garanta coerência e continuidade com os módulos anteriores já gerados.`;
 
-        // Step 4: Generate
+        // Generate
         const genModel = options?.generationModel;
         addLog(num, "generation", `Gerando conteúdo com ${genModel?.includes("pro") ? "Gemini Pro" : genModel?.includes("3-flash") ? "Gemini 3 Flash" : "Gemini 2.5 Flash"} para ${moduleConfig.title}...`);
         const fullText = await generateModule(num, systemPrompt, userMessage, pdfParts, genModel);
 
         if (abortRef.current) throw new Error("Cancelado pelo usuário");
 
-        // Step 5: Save
+        // Save
         addLog(num, "saving", "Salvando conteúdo gerado...");
-        
-        // Version backup
         if (module.generated_content) {
           await supabase.from("module_versions").insert({
             module_id: module.id,
@@ -368,7 +430,7 @@ export function useBatchGeneration() {
           is_outdated: false,
         }).eq("id", module.id);
 
-        // Step 6: Update strategic memory (M0)
+        // Update strategic memory (M0)
         addLog(num, "saving", "Atualizando memória estratégica (M0)...");
         try {
           const { data: currentProject } = await supabase
@@ -399,8 +461,6 @@ export function useBatchGeneration() {
               strategic_memory: memData.memory,
             } as any).eq("id", projectId);
             addLog(num, "done", "Memória estratégica atualizada ✓");
-          } else {
-            console.warn("Strategic memory update failed, continuing...");
           }
         } catch (memErr) {
           console.warn("Strategic memory error (non-fatal):", memErr);
@@ -425,7 +485,7 @@ export function useBatchGeneration() {
       }));
       addLog(0, "error", `❌ Erro: ${errorMsg}`);
     }
-  }, [addLog, autoResearch, generateModule]);
+  }, [addLog, generateModule]);
 
   const cancel = useCallback(() => {
     abortRef.current = true;
@@ -444,5 +504,5 @@ export function useBatchGeneration() {
     });
   }, []);
 
-  return { state, runBatch, cancel, reset };
+  return { state, runResearchOnly, runGenerationOnly, cancel, reset };
 }
