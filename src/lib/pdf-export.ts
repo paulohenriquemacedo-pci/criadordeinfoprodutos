@@ -157,6 +157,120 @@ export function exportProjectPdf(project: ProjectData, modules: ModuleData[]) {
   doc.save(`${project.name.replace(/[^a-zA-Z0-9]/g, "_")}_projeto_completo.pdf`);
 }
 
+interface ResearchModuleData {
+  module_number: number;
+  research_result: string | null;
+  research_citations: string[] | null;
+}
+
+export function exportResearchPdf(project: ProjectData, modules: ResearchModuleData[]) {
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 20;
+  const contentWidth = pageWidth - margin * 2;
+  let y = 0;
+
+  const addPage = () => {
+    doc.addPage();
+    y = margin;
+  };
+
+  // === COVER PAGE ===
+  doc.setFillColor(17, 24, 39);
+  doc.rect(0, 0, pageWidth, pageHeight, "F");
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(32);
+  doc.setFont("helvetica", "bold");
+  const titleLines = doc.splitTextToSize(project.name, contentWidth);
+  doc.text(titleLines, pageWidth / 2, 80, { align: "center" });
+
+  doc.setFontSize(16);
+  doc.setTextColor(100, 149, 237);
+  doc.text("Relatório de Pesquisa", pageWidth / 2, 100 + titleLines.length * 10, { align: "center" });
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(156, 163, 175);
+  if (project.niche) {
+    doc.text(project.niche, pageWidth / 2, 115 + titleLines.length * 10, { align: "center" });
+  }
+  doc.text(new Date().toLocaleDateString("pt-BR"), pageWidth / 2, 125 + titleLines.length * 10, { align: "center" });
+
+  // === RESEARCH PAGES ===
+  modules
+    .filter((m) => m.research_result)
+    .sort((a, b) => a.module_number - b.module_number)
+    .forEach((mod) => {
+      const config = MODULE_CONFIG.find((c) => c.number === mod.module_number);
+      if (!config || !mod.research_result) return;
+
+      addPage();
+
+      // Module header
+      doc.setFillColor(30, 58, 138);
+      doc.rect(margin - 5, y - 5, contentWidth + 10, 18, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text(`M${config.number} — ${config.title}`, margin, y + 7);
+      y += 20;
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "italic");
+      doc.setTextColor(107, 114, 128);
+      doc.text(config.description, margin, y);
+      y += 10;
+
+      // Render research content
+      const ctx = { doc, margin, contentWidth, y, pageHeight };
+      renderMarkdownToPdf(ctx, mod.research_result);
+      y = ctx.y;
+
+      // Citations
+      if (mod.research_citations && mod.research_citations.length > 0) {
+        y += 5;
+        if (y + 20 > pageHeight - margin) {
+          addPage();
+        }
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(17, 24, 39);
+        doc.text("Fontes:", margin, y);
+        y += 5;
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(75, 85, 99);
+        mod.research_citations.forEach((citation, i) => {
+          if (y + 5 > pageHeight - margin) {
+            addPage();
+          }
+          const citLines = doc.splitTextToSize(`[${i + 1}] ${citation}`, contentWidth);
+          doc.text(citLines, margin, y);
+          y += citLines.length * 4 + 2;
+        });
+      }
+    });
+
+  // === FOOTER ===
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 2; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(156, 163, 175);
+    doc.text(
+      `${project.name} — Pesquisa — Página ${i - 1} de ${totalPages - 1}`,
+      pageWidth / 2,
+      pageHeight - 10,
+      { align: "center" }
+    );
+  }
+
+  doc.save(`${project.name.replace(/[^a-zA-Z0-9]/g, "_")}_pesquisa.pdf`);
+}
+
 export function exportModulePdf(project: ProjectData, mod: ModuleData) {
   const config = MODULE_CONFIG.find((c) => c.number === mod.module_number);
   if (!config || !mod.generated_content) return;
