@@ -403,15 +403,11 @@ export function useBatchGeneration() {
             await supabase.from("modules").update({
               [engineColumn]: researchText,
               [citationsColumn]: researchResult.citations,
-              research_result: researchText,
-              research_citations: researchResult.citations,
             } as any).eq("id", module.id);
 
             // Update local module object for context building
             (module as any)[engineColumn] = researchText;
             (module as any)[citationsColumn] = researchResult.citations;
-            (module as any).research_result = researchText;
-            (module as any).research_citations = researchResult.citations;
 
             addLog(num, "done", `Pesquisa para ${moduleConfig.title} concluída ✓`);
           } else {
