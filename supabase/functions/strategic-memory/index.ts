@@ -32,11 +32,10 @@ serve(async (req) => {
   try {
     const { moduleNumber, moduleContent, existingMemory } = await req.json();
     
-    // Try GEMINI_API_KEY first (direct Google API), fall back to LOVABLE_API_KEY (gateway)
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     
-    if (!GEMINI_API_KEY && !LOVABLE_API_KEY) throw new Error("Nenhuma chave de IA configurada (GEMINI_API_KEY ou LOVABLE_API_KEY)");
+    if (!LOVABLE_API_KEY && !GEMINI_API_KEY) throw new Error("Nenhuma chave de IA configurada");
 
     const systemPrompt = `Você é um sistema de memória estratégica para uma plataforma de criação de infoprodutos.
 ${MEMORY_CATEGORIES}
@@ -48,42 +47,35 @@ ${existingMemory ? `MEMÓRIA EXISTENTE (mescle com os novos dados, priorizando o
 CONTEÚDO DO MÓDULO ${moduleNumber}:
 ${moduleContent.slice(0, 15000)}`;
 
-    let response: Response;
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ];
 
-    if (GEMINI_API_KEY) {
-      // Use Google Gemini API directly via OpenAI-compatible endpoint
-      response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${GEMINI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gemini-2.5-flash",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-          temperature: 0.1,
-        }),
-      });
+    // Helper to call Lovable AI Gateway
+    const callLovable = () => fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, temperature: 0.1 }),
+    });
+
+    // Helper to call Gemini directly
+    const callGemini = () => fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "gemini-2.5-flash", messages, temperature: 0.1 }),
+    });
+
+    // Try Lovable AI first, fallback to Gemini on 402/429
+    let response: Response;
+    if (LOVABLE_API_KEY) {
+      response = await callLovable();
+      if ((response.status === 402 || response.status === 429) && GEMINI_API_KEY) {
+        console.log(`Lovable AI returned ${response.status}, falling back to Gemini direct`);
+        response = await callGemini();
+      }
     } else {
-      // Fallback to Lovable AI Gateway
-      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-          temperature: 0.1,
-        }),
-      });
+      response = await callGemini();
     }
 
     if (!response.ok) {
