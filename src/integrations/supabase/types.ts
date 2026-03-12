@@ -14,6 +14,100 @@ export type Database = {
   }
   public: {
     Tables: {
+      creative_tasks: {
+        Row: {
+          category: string
+          context_modules: number[] | null
+          created_at: string
+          description: string | null
+          favorite_version_id: string | null
+          id: string
+          project_id: string
+          prompt_input: string | null
+          status: string
+          template_type: string | null
+          title: string
+          tone: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          context_modules?: number[] | null
+          created_at?: string
+          description?: string | null
+          favorite_version_id?: string | null
+          id?: string
+          project_id: string
+          prompt_input?: string | null
+          status?: string
+          template_type?: string | null
+          title: string
+          tone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          context_modules?: number[] | null
+          created_at?: string
+          description?: string | null
+          favorite_version_id?: string | null
+          id?: string
+          project_id?: string
+          prompt_input?: string | null
+          status?: string
+          template_type?: string | null
+          title?: string
+          tone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creative_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creative_versions: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_favorite: boolean
+          refinement_prompt: string | null
+          task_id: string
+          version_number: number
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_favorite?: boolean
+          refinement_prompt?: string | null
+          task_id: string
+          version_number?: number
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_favorite?: boolean
+          refinement_prompt?: string | null
+          task_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creative_versions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "creative_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       module_versions: {
         Row: {
           content: string

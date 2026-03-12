@@ -1,10 +1,10 @@
 import { MODULE_CONFIG, ModuleNumber } from "@/lib/modules";
 import { cn } from "@/lib/utils";
-import { FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, TrendingUp, AlertTriangle, Shield, BookOpen } from "lucide-react";
+import { FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, TrendingUp, AlertTriangle, Shield, BookOpen, Palette } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const iconMap: Record<string, any> = {
-  FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, TrendingUp, Shield, BookOpen,
+  FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, TrendingUp, Shield, BookOpen, Palette,
 };
 
 interface Props {
@@ -54,8 +54,8 @@ export default function WorkflowSidebar({ activeModule, onSelectModule, modules 
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="block truncate text-xs">{config.title}</span>
-                      {config.number === 9 && (
-                        <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/30 text-primary/70 font-normal">em breve</Badge>
+                      {config.number === 10 && (
+                        <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/30 text-primary/70 font-normal">novo</Badge>
                       )}
                     </div>
                   </div>
