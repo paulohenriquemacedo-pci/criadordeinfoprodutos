@@ -204,6 +204,12 @@ export default function StrategicMemoryPanel({ projectId }: Props) {
         if (memResponse.ok) {
           const memData = await memResponse.json();
           currentMemory = memData.memory;
+        } else if (memResponse.status === 402) {
+          toast.error("Créditos de IA insuficientes. Aguarde a renovação dos créditos do Lovable Cloud e tente novamente.");
+          break;
+        } else if (memResponse.status === 429) {
+          toast.error("Limite de requisições atingido. Aguarde alguns instantes e tente novamente.");
+          break;
         } else {
           const errText = await memResponse.text().catch(() => "");
           console.error(`Strategic memory error for M${mod.module_number}:`, memResponse.status, errText);
