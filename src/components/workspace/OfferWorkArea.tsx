@@ -725,9 +725,14 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
           </div>
           <div className="flex gap-2">
             {evaluation && (
-              <Button variant="outline" size="sm" onClick={handleSaveToModule} className="gap-1.5">
-                <Save className="h-4 w-4" /> Salvar no M9
-              </Button>
+              <>
+                <Button variant="outline" size="sm" onClick={handleDownloadEvaluation} className="gap-1.5">
+                  <Download className="h-4 w-4" /> Download
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleSaveToModule} className="gap-1.5">
+                  <Save className="h-4 w-4" /> Salvar no M9
+                </Button>
+              </>
             )}
             <Button
               size="sm"
