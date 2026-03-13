@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Sparkles, FileText, Search, Palette, BookOpen, Bot, Package, Zap } from "lucide-react";
+import { Sparkles, FileText, Search, Palette, BookOpen, Bot, Package, Zap, HelpCircle } from "lucide-react";
 
 const WELCOME_KEY = "orquestrador_welcome_seen";
 
@@ -38,21 +38,41 @@ const steps = [
   },
 ];
 
-export function WelcomeDialog() {
-  const [open, setOpen] = useState(false);
+interface WelcomeDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function WelcomeDialog({ open: controlledOpen, onOpenChange }: WelcomeDialogProps) {
+  const isControlled = controlledOpen !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
 
   useEffect(() => {
-    const seen = localStorage.getItem(WELCOME_KEY);
-    if (!seen) setOpen(true);
-  }, []);
+    if (!isControlled) {
+      const seen = localStorage.getItem(WELCOME_KEY);
+      if (!seen) setInternalOpen(true);
+    }
+  }, [isControlled]);
+
+  const open = isControlled ? controlledOpen : internalOpen;
 
   const handleClose = () => {
     localStorage.setItem(WELCOME_KEY, "true");
-    setOpen(false);
+    if (isControlled) {
+      onOpenChange?.(false);
+    } else {
+      setInternalOpen(false);
+    }
+  };
+
+  const handleOpenChange = (v: boolean) => {
+    if (!v) handleClose();
+    else if (isControlled) onOpenChange?.(true);
+    else setInternalOpen(true);
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
@@ -80,7 +100,7 @@ export function WelcomeDialog() {
 
         <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
           <p className="text-xs text-muted-foreground">
-            <strong className="text-foreground">Dica:</strong> Passe o mouse sobre os ícones <span className="inline-flex align-middle"><Search className="h-3 w-3 text-primary" /></span> de informação espalhados pela plataforma para ver dicas de uso de cada função.
+            <strong className="text-foreground">Dica:</strong> Passe o mouse sobre os ícones <span className="inline-flex align-middle"><HelpCircle className="h-3 w-3 text-primary" /></span> de informação espalhados pela plataforma para ver dicas de uso de cada função.
           </p>
         </div>
 
