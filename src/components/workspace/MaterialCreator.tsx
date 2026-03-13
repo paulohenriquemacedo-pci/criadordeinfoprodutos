@@ -496,7 +496,13 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
             style={{ width: cfg.width * previewScale, height: cfg.height * previewScale }}
             className="shadow-2xl rounded-lg overflow-hidden relative"
           >
-            <TemplateComponent ref={templateRef} brand={brand} content={content} scale={previewScale} />
+            <TemplateComponent
+              ref={templateRef}
+              brand={brand}
+              content={content}
+              scale={previewScale}
+              onContentChange={(field, value) => setContent(p => ({ ...p, [field]: value }))}
+            />
           </div>
         </div>
       </div>
