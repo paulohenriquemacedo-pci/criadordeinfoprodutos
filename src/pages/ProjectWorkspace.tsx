@@ -255,6 +255,9 @@ export default function ProjectWorkspace() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button variant="ghost" size="icon" onClick={() => setWelcomeOpen(true)} title="Como usar">
+            <HelpCircle className="h-4 w-4" />
+          </Button>
           <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
             <DialogTrigger asChild>
               <Button variant="ghost" size="icon" onClick={openSettings}>
