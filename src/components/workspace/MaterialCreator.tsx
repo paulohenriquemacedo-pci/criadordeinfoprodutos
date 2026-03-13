@@ -44,60 +44,121 @@ interface ExtractedContent extends PostContentData {
   searchKeywords?: string;
 }
 
-function extractLabeledField(lines: string[], labels: string[]): string {
-  for (const line of lines) {
-    const trimmed = line.trim();
-    // Match "**Label:** value" or "Label: value"
-    for (const label of labels) {
-      const regex = new RegExp(`^\\*{0,2}${label}\\*{0,2}\\s*[:：]\\s*(.+)`, "i");
-      const match = trimmed.match(regex);
-      if (match) {
-        return match[1].trim();
+/**
+ * Normalize a string for label comparison: lowercase, remove accents and markdown.
+ */
+function normalizeLabel(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\*/g, "")
+    .trim();
+}
+
+/**
+ * Check if a line starts with any of the given labels (with optional ** and :).
+ */
+function lineMatchesLabel(line: string, labels: string[]): boolean {
+  const norm = normalizeLabel(line);
+  return labels.some(label => {
+    const nl = normalizeLabel(label);
+    // Match patterns: "label:", "**label:**", "label :"
+    return new RegExp(`^\\*{0,2}${nl}\\*{0,2}\\s*[:：]`, "i").test(norm) ||
+           norm.startsWith(nl + ":") || norm.startsWith(nl + " :");
+  });
+}
+
+/**
+ * All known field labels to detect section boundaries.
+ */
+const ALL_LABELS = [
+  "título", "titulo", "headline", "gancho", "hook",
+  "subtítulo", "subtitulo", "sub-headline", "subhead",
+  "corpo", "body", "texto", "descrição", "descricao",
+  "cta", "call to action", "chamada para ação", "chamada",
+  "prompt de imagem", "image prompt", "prompt imagem", "prompt",
+  "palavras-chave", "palavras chave", "keywords", "busca", "search",
+  "legenda", "caption", "hashtags", "formato", "tom", "plataforma",
+];
+
+function isLabelLine(line: string): boolean {
+  return lineMatchesLabel(line, ALL_LABELS);
+}
+
+/**
+ * Extract a multi-line field value: gets the value after "Label:" on the first matching line,
+ * then collects subsequent lines until the next label or end.
+ */
+function extractMultiLineField(lines: string[], labels: string[]): string {
+  let startIdx = -1;
+  let inlineValue = "";
+
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+    if (lineMatchesLabel(trimmed, labels)) {
+      startIdx = i;
+      // Extract value after the colon on the same line
+      const colonIdx = trimmed.search(/[:：]/);
+      if (colonIdx !== -1) {
+        inlineValue = trimmed.slice(colonIdx + 1).replace(/\*\*/g, "").replace(/\*/g, "").trim();
       }
+      break;
     }
   }
-  return "";
+
+  if (startIdx === -1) return "";
+
+  // Collect continuation lines (lines after label that aren't new labels)
+  const parts: string[] = [];
+  if (inlineValue) parts.push(inlineValue);
+
+  for (let i = startIdx + 1; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+    if (!trimmed) continue;
+    if (isLabelLine(trimmed)) break; // Next section starts
+    if (trimmed.startsWith("---")) break;
+    parts.push(trimmed.replace(/\*\*/g, "").replace(/\*/g, "").trim());
+  }
+
+  return parts.join(" ").trim();
 }
 
 function extractContentFromMarkdown(markdown: string): ExtractedContent {
-  const lines = markdown.split("\n").filter(l => l.trim());
+  const lines = markdown.split("\n");
 
-  // Try structured extraction first (labeled fields)
-  let headline = extractLabeledField(lines, ["título", "titulo", "headline", "gancho", "hook"]);
-  let subheadline = extractLabeledField(lines, ["subtítulo", "subtitulo", "sub-headline", "subhead", "sub"]);
-  let body = extractLabeledField(lines, ["corpo", "body", "texto", "descrição", "descricao"]);
-  let cta = extractLabeledField(lines, ["cta", "call.to.action", "chamada para ação", "chamada"]);
-  let imagePromptSuggestion = extractLabeledField(lines, ["prompt de imagem", "image prompt", "prompt imagem", "prompt"]);
-  let searchKeywords = extractLabeledField(lines, ["palavras-chave", "palavras chave", "keywords", "busca", "search"]);
+  // Try structured multi-line extraction
+  let headline = extractMultiLineField(lines, ["título", "titulo", "headline", "gancho", "hook"]);
+  let subheadline = extractMultiLineField(lines, ["subtítulo", "subtitulo", "sub-headline", "subhead"]);
+  let body = extractMultiLineField(lines, ["corpo", "body", "texto", "descrição", "descricao"]);
+  let cta = extractMultiLineField(lines, ["cta", "call to action", "chamada para ação", "chamada"]);
+  let imagePromptSuggestion = extractMultiLineField(lines, ["prompt de imagem", "image prompt", "prompt imagem"]);
+  let searchKeywords = extractMultiLineField(lines, ["palavras-chave", "palavras chave", "keywords", "busca"]);
 
-  // Fallback: try heading-based extraction if no labeled fields found
+  const cleanLines = lines.filter(l => l.trim());
+
+  // Fallback headline: first heading or first meaningful line
   if (!headline) {
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (trimmed.startsWith("# ")) {
-        headline = trimmed.replace(/^#+\s*/, "").replace(/\*\*/g, "").trim();
-        break;
-      }
+    const headingLine = cleanLines.find(l => l.trim().startsWith("# "));
+    if (headingLine) {
+      headline = headingLine.replace(/^#+\s*/, "").replace(/\*\*/g, "").trim();
+    } else {
+      const first = cleanLines[0]?.replace(/[#*]/g, "").trim().slice(0, 80);
+      headline = first || "Seu Título Aqui";
     }
-  }
-
-  // Fallback: first meaningful line
-  if (!headline) {
-    const first = lines[0]?.replace(/[#*]/g, "").trim().slice(0, 80);
-    headline = first || "Seu Título Aqui";
   }
 
   // Fallback body: collect non-labeled paragraphs
   if (!body) {
     const bodyParts: string[] = [];
-    for (const line of lines) {
+    for (const line of cleanLines) {
       const trimmed = line.trim();
       const clean = trimmed.replace(/\*\*/g, "").replace(/\*/g, "");
       if (
         !trimmed.startsWith("#") &&
         !trimmed.startsWith("---") &&
         clean.length > 15 &&
-        !/^(título|subtítulo|cta|corpo|prompt|palavras|legenda|caption|hashtag|formato|tom|plataforma|slide|imagem|call|chamada)\s*[:：]/i.test(clean)
+        !isLabelLine(trimmed)
       ) {
         bodyParts.push(clean);
       }
@@ -107,7 +168,7 @@ function extractContentFromMarkdown(markdown: string): ExtractedContent {
 
   // Fallback CTA
   if (!cta) {
-    const ctaLine = lines.find(l => {
+    const ctaLine = cleanLines.find(l => {
       const c = l.trim().toLowerCase();
       return c.includes("clique") || c.includes("acesse") || c.includes("saiba mais") || c.includes("link na bio") || c.includes("arraste") || c.includes("comente");
     });
@@ -115,6 +176,8 @@ function extractContentFromMarkdown(markdown: string): ExtractedContent {
       cta = ctaLine.replace(/\*\*/g, "").replace(/\*/g, "").trim().slice(0, 80);
     }
   }
+
+  console.log("[MaterialCreator] Extracted:", { headline, subheadline, body: body?.slice(0, 50), cta, imagePromptSuggestion: imagePromptSuggestion?.slice(0, 50), searchKeywords });
 
   return {
     headline: headline.slice(0, 120),
