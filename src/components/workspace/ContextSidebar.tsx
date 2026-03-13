@@ -246,6 +246,15 @@ export default function ContextSidebar({ project, projectId, hasGeneratedContent
         >
           <FolderOpen className="h-4 w-4" />
         </Button>
+        <Button
+          variant={expanded && activeTab === "brand" ? "default" : "ghost"}
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => handleTabClick("brand")}
+          title="Brand Kit"
+        >
+          <Palette className="h-4 w-4" />
+        </Button>
         <div className="border-t border-border/30 w-full my-1" />
         <Button
           variant="ghost"
