@@ -8,6 +8,7 @@ interface PostContentData {
   cta?: string;
   footer?: string;
   logoUrl?: string;
+  highlightWords?: string[];
 }
 
 interface Props {
@@ -16,38 +17,45 @@ interface Props {
   scale?: number;
 }
 
+function renderHighlightedText(
+  text: string,
+  accentColor: string,
+  highlightColor: string = "#CC2222"
+): React.ReactNode[] {
+  // Match text wrapped in *word* (yellow) or **word** (red)
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <span key={i} style={{ color: highlightColor }}>
+          {part.slice(2, -2)}
+        </span>
+      );
+    }
+    if (part.startsWith("*") && part.endsWith("*")) {
+      return (
+        <span key={i} style={{ color: accentColor }}>
+          {part.slice(1, -1)}
+        </span>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
   ({ brand, content, scale = 0.3 }, ref) => {
-    const styleMap: Record<string, React.CSSProperties> = {
-      clean: {
-        background: brand.background_color,
-        justifyContent: "center",
-      },
-      bold: {
-        background: `linear-gradient(135deg, ${brand.primary_color}, ${brand.secondary_color})`,
-        justifyContent: "center",
-      },
-      dark: {
-        background: `linear-gradient(180deg, #0f0f0f, #1a1a2e)`,
-        justifyContent: "center",
-      },
-      minimal: {
-        background: brand.background_color,
-        justifyContent: "center",
-      },
-    };
-
-    const textColorMap: Record<string, string> = {
-      clean: brand.text_color,
-      bold: "#ffffff",
-      dark: "#f0f0f0",
-      minimal: brand.text_color,
-    };
-
-    const style = styleMap[brand.visual_style] || styleMap.clean;
-    const textColor = textColorMap[brand.visual_style] || brand.text_color;
-
     const isDark = brand.visual_style === "dark" || brand.visual_style === "bold";
+
+    const backgrounds: Record<string, React.CSSProperties> = {
+      clean: { background: brand.background_color },
+      bold: { background: `linear-gradient(135deg, ${brand.primary_color}, ${brand.secondary_color})` },
+      dark: { background: `linear-gradient(180deg, ${brand.secondary_color}, #0a0f1a)` },
+      minimal: { background: brand.background_color },
+    };
+
+    const textColor = isDark ? "#FFFFFF" : brand.text_color;
+    const bgStyle = backgrounds[brand.visual_style] || backgrounds.dark;
 
     return (
       <div
@@ -55,10 +63,10 @@ const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
         style={{
           width: 1080,
           height: 1350,
-          ...style,
+          ...bgStyle,
           display: "flex",
           flexDirection: "column",
-          padding: "80px 72px",
+          padding: "64px 72px",
           position: "relative",
           overflow: "hidden",
           fontFamily: brand.body_font,
@@ -66,7 +74,22 @@ const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
           transformOrigin: "top left",
         }}
       >
-        {/* Decorative elements based on style */}
+        {/* Subtle gradient overlay for dark style */}
+        {brand.visual_style === "dark" && (
+          <>
+            <div style={{
+              position: "absolute", top: 0, right: 0,
+              width: "60%", height: "100%",
+              background: `linear-gradient(200deg, ${brand.primary_color}12, transparent 60%)`,
+            }} />
+            <div style={{
+              position: "absolute", bottom: 0, left: 0,
+              width: "100%", height: "40%",
+              background: `linear-gradient(to top, ${brand.primary_color}08, transparent)`,
+            }} />
+          </>
+        )}
+
         {brand.visual_style === "bold" && (
           <>
             <div style={{
@@ -82,14 +105,6 @@ const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
           </>
         )}
 
-        {brand.visual_style === "dark" && (
-          <div style={{
-            position: "absolute", top: 0, right: 0,
-            width: "50%", height: "100%",
-            background: `linear-gradient(180deg, ${brand.primary_color}15, transparent)`,
-          }} />
-        )}
-
         {brand.visual_style === "clean" && (
           <div style={{
             position: "absolute", top: 0, left: 0,
@@ -98,53 +113,57 @@ const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
           }} />
         )}
 
-        {/* Logo */}
+        {/* Logo area */}
         {content.logoUrl && (
-          <div style={{ marginBottom: 40, position: "relative", zIndex: 1 }}>
+          <div style={{ marginBottom: 32, position: "relative", zIndex: 1 }}>
             <img
               src={content.logoUrl}
               alt="Logo"
-              style={{ height: 48, objectFit: "contain" }}
+              style={{ height: 56, objectFit: "contain" }}
               crossOrigin="anonymous"
             />
           </div>
         )}
 
         {/* Content area */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", zIndex: 1 }}>
-          {/* Headline */}
+        <div style={{
+          flex: 1, display: "flex", flexDirection: "column",
+          justifyContent: "center", position: "relative", zIndex: 1,
+        }}>
+          {/* Headline with highlight support */}
           <h1 style={{
             fontFamily: brand.heading_font,
-            fontSize: content.headline.length > 60 ? 56 : content.headline.length > 30 ? 68 : 80,
+            fontSize: content.headline.length > 60 ? 54 : content.headline.length > 30 ? 66 : 80,
             fontWeight: 800,
-            lineHeight: 1.1,
-            color: isDark ? "#ffffff" : brand.primary_color,
-            marginBottom: 24,
-            letterSpacing: "-0.02em",
+            lineHeight: 1.05,
+            color: textColor,
+            marginBottom: 28,
+            letterSpacing: brand.heading_font.includes("Bebas") ? "0.03em" : "-0.02em",
+            textTransform: brand.heading_font.includes("Bebas") ? "uppercase" : "none",
           }}>
-            {content.headline}
+            {renderHighlightedText(content.headline, brand.accent_color)}
           </h1>
 
           {/* Subheadline */}
           {content.subheadline && (
             <p style={{
-              fontSize: 32,
+              fontSize: 30,
               fontWeight: 500,
               color: textColor,
               opacity: 0.85,
               lineHeight: 1.4,
               marginBottom: 32,
             }}>
-              {content.subheadline}
+              {renderHighlightedText(content.subheadline, brand.accent_color)}
             </p>
           )}
 
           {/* Body */}
           {content.body && (
             <p style={{
-              fontSize: 26,
+              fontSize: 24,
               color: textColor,
-              opacity: 0.7,
+              opacity: 0.65,
               lineHeight: 1.6,
               maxWidth: "90%",
             }}>
@@ -153,39 +172,45 @@ const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
           )}
         </div>
 
-        {/* CTA */}
+        {/* CTA bar — orange bar at bottom like @sistema.academia */}
         {content.cta && (
-          <div style={{ position: "relative", zIndex: 1, marginTop: 40 }}>
-            <div style={{
-              display: "inline-flex",
-              padding: "20px 48px",
-              borderRadius: brand.visual_style === "minimal" ? 0 : 12,
-              background: isDark ? brand.accent_color : brand.primary_color,
-              color: "#ffffff",
-              fontSize: 28,
+          <div style={{
+            position: "absolute",
+            bottom: 0, left: 0, right: 0,
+            zIndex: 2,
+            background: brand.primary_color,
+            padding: "28px 72px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <span style={{
+              color: "#FFFFFF",
+              fontSize: 30,
               fontWeight: 700,
               fontFamily: brand.heading_font,
-              letterSpacing: "0.02em",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
             }}>
               {content.cta}
-            </div>
+            </span>
           </div>
         )}
 
-        {/* Footer */}
-        {content.footer && (
+        {/* Footer text */}
+        {content.footer && !content.cta && (
           <div style={{
             position: "relative", zIndex: 1, marginTop: 24,
             fontSize: 20,
             color: textColor,
-            opacity: 0.5,
+            opacity: 0.4,
             fontFamily: brand.body_font,
           }}>
             {content.footer}
           </div>
         )}
 
-        {/* Bottom accent bar */}
+        {/* Bottom accent line for minimal */}
         {brand.visual_style === "minimal" && (
           <div style={{
             position: "absolute", bottom: 0, left: 0,

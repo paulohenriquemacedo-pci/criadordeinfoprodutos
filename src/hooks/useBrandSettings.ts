@@ -19,15 +19,15 @@ export interface BrandSettings {
 }
 
 const DEFAULT_BRAND: Omit<BrandSettings, "id" | "project_id" | "created_at" | "updated_at"> = {
-  primary_color: "#6366f1",
-  secondary_color: "#8b5cf6",
-  accent_color: "#f59e0b",
-  background_color: "#ffffff",
-  text_color: "#1f2937",
-  heading_font: "Inter",
+  primary_color: "#E8791D",
+  secondary_color: "#0B1929",
+  accent_color: "#FFD700",
+  background_color: "#0B1929",
+  text_color: "#FFFFFF",
+  heading_font: "Bebas Neue",
   body_font: "Inter",
   logo_url: null,
-  visual_style: "clean",
+  visual_style: "dark",
 };
 
 export function useBrandSettings(projectId: string | undefined) {
