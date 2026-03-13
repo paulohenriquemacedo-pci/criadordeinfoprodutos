@@ -519,6 +519,7 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
           <div className="flex items-center gap-2 min-w-0">
             <Badge variant="outline" className="text-xs shrink-0">M{moduleConfig.number}</Badge>
             <h2 className="text-base font-semibold truncate">{moduleConfig.title}</h2>
+            <HelpTooltip text="1) Pesquise o mercado clicando em 'Pesquisar'. 2) Edite o prompt se desejar. 3) Clique 'Gerar' para criar o conteúdo. Você pode salvar, ver versões anteriores e refinar." side="bottom" />
             {module?.is_outdated && (
               <Badge variant="destructive" className="text-xs gap-1 shrink-0">
                 <AlertTriangle className="h-3 w-3" /> Desatualizado

@@ -344,6 +344,8 @@ Garanta profundidade, exemplos práticos e coerência com o restante do produto.
             <h3 className="text-sm font-semibold flex items-center gap-1.5">
               <BookOpen className="h-4 w-4 text-primary" />
               {chapterLabelPlural}
+              <HelpTooltip text="Importe a estrutura do M2 ou adicione capítulos manualmente. Gere cada um individualmente ou use 'Gerar Todos' para produção em lote." side="right" size={12} />
+            </h3>
             </h3>
             <Badge variant="secondary" className="text-xs">{completedCount}/{totalCount}</Badge>
           </div>
