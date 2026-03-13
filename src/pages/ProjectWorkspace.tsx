@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useProject, useProjectModules, useUpdateProject, useMarkModulesOutdated } from "@/hooks/useProjects";
 import { MODULE_CONFIG, ModuleNumber } from "@/lib/modules";
 import WorkflowSidebar from "@/components/workspace/WorkflowSidebar";
