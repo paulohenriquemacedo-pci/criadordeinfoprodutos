@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Plus, Sparkles, Save, Trash2, BookOpen, ChevronRight, Loader2, RefreshCw, Download, GripVertical, CheckCircle2, Clock, Zap } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
+import { HelpTooltip } from "@/components/HelpTooltip";
 import jsPDF from "jspdf";
 
 interface Props {
