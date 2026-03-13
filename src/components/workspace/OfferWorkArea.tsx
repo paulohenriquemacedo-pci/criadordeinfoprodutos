@@ -551,6 +551,8 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
           } catch { /* partial json */ }
         }
       }
+      setEvalProgress(90);
+      setEvalStage("Salvando resultado...");
 
       // Save version snapshot
       const snapshot = {
@@ -561,6 +563,8 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
         timestamp: new Date().toISOString(),
       };
       await saveVersion.mutateAsync({ product_id: selectedProduct.id, snapshot });
+      setEvalProgress(100);
+      setEvalStage("Concluído!");
 
     } catch (err: any) {
       toast.error("Erro na avaliação: " + err.message);
