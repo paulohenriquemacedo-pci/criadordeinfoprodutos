@@ -513,10 +513,14 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
 
       if (!response.body) throw new Error("Stream não disponível");
 
+      setEvalProgress(40);
+      setEvalStage("Gerando avaliação...");
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let textBuffer = "";
       let result = "";
+      let chunkCount = 0;
 
       while (true) {
         const { done, value } = await reader.read();
