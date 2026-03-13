@@ -396,6 +396,10 @@ export default function ContextSidebar({ project, projectId, hasGeneratedContent
                   </div>
                 </section>
               )}
+
+              {activeTab === "brand" && (
+                <BrandKitPanel projectId={projectId} />
+              )}
             </div>
           </motion.div>
         )}
