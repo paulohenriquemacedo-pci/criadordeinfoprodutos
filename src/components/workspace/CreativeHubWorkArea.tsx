@@ -1,7 +1,9 @@
 import { useState, useCallback } from "react";
-import { useCreativeTasks, useCreateCreativeTask, useDeleteCreativeTask, useCreateCreativeVersion, useCreativeVersions, useToggleFavoriteVersion, CreativeTask } from "@/hooks/useCreativeHub";
+import { useCreativeTasks, useCreateCreativeTask, useDeleteCreativeTask, useCreateCreativeVersion, useCreativeVersions, useToggleFavoriteVersion, useUpdateCreativeTask, CreativeTask } from "@/hooks/useCreativeHub";
+import { useProducts } from "@/hooks/useOffers";
 import { buildProjectContext } from "@/lib/context-builder";
 import { MODULE_CONFIG } from "@/lib/modules";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Sparkles, Trash2, Palette, Loader2, Star, ArrowLeft, RefreshCw, ChevronRight, Instagram, Megaphone, FileText, Copy } from "lucide-react";
+import { Plus, Sparkles, Trash2, Palette, Loader2, Star, ArrowLeft, RefreshCw, ChevronRight, Instagram, Megaphone, FileText, Copy, Download, MessageSquare, ShoppingBag, Heart } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface Props {
@@ -53,8 +55,16 @@ export default function CreativeHubWorkArea({ projectId, project }: Props) {
 
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
-  const [newTask, setNewTask] = useState({ category: "social", title: "", description: "", template_type: "", tone: "", context_modules: [1, 2, 3, 4, 5, 6, 7, 8] as number[] });
+  const [newTask, setNewTask] = useState({
+    category: "social", title: "", description: "", template_type: "", tone: "",
+    context_modules: [1, 2, 3, 4, 5, 6, 7, 8] as number[],
+    content_focus: "engagement" as string,
+    product_id: "" as string,
+    prompt_input: "" as string,
+  });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  const { data: products } = useProducts(projectId);
 
   const activeTask = tasks?.find(t => t.id === activeTaskId);
 
@@ -68,9 +78,12 @@ export default function CreativeHubWorkArea({ projectId, project }: Props) {
       template_type: newTask.template_type || undefined,
       tone: newTask.tone || undefined,
       context_modules: newTask.context_modules,
-    });
+      content_focus: newTask.content_focus,
+      product_id: newTask.product_id || undefined,
+      prompt_input: newTask.prompt_input || undefined,
+    } as any);
     setNewTaskOpen(false);
-    setNewTask({ category: "social", title: "", description: "", template_type: "", tone: "", context_modules: [1, 2, 3, 4, 5, 6, 7, 8] });
+    setNewTask({ category: "social", title: "", description: "", template_type: "", tone: "", context_modules: [1, 2, 3, 4, 5, 6, 7, 8], content_focus: "engagement", product_id: "", prompt_input: "" });
     setActiveTaskId(task.id);
   };
 
@@ -120,7 +133,6 @@ export default function CreativeHubWorkArea({ projectId, project }: Props) {
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6">
-          {/* Templates por categoria */}
           {CATEGORIES.map(cat => (
             <div key={cat.id}>
               <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
@@ -140,7 +152,6 @@ export default function CreativeHubWorkArea({ projectId, project }: Props) {
                 ))}
               </div>
 
-              {/* Tasks existentes da categoria */}
               {tasks?.filter(t => t.category === cat.id).map(task => (
                 <div
                   key={task.id}
@@ -151,6 +162,7 @@ export default function CreativeHubWorkArea({ projectId, project }: Props) {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium truncate">{task.title}</span>
                       {task.template_type && <Badge variant="outline" className="text-[10px]">{task.template_type}</Badge>}
+                      {(task as any).content_focus === "product" && <Badge variant="outline" className="text-[10px] border-primary/30"><ShoppingBag className="h-2.5 w-2.5 mr-0.5" />Produto</Badge>}
                     </div>
                     {task.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{task.description}</p>}
                   </div>
@@ -170,7 +182,7 @@ export default function CreativeHubWorkArea({ projectId, project }: Props) {
 
       {/* New Task Dialog */}
       <Dialog open={newTaskOpen} onOpenChange={setNewTaskOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nova Task Criativa</DialogTitle>
           </DialogHeader>
@@ -187,6 +199,62 @@ export default function CreativeHubWorkArea({ projectId, project }: Props) {
             <Input placeholder="Título da task" value={newTask.title} onChange={e => setNewTask(p => ({ ...p, title: e.target.value }))} />
             <Textarea placeholder="Descreva o que deseja criar... (ex: carrossel sobre gerenciamento de tempo para CLT)" value={newTask.description} onChange={e => setNewTask(p => ({ ...p, description: e.target.value }))} rows={3} />
             <Input placeholder="Tom desejado (ex: informal e provocativo)" value={newTask.tone} onChange={e => setNewTask(p => ({ ...p, tone: e.target.value }))} />
+
+            {/* Content Focus Toggle */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Foco do conteúdo</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setNewTask(p => ({ ...p, content_focus: "engagement", product_id: "" }))}
+                  className={`flex-1 p-3 rounded-lg border text-left transition-all ${newTask.content_focus === "engagement" ? "border-primary bg-primary/10" : "border-border/50 hover:border-primary/30"}`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <Heart className="h-4 w-4 text-pink-500" />
+                    <span className="text-sm font-medium">Engajamento</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">Autoridade, visibilidade e conexão com a audiência</p>
+                </button>
+                <button
+                  onClick={() => setNewTask(p => ({ ...p, content_focus: "product" }))}
+                  className={`flex-1 p-3 rounded-lg border text-left transition-all ${newTask.content_focus === "product" ? "border-primary bg-primary/10" : "border-border/50 hover:border-primary/30"}`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <ShoppingBag className="h-4 w-4 text-blue-500" />
+                    <span className="text-sm font-medium">Produto</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">Conversão, venda direta com detalhes da oferta do M9</p>
+                </button>
+              </div>
+            </div>
+
+            {/* Product Selector (when product focus) */}
+            {newTask.content_focus === "product" && products && products.length > 0 && (
+              <div>
+                <label className="text-sm font-medium mb-1 block">Produto do M9</label>
+                <Select value={newTask.product_id} onValueChange={v => setNewTask(p => ({ ...p, product_id: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Selecione um produto..." /></SelectTrigger>
+                  <SelectContent>
+                    {products.map((p: any) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name} {p.price ? `- R$ ${p.price}` : ""}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Custom Prompt */}
+            <div>
+              <label className="text-sm font-medium mb-1 block">Prompt personalizado (opcional)</label>
+              <Textarea
+                placeholder="Instruções adicionais para a IA... (ex: use metáforas esportivas, mencione cases reais, foque na dor de perder tempo)"
+                value={newTask.prompt_input}
+                onChange={e => setNewTask(p => ({ ...p, prompt_input: e.target.value }))}
+                rows={3}
+                className="text-xs"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Esse prompt será injetado em todas as gerações desta task</p>
+            </div>
+
             <div>
               <label className="text-sm font-medium mb-2 block">Módulos de contexto</label>
               <div className="flex flex-wrap gap-2">
@@ -229,11 +297,20 @@ function CreativeTaskWorkspace({ task, projectId, project, onBack }: { task: Cre
   const { data: versions, isLoading: versionsLoading } = useCreativeVersions(task.id);
   const createVersion = useCreateCreativeVersion();
   const toggleFav = useToggleFavoriteVersion();
+  const { data: products } = useProducts(projectId);
 
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamText, setStreamText] = useState("");
-  const [selectedVersions, setSelectedVersions] = useState<string[]>([]);
+  const [showRefinementFor, setShowRefinementFor] = useState<string | null>(null);
+
+  const taskAny = task as any;
+  const contentFocus = taskAny.content_focus || "engagement";
+  const productId = taskAny.product_id;
+  const customPromptInput = taskAny.prompt_input || "";
+
+  // Fetch product details if product focus
+  const selectedProduct = products?.find((p: any) => p.id === productId);
 
   const handleGenerate = useCallback(async (refinementPrompt?: string) => {
     setIsGenerating(true);
@@ -241,17 +318,52 @@ function CreativeTaskWorkspace({ task, projectId, project, onBack }: { task: Cre
     try {
       const context = await buildProjectContext(projectId);
 
-      // Filter context to only selected modules
-      const contextModules = task.context_modules || [1, 2, 3, 4, 5, 6, 7, 8];
+      // Build product context if product-focused
+      let productContext = "";
+      if (contentFocus === "product" && selectedProduct) {
+        const sp = selectedProduct as any;
+        productContext = `\n\nCONTEXTO DO PRODUTO (M9 - Oferta):
+- Nome: ${sp.name}
+- Preço: R$ ${sp.price || "não definido"}
+- Tipo: ${sp.product_type}
+- Descrição: ${sp.description || "N/A"}
+- Posicionamento: ${sp.positioning || "N/A"}
+- Transformação alvo: ${sp.target_transformation || "N/A"}
+- Formato de entrega: ${sp.delivery_format || "N/A"}`;
+
+        // Try to fetch bonuses and bumps
+        try {
+          const [bonusRes, bumpRes] = await Promise.all([
+            supabase.from("product_bonuses" as any).select("*").eq("product_id", sp.id),
+            supabase.from("product_bumps" as any).select("*").eq("product_id", sp.id),
+          ]);
+          if (bonusRes.data?.length) {
+            productContext += `\n\nBÔNUS DA OFERTA:\n${(bonusRes.data as any[]).map((b: any) => `- ${b.name}: ${b.description || ""} (Valor percebido: R$ ${b.perceived_value || "N/A"})`).join("\n")}`;
+          }
+          if (bumpRes.data?.length) {
+            productContext += `\n\nORDER BUMPS/UPSELLS:\n${(bumpRes.data as any[]).map((b: any) => `- ${b.name} (${b.bump_type}): R$ ${b.price || "N/A"} - ${b.description || ""}`).join("\n")}`;
+          }
+        } catch {}
+      }
+
+      const focusInstruction = contentFocus === "product"
+        ? "FOCO: PRODUTO/CONVERSÃO. Priorize a venda direta, destaque a oferta, bônus, urgência e transformação. Use os detalhes do produto para criar copy persuasiva."
+        : "FOCO: ENGAJAMENTO/AUTORIDADE. Priorize conexão com a audiência, construção de autoridade e visibilidade. NÃO faça pitch de venda direta.";
+
+      const customPromptSection = customPromptInput
+        ? `\nINSTRUÇÕES PERSONALIZADAS DO USUÁRIO:\n${customPromptInput}\n`
+        : "";
 
       const systemPrompt = `Você é um especialista criativo em marketing digital e infoprodutos no mercado brasileiro.
 Sua tarefa é criar peças de conteúdo profissionais, criativas e estratégicas.
 
+${focusInstruction}
+
 CONTEXTO DO PROJETO:
 ${context.briefing}
 
-${context.fullContext}
-
+${context.fullContext}${productContext}
+${customPromptSection}
 REGRAS:
 - Crie conteúdo original, prático e direto
 - Adapte o tom conforme solicitado
@@ -314,7 +426,6 @@ ${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}`;
         }
       }
 
-      // Save version
       const nextVersion = (versions?.length || 0) + 1;
       await createVersion.mutateAsync({
         task_id: task.id,
@@ -330,7 +441,7 @@ ${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}`;
       setIsGenerating(false);
       setStreamText("");
     }
-  }, [projectId, task, versions, createVersion]);
+  }, [projectId, task, versions, createVersion, contentFocus, selectedProduct, customPromptInput]);
 
   const handleSubmitPrompt = () => {
     if (!prompt.trim() && (!versions || versions.length === 0)) {
@@ -348,7 +459,17 @@ ${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}`;
     toast.success("Copiado!");
   };
 
-  const displayText = isGenerating ? streamText : "";
+  const downloadVersion = (version: { version_number: number; content: string }) => {
+    const filename = `${task.title.replace(/[^a-zA-Z0-9]/g, "_")}_v${version.version_number}.md`;
+    const blob = new Blob([version.content], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Download iniciado!");
+  };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -359,8 +480,13 @@ ${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}`;
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold truncate">{task.title}</h3>
             <Badge variant="outline" className="text-[10px]">{CATEGORIES.find(c => c.id === task.category)?.label}</Badge>
+            {contentFocus === "product" && <Badge variant="outline" className="text-[10px] border-primary/30"><ShoppingBag className="h-2.5 w-2.5 mr-0.5" />Produto</Badge>}
+            {contentFocus === "engagement" && <Badge variant="outline" className="text-[10px] border-pink-500/30"><Heart className="h-2.5 w-2.5 mr-0.5" />Engajamento</Badge>}
           </div>
-          {task.description && <p className="text-xs text-muted-foreground truncate">{task.description}</p>}
+          <div className="flex items-center gap-2 mt-0.5">
+            {task.description && <p className="text-xs text-muted-foreground truncate">{task.description}</p>}
+            {selectedProduct && <Badge variant="secondary" className="text-[10px]">{(selectedProduct as any).name}</Badge>}
+          </div>
         </div>
         <Button size="sm" variant="default" className="gap-1.5" onClick={() => handleGenerate()} disabled={isGenerating}>
           {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
@@ -368,8 +494,15 @@ ${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}`;
         </Button>
       </div>
 
+      {/* Custom prompt indicator */}
+      {customPromptInput && (
+        <div className="px-3 py-1.5 bg-accent/30 border-b border-border/30 flex items-center gap-2">
+          <MessageSquare className="h-3 w-3 text-primary" />
+          <span className="text-[10px] text-muted-foreground truncate">Prompt personalizado: "{customPromptInput.slice(0, 80)}{customPromptInput.length > 80 ? "..." : ""}"</span>
+        </div>
+      )}
+
       <div className="flex-1 flex overflow-hidden">
-        {/* Left: Versions list + Prompt */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Prompt input */}
           <div className="p-3 border-b border-border/50">
@@ -410,9 +543,20 @@ ${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}`;
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary" className="text-xs">v{v.version_number}</Badge>
-                        {v.refinement_prompt && <span className="text-[10px] text-muted-foreground truncate max-w-[200px]">"{v.refinement_prompt}"</span>}
+                        {v.refinement_prompt && (
+                          <button
+                            onClick={() => setShowRefinementFor(showRefinementFor === v.id ? null : v.id)}
+                            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            <MessageSquare className="h-2.5 w-2.5" />
+                            <span className="truncate max-w-[180px]">"{v.refinement_prompt}"</span>
+                          </button>
+                        )}
                       </div>
                       <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadVersion(v)} title="Download .md">
+                          <Download className="h-3 w-3" />
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyToClipboard(v.content)}>
                           <Copy className="h-3 w-3" />
                         </Button>
@@ -421,6 +565,13 @@ ${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}`;
                         </Button>
                       </div>
                     </div>
+                    {/* Expanded refinement prompt */}
+                    {showRefinementFor === v.id && v.refinement_prompt && (
+                      <div className="mb-3 p-2 rounded bg-accent/40 border border-border/30">
+                        <p className="text-[11px] text-muted-foreground font-medium mb-0.5">Prompt usado nesta versão:</p>
+                        <p className="text-xs text-foreground/80">{v.refinement_prompt}</p>
+                      </div>
+                    )}
                     <div className="text-sm whitespace-pre-wrap max-h-96 overflow-y-auto">{v.content}</div>
                   </div>
                 ))

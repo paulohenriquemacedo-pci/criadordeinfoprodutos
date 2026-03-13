@@ -14,6 +14,10 @@ export interface CreativeTask {
   tone: string | null;
   status: string;
   favorite_version_id: string | null;
+  content_focus: string;
+  product_id: string | null;
+  offer_item_id: string | null;
+  offer_item_type: string | null;
   created_at: string;
   updated_at: string;
 }
