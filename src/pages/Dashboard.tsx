@@ -137,12 +137,14 @@ export default function Dashboard() {
             <p className="text-muted-foreground mt-1">Gerencie seus infoprodutos com IA</p>
           </div>
           <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" /> Novo Projeto
-              </Button>
+            <div className="flex items-center gap-2">
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" /> Novo Projeto
+                </Button>
+              </DialogTrigger>
               <HelpTooltip text="Crie um projeto do zero (preenchendo briefing) ou a partir de material existente (enviando PDFs)." side="bottom" />
-            </DialogTrigger>
+            </div>
             <DialogContent className="sm:max-w-lg">
               {/* Step 1: Choose mode */}
               {mode === null && (
