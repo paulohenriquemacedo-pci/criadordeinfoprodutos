@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import StrategicMemoryPanel from "./StrategicMemoryPanel";
+import { HelpTooltip } from "@/components/HelpTooltip";
 
 interface Contradiction {
   issue: string;
