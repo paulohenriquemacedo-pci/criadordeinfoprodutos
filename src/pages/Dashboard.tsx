@@ -34,6 +34,7 @@ export default function Dashboard() {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<CreationMode>(null);
   const [form, setForm] = useState({ name: "", niche: "", promise: "", target_audience: "" });
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [batchProjectId, setBatchProjectId] = useState<string | null>(null);
   const batch = useBatchGeneration();
 
