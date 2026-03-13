@@ -708,6 +708,17 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
           </div>
         </div>
 
+        {/* Progress bar */}
+        {evaluating && evalProgress > 0 && (
+          <div className="px-4 py-2 border-b border-border/30 space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">{evalStage}</span>
+              <span className="font-medium text-primary">{Math.round(evalProgress)}%</span>
+            </div>
+            <Progress value={evalProgress} className="h-1.5" />
+          </div>
+        )}
+
         <ScrollArea className="flex-1">
           <div className="p-4">
             {evaluation ? (
