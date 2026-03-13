@@ -304,6 +304,8 @@ function CreativeTaskWorkspace({ task, projectId, project, onBack }: { task: Cre
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamText, setStreamText] = useState("");
   const [showRefinementFor, setShowRefinementFor] = useState<string | null>(null);
+  const [materialVersion, setMaterialVersion] = useState<{ content: string } | null>(null);
+  const [showRefinementFor, setShowRefinementFor] = useState<string | null>(null);
 
   const taskAny = task as any;
   const contentFocus = taskAny.content_focus || "engagement";
