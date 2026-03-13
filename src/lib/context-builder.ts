@@ -104,7 +104,11 @@ ${JSON.stringify(strategicMemory, null, 2)}`
     return parts.join("\n\n---\n\n");
   };
 
-  const previousOutputs = (modules || [])
+  const filteredModules = filterModules
+    ? (modules || []).filter(m => filterModules.includes(m.module_number))
+    : (modules || []);
+
+  const previousOutputs = filteredModules
     .filter((m) => m.generated_content)
     .map((m) => `MÓDULO ${m.module_number} (${MODULE_CONFIG_LABELS[m.module_number] || ""}):\n${m.generated_content}`)
     .join("\n\n---\n\n");
