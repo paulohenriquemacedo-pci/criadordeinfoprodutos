@@ -96,13 +96,14 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
 
   const handleReExtract = () => {
     const re = extractContentFromMarkdown(versionContent);
-    setContent({
+    setContent(prev => ({
       headline: re.headline,
       subheadline: re.subheadline || "",
       body: re.body || "",
       cta: re.cta || "",
       footer: "",
-    });
+      imageUrl: prev.imageUrl || "",
+    }));
     toast.success("Conteúdo re-extraído do texto!");
   };
 
