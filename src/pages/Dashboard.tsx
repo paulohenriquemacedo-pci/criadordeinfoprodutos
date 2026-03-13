@@ -113,6 +113,9 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
+            <Button variant="ghost" size="icon" onClick={() => setWelcomeOpen(true)} title="Como usar">
+              <HelpCircle className="h-4 w-4" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={signOut}>
               <LogOut className="h-4 w-4" />
             </Button>
