@@ -202,6 +202,6 @@ export default function BrandKitPanel({ projectId }: Props) {
           </div>
         </div>
       </div>
-    </ScrollArea>
+    </div>
   );
 }
