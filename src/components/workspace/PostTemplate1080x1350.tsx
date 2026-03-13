@@ -16,6 +16,7 @@ interface Props {
   brand: BrandSettings;
   content: PostContentData;
   scale?: number;
+  onContentChange?: (field: keyof PostContentData, value: string) => void;
 }
 
 function renderHighlightedText(
@@ -45,7 +46,7 @@ function renderHighlightedText(
 }
 
 const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
-  ({ brand, content, scale = 0.3 }, ref) => {
+  ({ brand, content, scale = 0.3, onContentChange }, ref) => {
     const isDark = brand.visual_style === "dark" || brand.visual_style === "bold";
 
     const backgrounds: Record<string, React.CSSProperties> = {
@@ -155,42 +156,63 @@ const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
           justifyContent: "center", position: "relative", zIndex: 1,
         }}>
           {/* Headline with highlight support */}
-          <h1 style={{
-            fontFamily: brand.heading_font,
-            fontSize: content.headline.length > 60 ? 54 : content.headline.length > 30 ? 66 : 80,
-            fontWeight: 800,
-            lineHeight: 1.05,
-            color: textColor,
-            marginBottom: 28,
-            letterSpacing: brand.heading_font.includes("Bebas") ? "0.03em" : "-0.02em",
-            textTransform: brand.heading_font.includes("Bebas") ? "uppercase" : "none",
-          }}>
-            {renderHighlightedText(content.headline, brand.accent_color)}
+          <h1
+            style={{
+              fontFamily: brand.heading_font,
+              fontSize: content.headline.length > 60 ? 54 : content.headline.length > 30 ? 66 : 80,
+              fontWeight: 800,
+              lineHeight: 1.05,
+              color: textColor,
+              marginBottom: 28,
+              letterSpacing: brand.heading_font.includes("Bebas") ? "0.03em" : "-0.02em",
+              textTransform: brand.heading_font.includes("Bebas") ? "uppercase" : "none",
+              cursor: onContentChange ? "text" : "default",
+              outline: "none",
+            }}
+            contentEditable={!!onContentChange}
+            suppressContentEditableWarning
+            onBlur={e => onContentChange?.("headline", e.currentTarget.textContent || "")}
+          >
+            {onContentChange ? content.headline : renderHighlightedText(content.headline, brand.accent_color)}
           </h1>
 
           {/* Subheadline */}
           {content.subheadline && (
-            <p style={{
-              fontSize: 30,
-              fontWeight: 500,
-              color: textColor,
-              opacity: 0.85,
-              lineHeight: 1.4,
-              marginBottom: 32,
-            }}>
-              {renderHighlightedText(content.subheadline, brand.accent_color)}
+            <p
+              style={{
+                fontSize: 30,
+                fontWeight: 500,
+                color: textColor,
+                opacity: 0.85,
+                lineHeight: 1.4,
+                marginBottom: 32,
+                cursor: onContentChange ? "text" : "default",
+                outline: "none",
+              }}
+              contentEditable={!!onContentChange}
+              suppressContentEditableWarning
+              onBlur={e => onContentChange?.("subheadline", e.currentTarget.textContent || "")}
+            >
+              {onContentChange ? content.subheadline : renderHighlightedText(content.subheadline, brand.accent_color)}
             </p>
           )}
 
           {/* Body */}
           {content.body && (
-            <p style={{
-              fontSize: 24,
-              color: textColor,
-              opacity: 0.65,
-              lineHeight: 1.6,
-              maxWidth: "90%",
-            }}>
+            <p
+              style={{
+                fontSize: 24,
+                color: textColor,
+                opacity: 0.65,
+                lineHeight: 1.6,
+                maxWidth: "90%",
+                cursor: onContentChange ? "text" : "default",
+                outline: "none",
+              }}
+              contentEditable={!!onContentChange}
+              suppressContentEditableWarning
+              onBlur={e => onContentChange?.("body", e.currentTarget.textContent || "")}
+            >
               {content.body}
             </p>
           )}
@@ -208,14 +230,21 @@ const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
             alignItems: "center",
             justifyContent: "center",
           }}>
-            <span style={{
-              color: "#FFFFFF",
-              fontSize: 30,
-              fontWeight: 700,
-              fontFamily: brand.heading_font,
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-            }}>
+            <span
+              style={{
+                color: "#FFFFFF",
+                fontSize: 30,
+                fontWeight: 700,
+                fontFamily: brand.heading_font,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                cursor: onContentChange ? "text" : "default",
+                outline: "none",
+              }}
+              contentEditable={!!onContentChange}
+              suppressContentEditableWarning
+              onBlur={e => onContentChange?.("cta", e.currentTarget.textContent || "")}
+            >
               {content.cta}
             </span>
           </div>

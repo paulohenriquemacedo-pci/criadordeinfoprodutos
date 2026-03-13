@@ -39,51 +39,73 @@ interface Props {
   projectAudience?: string;
 }
 
-function extractContentFromMarkdown(markdown: string): PostContentData {
-  const lines = markdown.split("\n").filter(l => l.trim());
-  let headline = "";
-  let subheadline = "";
-  let body = "";
-  let cta = "";
-  const bodyParts: string[] = [];
+interface ExtractedContent extends PostContentData {
+  imagePromptSuggestion?: string;
+  searchKeywords?: string;
+}
 
+function extractLabeledField(lines: string[], labels: string[]): string {
   for (const line of lines) {
     const trimmed = line.trim();
-    const clean = trimmed.replace(/\*\*/g, "").replace(/\*/g, "");
+    // Match "**Label:** value" or "Label: value"
+    for (const label of labels) {
+      const regex = new RegExp(`^\\*{0,2}${label}\\*{0,2}\\s*[:：]\\s*(.+)`, "i");
+      const match = trimmed.match(regex);
+      if (match) {
+        return match[1].trim();
+      }
+    }
+  }
+  return "";
+}
 
-    // Detect headline: first # heading, or labeled "Título" / "Headline" / "Gancho"
-    if (!headline && (trimmed.startsWith("# ") || /^(título|headline|gancho|hook)\s*[:：]/i.test(clean))) {
-      headline = clean.replace(/^#+\s*/, "").replace(/^(título|headline|gancho|hook)\s*[:：]\s*/i, "").trim();
-    }
-    // Detect subheadline: ## heading or labeled "Subtítulo" / "Sub"
-    else if (!subheadline && (trimmed.startsWith("## ") || /^(subtítulo|sub-?headline|subhead)\s*[:：]/i.test(clean))) {
-      subheadline = clean.replace(/^#+\s*/, "").replace(/^(subtítulo|sub-?headline|subhead)\s*[:：]\s*/i, "").trim();
-    }
-    // Detect CTA
-    else if (!cta && (/cta\s*[:：]/i.test(clean) || /call.to.action\s*[:：]/i.test(clean) || /chamada.para.ação\s*[:：]/i.test(clean))) {
-      cta = clean.replace(/^.*?[:：]\s*/, "").trim();
-    }
-    // Collect body paragraphs (non-heading, non-list, substantial text)
-    else if (!trimmed.startsWith("#") && !trimmed.startsWith("---") && clean.length > 15) {
-      // Skip metadata-like lines
-      if (!/^(legenda|caption|hashtag|formato|tom|plataforma|slide|imagem)\s*[:：]/i.test(clean)) {
-        bodyParts.push(clean);
+function extractContentFromMarkdown(markdown: string): ExtractedContent {
+  const lines = markdown.split("\n").filter(l => l.trim());
+
+  // Try structured extraction first (labeled fields)
+  let headline = extractLabeledField(lines, ["título", "titulo", "headline", "gancho", "hook"]);
+  let subheadline = extractLabeledField(lines, ["subtítulo", "subtitulo", "sub-headline", "subhead", "sub"]);
+  let body = extractLabeledField(lines, ["corpo", "body", "texto", "descrição", "descricao"]);
+  let cta = extractLabeledField(lines, ["cta", "call.to.action", "chamada para ação", "chamada"]);
+  let imagePromptSuggestion = extractLabeledField(lines, ["prompt de imagem", "image prompt", "prompt imagem", "prompt"]);
+  let searchKeywords = extractLabeledField(lines, ["palavras-chave", "palavras chave", "keywords", "busca", "search"]);
+
+  // Fallback: try heading-based extraction if no labeled fields found
+  if (!headline) {
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("# ")) {
+        headline = trimmed.replace(/^#+\s*/, "").replace(/\*\*/g, "").trim();
+        break;
       }
     }
   }
 
-  // Fallback: use first meaningful line as headline
+  // Fallback: first meaningful line
   if (!headline) {
     const first = lines[0]?.replace(/[#*]/g, "").trim().slice(0, 80);
     headline = first || "Seu Título Aqui";
   }
 
-  // Build body from collected paragraphs (first 2-3)
-  if (!body && bodyParts.length > 0) {
+  // Fallback body: collect non-labeled paragraphs
+  if (!body) {
+    const bodyParts: string[] = [];
+    for (const line of lines) {
+      const trimmed = line.trim();
+      const clean = trimmed.replace(/\*\*/g, "").replace(/\*/g, "");
+      if (
+        !trimmed.startsWith("#") &&
+        !trimmed.startsWith("---") &&
+        clean.length > 15 &&
+        !/^(título|subtítulo|cta|corpo|prompt|palavras|legenda|caption|hashtag|formato|tom|plataforma|slide|imagem|call|chamada)\s*[:：]/i.test(clean)
+      ) {
+        bodyParts.push(clean);
+      }
+    }
     body = bodyParts.slice(0, 3).join(" ").slice(0, 200);
   }
 
-  // Try to find CTA from body text if not explicitly labeled
+  // Fallback CTA
   if (!cta) {
     const ctaLine = lines.find(l => {
       const c = l.trim().toLowerCase();
@@ -94,7 +116,14 @@ function extractContentFromMarkdown(markdown: string): PostContentData {
     }
   }
 
-  return { headline: headline.slice(0, 120), subheadline: subheadline.slice(0, 120), body, cta };
+  return {
+    headline: headline.slice(0, 120),
+    subheadline: subheadline.slice(0, 120),
+    body,
+    cta,
+    imagePromptSuggestion,
+    searchKeywords,
+  };
 }
 
 export default function MaterialCreator({ projectId, versionContent, taskTitle, onBack, projectNiche, projectAudience }: Props) {
@@ -106,12 +135,12 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
 
   const extracted = extractContentFromMarkdown(versionContent);
 
-  // Image generation states — pre-fill with headline for convenience
-  const [imagePrompt, setImagePrompt] = useState(extracted.headline?.replace(/\*+/g, "").slice(0, 80) || "");
+  // Image generation states — pre-fill with AI-suggested prompt or headline
+  const [imagePrompt, setImagePrompt] = useState(extracted.imagePromptSuggestion || extracted.headline?.replace(/\*+/g, "").slice(0, 80) || "");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
-  // Stock image search states
-  const [stockQuery, setStockQuery] = useState("");
+  // Stock image search states — pre-fill with suggested keywords
+  const [stockQuery, setStockQuery] = useState(extracted.searchKeywords || "");
   const [stockImages, setStockImages] = useState<StockImage[]>([]);
   const [isSearchingStock, setIsSearchingStock] = useState(false);
   const [stockDialogOpen, setStockDialogOpen] = useState(false);
@@ -133,6 +162,7 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
     cta: extracted.cta || "",
     footer: "",
     imageUrl: "",
+    logoUrl: brand.logo_url || "",
   });
 
   const cfg = FORMAT_CONFIG[format];
@@ -163,7 +193,10 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
       headline: re.headline, subheadline: re.subheadline || "",
       body: re.body || "", cta: re.cta || "", footer: "",
       imageUrl: prev.imageUrl || "",
+      logoUrl: prev.logoUrl || "",
     }));
+    if (re.imagePromptSuggestion) setImagePrompt(re.imagePromptSuggestion);
+    if (re.searchKeywords) setStockQuery(re.searchKeywords);
     toast.success("Conteúdo re-extraído do texto!");
   };
 
@@ -336,7 +369,33 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
                 <Input value={content.footer || ""} onChange={e => setContent(p => ({ ...p, footer: e.target.value }))} className="text-xs h-8" placeholder="@seuinstagram" />
               </div>
 
-              {/* === IMAGE SOURCE SECTION === */}
+              {/* === LOGO SECTION === */}
+              <div className="border-t border-border/30 pt-3">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">🏷️ Logomarca</h4>
+                {content.logoUrl && (
+                  <div className="mb-2 p-2 bg-muted/30 rounded-lg flex items-center gap-2">
+                    <img src={content.logoUrl} alt="Logo" className="h-8 object-contain" />
+                    <Button variant="ghost" size="sm" className="text-xs text-destructive ml-auto h-6"
+                      onClick={() => setContent(p => ({ ...p, logoUrl: "" }))}>
+                      Remover
+                    </Button>
+                  </div>
+                )}
+                <Input
+                  value={content.logoUrl || ""}
+                  onChange={e => setContent(p => ({ ...p, logoUrl: e.target.value }))}
+                  className="text-xs h-8 mb-1.5"
+                  placeholder="Cole a URL da logomarca..."
+                />
+                <input type="file" accept="image/*" className="hidden" id="logo-upload"
+                  onChange={e => { const file = e.target.files?.[0]; if (file) setContent(p => ({ ...p, logoUrl: URL.createObjectURL(file) })); }}
+                />
+                <Button variant="outline" size="sm" className="w-full text-xs gap-1"
+                  onClick={() => document.getElementById("logo-upload")?.click()}>
+                  <Image className="h-3 w-3" /> Upload Logo
+                </Button>
+              </div>
+
               <div className="border-t border-border/30 pt-3">
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">🖼️ Imagem de Fundo</h4>
 
@@ -437,7 +496,13 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
             style={{ width: cfg.width * previewScale, height: cfg.height * previewScale }}
             className="shadow-2xl rounded-lg overflow-hidden relative"
           >
-            <TemplateComponent ref={templateRef} brand={brand} content={content} scale={previewScale} />
+            <TemplateComponent
+              ref={templateRef}
+              brand={brand}
+              content={content}
+              scale={previewScale}
+              onContentChange={(field, value) => setContent(p => ({ ...p, [field]: value }))}
+            />
           </div>
         </div>
       </div>
