@@ -178,15 +178,22 @@ const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
 
           {/* Subheadline */}
           {content.subheadline && (
-            <p style={{
-              fontSize: 30,
-              fontWeight: 500,
-              color: textColor,
-              opacity: 0.85,
-              lineHeight: 1.4,
-              marginBottom: 32,
-            }}>
-              {renderHighlightedText(content.subheadline, brand.accent_color)}
+            <p
+              style={{
+                fontSize: 30,
+                fontWeight: 500,
+                color: textColor,
+                opacity: 0.85,
+                lineHeight: 1.4,
+                marginBottom: 32,
+                cursor: onContentChange ? "text" : "default",
+                outline: "none",
+              }}
+              contentEditable={!!onContentChange}
+              suppressContentEditableWarning
+              onBlur={e => onContentChange?.("subheadline", e.currentTarget.textContent || "")}
+            >
+              {onContentChange ? content.subheadline : renderHighlightedText(content.subheadline, brand.accent_color)}
             </p>
           )}
 
