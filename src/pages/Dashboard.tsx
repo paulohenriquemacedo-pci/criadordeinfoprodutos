@@ -138,11 +138,9 @@ export default function Dashboard() {
           </div>
           <Dialog open={open} onOpenChange={handleOpenChange}>
             <div className="flex items-center gap-2">
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" /> Novo Projeto
-                </Button>
-              </DialogTrigger>
+              <Button className="gap-2" onClick={() => handleOpenChange(true)}>
+                <Plus className="h-4 w-4" /> Novo Projeto
+              </Button>
               <HelpTooltip text="Crie um projeto do zero (preenchendo briefing) ou a partir de material existente (enviando PDFs)." side="bottom" />
             </div>
             <DialogContent className="sm:max-w-lg">

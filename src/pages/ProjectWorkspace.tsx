@@ -259,11 +259,9 @@ export default function ProjectWorkspace() {
             <HelpCircle className="h-4 w-4" />
           </Button>
           <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" onClick={openSettings}>
-                <Settings className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
+            <Button variant="ghost" size="icon" onClick={openSettings}>
+              <Settings className="h-4 w-4" />
+            </Button>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Configurações do Projeto</DialogTitle>

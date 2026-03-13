@@ -60,7 +60,9 @@ export default function WorkflowSidebar({ activeModule, onSelectModule, modules 
                       )}
                       <Tooltip delayDuration={300}>
                         <TooltipTrigger asChild>
-                          <Info className="h-3 w-3 text-muted-foreground/40 hover:text-primary/70 transition-colors shrink-0 cursor-help" />
+                          <span className="inline-flex items-center justify-center shrink-0 cursor-help">
+                            <Info className="h-3 w-3 text-muted-foreground/40 hover:text-primary/70 transition-colors" />
+                          </span>
                         </TooltipTrigger>
                         <TooltipContent side="right" className="max-w-[220px] text-xs">
                           {config.description}
