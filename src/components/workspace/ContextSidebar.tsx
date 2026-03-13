@@ -279,7 +279,7 @@ export default function ContextSidebar({ project, projectId, hasGeneratedContent
           >
             <div className="flex items-center justify-between px-3 py-2 border-b border-border/30">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                {activeTab === "progress" ? "Progresso" : activeTab === "context" ? "Contexto" : "Arquivos"}
+                {activeTab === "progress" ? "Progresso" : activeTab === "context" ? "Contexto" : activeTab === "brand" ? "Brand Kit" : "Arquivos"}
               </span>
               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setExpanded(false)}>
                 <PanelRightClose className="h-3.5 w-3.5" />
