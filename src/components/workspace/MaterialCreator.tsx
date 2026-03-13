@@ -196,6 +196,46 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
                 />
               </div>
 
+              <div className="space-y-1">
+                <Label className="text-xs">Imagem de Fundo</Label>
+                <Input
+                  value={content.imageUrl || ""}
+                  onChange={e => setContent(p => ({ ...p, imageUrl: e.target.value }))}
+                  className="text-xs h-8"
+                  placeholder="Cole a URL da imagem..."
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  id="bg-image-upload"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const url = URL.createObjectURL(file);
+                      setContent(p => ({ ...p, imageUrl: url }));
+                    }
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs gap-1"
+                  onClick={() => document.getElementById("bg-image-upload")?.click()}
+                >
+                  <Image className="h-3 w-3" /> Upload Imagem
+                </Button>
+                {content.imageUrl && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-xs text-destructive"
+                    onClick={() => setContent(p => ({ ...p, imageUrl: "" }))}
+                  >
+                    Remover imagem
+                  </Button>
+                )}
+              </div>
               {!savedBrand && (
                 <div className="p-2 bg-accent/30 rounded-lg border border-border/30">
                   <p className="text-[10px] text-muted-foreground">
