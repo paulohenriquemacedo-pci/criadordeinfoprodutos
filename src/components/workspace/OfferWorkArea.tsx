@@ -733,7 +733,7 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
       <div className="w-1/2 border-r border-border/50 flex flex-col">
         <div className="p-4 border-b border-border/30 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold flex items-center gap-2"><Package className="h-5 w-5 text-primary" /> Definição de Oferta</h2>
+            <h2 className="text-lg font-semibold flex items-center gap-2"><Package className="h-5 w-5 text-primary" /> Definição de Oferta <HelpTooltip text="Cadastre produtos, bônus e order bumps. Importe dados dos módulos ou de PDFs. Use 'Avaliar Oferta' para a IA pontuar e sugerir melhorias." side="bottom" /></h2>
             <p className="text-xs text-muted-foreground">Cadastre seus produtos, bônus e bumps</p>
           </div>
           <div className="flex items-center gap-2">
