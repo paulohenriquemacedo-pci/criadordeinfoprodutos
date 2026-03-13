@@ -157,7 +157,7 @@ export function useBatchGeneration() {
 
       try {
         const parsed = JSON.parse(jsonStr);
-        const delta = parsed.choices?.[0]?.delta?.content;
+        const delta = parsed.choices?.[0]?.delta?.content || parsed.candidates?.[0]?.content?.parts?.[0]?.text;
         const fr = parsed.choices?.[0]?.finish_reason;
         if (fr) lastFinishReason = fr;
         if (delta) text += delta;
