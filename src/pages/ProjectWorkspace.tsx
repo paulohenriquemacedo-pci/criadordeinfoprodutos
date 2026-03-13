@@ -283,6 +283,8 @@ export default function ProjectWorkspace() {
         </div>
       </header>
 
+      <WelcomeDialog open={welcomeOpen} onOpenChange={setWelcomeOpen} />
+
       {/* 3-panel layout */}
       <div className="flex-1 flex overflow-hidden min-w-0">
         <WorkflowSidebar
