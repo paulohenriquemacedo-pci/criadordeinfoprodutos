@@ -66,6 +66,8 @@ export default function WorkflowSidebar({ activeModule, onSelectModule, modules 
                 {isM0 && <div className="my-2 border-t border-border/30" />}
                 {config.number === 8 && <div className="my-2 border-t border-border/30" />}
                 {config.number === 9 && <div className="my-2 border-t border-border/30" />}
+                {config.number === 11 && <div className="my-2 border-t border-border/30" />}
+                {config.number === 9 && <div className="my-2 border-t border-border/30" />}
               </div>
             );
           })}
