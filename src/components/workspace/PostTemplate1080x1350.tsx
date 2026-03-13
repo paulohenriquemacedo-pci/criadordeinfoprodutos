@@ -16,6 +16,7 @@ interface Props {
   brand: BrandSettings;
   content: PostContentData;
   scale?: number;
+  onContentChange?: (field: keyof PostContentData, value: string) => void;
 }
 
 function renderHighlightedText(
