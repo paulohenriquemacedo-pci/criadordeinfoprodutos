@@ -258,6 +258,39 @@ export default function OfferWorkArea({ projectId, project }: Props) {
   const [importing, setImporting] = useState(false);
   const [importingM2, setImportingM2] = useState(false);
 
+  // Load last saved evaluation when selecting a product
+  useEffect(() => {
+    if (!selectedProduct) return;
+    const loadLastEvaluation = async () => {
+      const { data } = await supabase
+        .from("offer_versions")
+        .select("snapshot")
+        .eq("product_id", selectedProduct.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (data?.[0]?.snapshot) {
+        const snapshot = data[0].snapshot as any;
+        if (snapshot.evaluation) {
+          setEvaluation(snapshot.evaluation);
+        }
+      }
+    };
+    loadLastEvaluation();
+  }, [selectedProduct?.id]);
+
+  const handleDownloadEvaluation = () => {
+    if (!evaluation || !selectedProduct) return;
+    const blob = new Blob([evaluation], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `avaliacao-${selectedProduct.name.replace(/\s+/g, "-").toLowerCase()}.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const handleImportFromModules = async (moduleNumbers: number[]) => {
     setImportingM2(true);
     try {
