@@ -219,6 +219,7 @@ export default function ProjectWorkspace() {
           </div>
         </div>
         <div className="flex items-center gap-1">
+          <HelpTooltip text="Use 'Pesquisar Tudo' para rodar pesquisa de mercado em todos os módulos. 'Gerar Tudo' cria o conteúdo de todos os módulos de uma vez." side="bottom" />
           <PromptExportImport projectId={project.id} />
           <Button variant="outline" size="sm" onClick={() => { setBatchMode("research"); setBatchConfigOpen(true); }} className="gap-1.5" title="Pesquisar todos os módulos de uma vez">
             <Search className="h-4 w-4" /> Pesquisar Tudo
