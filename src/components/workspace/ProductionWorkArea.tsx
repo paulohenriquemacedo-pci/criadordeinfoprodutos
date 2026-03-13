@@ -346,7 +346,6 @@ Garanta profundidade, exemplos práticos e coerência com o restante do produto.
               {chapterLabelPlural}
               <HelpTooltip text="Importe a estrutura do M2 ou adicione capítulos manualmente. Gere cada um individualmente ou use 'Gerar Todos' para produção em lote." side="right" size={12} />
             </h3>
-            </h3>
             <Badge variant="secondary" className="text-xs">{completedCount}/{totalCount}</Badge>
           </div>
           {totalCount > 0 && (
