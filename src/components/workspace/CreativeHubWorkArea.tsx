@@ -31,6 +31,7 @@ const CATEGORIES = [
 
 const TEMPLATES: Record<string, Array<{ id: string; label: string; description: string }>> = {
   social: [
+    { id: "single_post", label: "Post de Imagem Única", description: "Post com imagem + legenda persuasiva para feed" },
     { id: "carousel", label: "Carrossel Instagram", description: "Carrossel educativo ou de vendas com slides estruturados" },
     { id: "reel_script", label: "Roteiro de Reel", description: "Roteiro completo para Reels/TikTok com gancho e CTA" },
     { id: "caption", label: "Legenda de Post", description: "Legenda persuasiva com storytelling e call-to-action" },
