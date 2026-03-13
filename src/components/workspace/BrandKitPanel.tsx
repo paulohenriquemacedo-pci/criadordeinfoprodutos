@@ -77,8 +77,8 @@ export default function BrandKitPanel({ projectId }: Props) {
   }
 
   return (
-    <ScrollArea className="h-full">
-      <div className="p-4 space-y-5">
+    <div>
+      <div className="space-y-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Palette className="h-4 w-4 text-primary" />
