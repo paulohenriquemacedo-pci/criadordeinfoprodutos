@@ -299,10 +299,11 @@ export default function ProjectWorkspace() {
             moduleConfig={MODULE_CONFIG.find((m) => m.number === activeModule)!}
           />
         )}
-        <ContextSidebar
-          project={project}
-          projectId={project.id}
-          hasGeneratedContent={modules?.some((m) => !!m.generated_content)}
+        {activeModule !== 12 && (
+          <ContextSidebar
+            project={project}
+            projectId={project.id}
+            hasGeneratedContent={modules?.some((m) => !!m.generated_content)}
         />
       </div>
 
