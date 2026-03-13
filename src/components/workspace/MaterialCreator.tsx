@@ -9,8 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Download, ArrowLeft, Loader2, Image, RefreshCw } from "lucide-react";
+import { Download, ArrowLeft, Loader2, Image, RefreshCw, Sparkles, Search, FileText, Copy, Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 type TemplateFormat = "feed" | "story";
 
@@ -19,11 +21,22 @@ const FORMAT_CONFIG: Record<TemplateFormat, { label: string; badge: string; widt
   story: { label: "Story", badge: "1080×1920", width: 1080, height: 1920 },
 };
 
+interface StockImage {
+  id: string;
+  url: string;
+  thumbUrl: string;
+  alt: string;
+  author: string;
+  authorUrl: string;
+}
+
 interface Props {
   projectId: string;
   versionContent: string;
   taskTitle: string;
   onBack: () => void;
+  projectNiche?: string;
+  projectAudience?: string;
 }
 
 function extractContentFromMarkdown(markdown: string): PostContentData {
@@ -53,12 +66,27 @@ function extractContentFromMarkdown(markdown: string): PostContentData {
   return { headline, subheadline, body, cta };
 }
 
-export default function MaterialCreator({ projectId, versionContent, taskTitle, onBack }: Props) {
+export default function MaterialCreator({ projectId, versionContent, taskTitle, onBack, projectNiche, projectAudience }: Props) {
   const { data: savedBrand } = useBrandSettings(projectId);
   const templateRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [format, setFormat] = useState<TemplateFormat>("feed");
+
+  // Image generation states
+  const [imagePrompt, setImagePrompt] = useState("");
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+
+  // Stock image search states
+  const [stockQuery, setStockQuery] = useState("");
+  const [stockImages, setStockImages] = useState<StockImage[]>([]);
+  const [isSearchingStock, setIsSearchingStock] = useState(false);
+  const [stockDialogOpen, setStockDialogOpen] = useState(false);
+
+  // Caption generation states
+  const [caption, setCaption] = useState("");
+  const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
+  const [captionCopied, setCaptionCopied] = useState(false);
 
   const brand: BrandSettings = savedBrand || {
     id: "", project_id: projectId, created_at: "", updated_at: "",
@@ -83,11 +111,8 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
     setIsExporting(true);
     try {
       const canvas = await html2canvas(exportRef.current, {
-        scale: 1,
-        useCORS: true,
-        backgroundColor: null,
-        width: cfg.width,
-        height: cfg.height,
+        scale: 1, useCORS: true, backgroundColor: null,
+        width: cfg.width, height: cfg.height,
       });
       const link = document.createElement("a");
       link.download = `${taskTitle.replace(/[^a-zA-Z0-9]/g, "_")}_${cfg.width}x${cfg.height}.png`;
@@ -104,18 +129,101 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const handleReExtract = () => {
     const re = extractContentFromMarkdown(versionContent);
     setContent(prev => ({
-      headline: re.headline,
-      subheadline: re.subheadline || "",
-      body: re.body || "",
-      cta: re.cta || "",
-      footer: "",
+      headline: re.headline, subheadline: re.subheadline || "",
+      body: re.body || "", cta: re.cta || "", footer: "",
       imageUrl: prev.imageUrl || "",
     }));
     toast.success("Conteúdo re-extraído do texto!");
   };
 
-  const previewScale = format === "story" ? 0.24 : 0.32;
+  // AI Image Generation
+  const handleGenerateImage = async () => {
+    const prompt = imagePrompt || content.headline || projectNiche || "professional background";
+    setIsGeneratingImage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-post-image", {
+        body: {
+          prompt,
+          style: brand.visual_style === "dark" ? "dark premium, cinematic lighting, moody" : "clean, bright, professional",
+          width: cfg.width,
+          height: cfg.height,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.imageUrl) {
+        setContent(p => ({ ...p, imageUrl: data.imageUrl }));
+        toast.success("Imagem gerada com IA!");
+      }
+    } catch (err: any) {
+      toast.error("Erro ao gerar imagem: " + err.message);
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
 
+  // Stock Image Search
+  const handleSearchStock = async () => {
+    const query = stockQuery || content.headline || projectNiche || "";
+    if (!query) { toast.error("Digite um termo de busca."); return; }
+    setIsSearchingStock(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("search-stock-images", {
+        body: { query, perPage: 12, orientation: format === "story" ? "portrait" : "portrait" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setStockImages(data?.images || []);
+      if (!data?.images?.length) toast.info("Nenhuma imagem encontrada.");
+    } catch (err: any) {
+      toast.error("Erro na busca: " + err.message);
+    } finally {
+      setIsSearchingStock(false);
+    }
+  };
+
+  const selectStockImage = (img: StockImage) => {
+    setContent(p => ({ ...p, imageUrl: img.url }));
+    setStockDialogOpen(false);
+    toast.success(`Imagem selecionada! Foto de ${img.author}`);
+  };
+
+  // Caption Generation
+  const handleGenerateCaption = async () => {
+    setIsGeneratingCaption(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-post-caption", {
+        body: {
+          headline: content.headline,
+          subheadline: content.subheadline,
+          body: content.body,
+          niche: projectNiche,
+          targetAudience: projectAudience,
+          tone: "profissional e engajante",
+          platform: "Instagram",
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.caption) {
+        setCaption(data.caption);
+        toast.success("Legenda gerada com sucesso!");
+      }
+    } catch (err: any) {
+      toast.error("Erro ao gerar legenda: " + err.message);
+    } finally {
+      setIsGeneratingCaption(false);
+    }
+  };
+
+  const handleCopyCaption = () => {
+    navigator.clipboard.writeText(caption);
+    setCaptionCopied(true);
+    toast.success("Legenda copiada!");
+    setTimeout(() => setCaptionCopied(false), 2000);
+  };
+
+  const previewScale = format === "story" ? 0.24 : 0.32;
   const TemplateComponent = format === "story" ? StoryTemplate1080x1920 : PostTemplate1080x1350;
 
   return (
@@ -143,7 +251,7 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
 
       <div className="flex-1 flex overflow-hidden">
         {/* Editor Panel */}
-        <div className="w-72 border-r border-border/50 shrink-0">
+        <div className="w-80 border-r border-border/50 shrink-0">
           <ScrollArea className="h-full">
             <div className="p-3 space-y-3">
               {/* Format selector */}
@@ -166,107 +274,123 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
                 </div>
               </div>
 
-              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Conteúdo</h4>
+              {/* Content fields */}
+              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Conteúdo do Post</h4>
               <p className="text-[10px] text-muted-foreground">
-                Use <code className="bg-muted px-1 rounded">*texto*</code> para destaque amarelo e <code className="bg-muted px-1 rounded">**texto**</code> para vermelho.
+                Use <code className="bg-muted px-1 rounded">*texto*</code> para amarelo e <code className="bg-muted px-1 rounded">**texto**</code> para vermelho.
               </p>
-              
+
               <div className="space-y-1">
                 <Label className="text-xs">Título Principal</Label>
-                <Textarea
-                  value={content.headline}
-                  onChange={e => setContent(p => ({ ...p, headline: e.target.value }))}
-                  rows={2}
-                  className="text-xs resize-none"
-                  placeholder="Use *destaque* e **forte** para hierarquia de cores"
-                />
+                <Textarea value={content.headline} onChange={e => setContent(p => ({ ...p, headline: e.target.value }))} rows={2} className="text-xs resize-none" />
               </div>
 
               <div className="space-y-1">
                 <Label className="text-xs">Subtítulo</Label>
-                <Textarea
-                  value={content.subheadline || ""}
-                  onChange={e => setContent(p => ({ ...p, subheadline: e.target.value }))}
-                  rows={2}
-                  className="text-xs resize-none"
-                  placeholder="Complemento do título..."
-                />
+                <Textarea value={content.subheadline || ""} onChange={e => setContent(p => ({ ...p, subheadline: e.target.value }))} rows={2} className="text-xs resize-none" />
               </div>
 
               <div className="space-y-1">
                 <Label className="text-xs">Corpo</Label>
-                <Textarea
-                  value={content.body || ""}
-                  onChange={e => setContent(p => ({ ...p, body: e.target.value }))}
-                  rows={3}
-                  className="text-xs resize-none"
-                  placeholder="Texto complementar..."
-                />
+                <Textarea value={content.body || ""} onChange={e => setContent(p => ({ ...p, body: e.target.value }))} rows={2} className="text-xs resize-none" />
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs">CTA (Botão)</Label>
-                <Input
-                  value={content.cta || ""}
-                  onChange={e => setContent(p => ({ ...p, cta: e.target.value }))}
-                  className="text-xs h-8"
-                  placeholder="Ex: Saiba mais →"
-                />
+                <Label className="text-xs">CTA (Barra inferior)</Label>
+                <Input value={content.cta || ""} onChange={e => setContent(p => ({ ...p, cta: e.target.value }))} className="text-xs h-8" placeholder="Ex: Saiba mais →" />
               </div>
 
               <div className="space-y-1">
                 <Label className="text-xs">Rodapé</Label>
-                <Input
-                  value={content.footer || ""}
-                  onChange={e => setContent(p => ({ ...p, footer: e.target.value }))}
-                  className="text-xs h-8"
-                  placeholder="@seuinstagram"
-                />
+                <Input value={content.footer || ""} onChange={e => setContent(p => ({ ...p, footer: e.target.value }))} className="text-xs h-8" placeholder="@seuinstagram" />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs">Imagem de Fundo</Label>
+              {/* === IMAGE SOURCE SECTION === */}
+              <div className="border-t border-border/30 pt-3">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">🖼️ Imagem de Fundo</h4>
+
+                {/* AI Image Generation */}
+                <div className="space-y-1.5 mb-2">
+                  <Input
+                    value={imagePrompt}
+                    onChange={e => setImagePrompt(e.target.value)}
+                    className="text-xs h-8"
+                    placeholder="Descreva a imagem (ex: academia escura com luzes neon)"
+                  />
+                  <Button
+                    variant="outline" size="sm"
+                    className="w-full text-xs gap-1"
+                    onClick={handleGenerateImage}
+                    disabled={isGeneratingImage}
+                  >
+                    {isGeneratingImage ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    {isGeneratingImage ? "Gerando com IA..." : "Gerar Imagem com IA"}
+                  </Button>
+                </div>
+
+                {/* Stock Image Search */}
+                <Button
+                  variant="outline" size="sm"
+                  className="w-full text-xs gap-1 mb-2"
+                  onClick={() => { setStockDialogOpen(true); setStockQuery(content.headline?.replace(/\*+/g, "") || projectNiche || ""); }}
+                >
+                  <Search className="h-3 w-3" /> Buscar no Banco de Imagens
+                </Button>
+
+                {/* Manual upload/URL */}
                 <Input
                   value={content.imageUrl || ""}
                   onChange={e => setContent(p => ({ ...p, imageUrl: e.target.value }))}
-                  className="text-xs h-8"
-                  placeholder="Cole a URL da imagem..."
+                  className="text-xs h-8 mb-1.5"
+                  placeholder="Ou cole a URL da imagem..."
                 />
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  id="bg-image-upload"
-                  onChange={e => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const url = URL.createObjectURL(file);
-                      setContent(p => ({ ...p, imageUrl: url }));
-                    }
-                  }}
+                <input type="file" accept="image/*" className="hidden" id="bg-image-upload"
+                  onChange={e => { const file = e.target.files?.[0]; if (file) setContent(p => ({ ...p, imageUrl: URL.createObjectURL(file) })); }}
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-xs gap-1"
-                  onClick={() => document.getElementById("bg-image-upload")?.click()}
-                >
-                  <Image className="h-3 w-3" /> Upload Imagem
+                <Button variant="outline" size="sm" className="w-full text-xs gap-1"
+                  onClick={() => document.getElementById("bg-image-upload")?.click()}>
+                  <Image className="h-3 w-3" /> Upload do Computador
                 </Button>
+
                 {content.imageUrl && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-xs text-destructive"
-                    onClick={() => setContent(p => ({ ...p, imageUrl: "" }))}
-                  >
+                  <Button variant="ghost" size="sm" className="w-full text-xs text-destructive mt-1"
+                    onClick={() => setContent(p => ({ ...p, imageUrl: "" }))}>
                     Remover imagem
                   </Button>
                 )}
               </div>
 
+              {/* === CAPTION SECTION === */}
+              <div className="border-t border-border/30 pt-3">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">📝 Legenda com CTA & Hashtags</h4>
+                <Button
+                  variant="default" size="sm"
+                  className="w-full text-xs gap-1 mb-2"
+                  onClick={handleGenerateCaption}
+                  disabled={isGeneratingCaption}
+                >
+                  {isGeneratingCaption ? <Loader2 className="h-3 w-3 animate-spin" /> : <FileText className="h-3 w-3" />}
+                  {isGeneratingCaption ? "Gerando legenda..." : "Gerar Legenda Completa"}
+                </Button>
+
+                {caption && (
+                  <div className="space-y-1.5">
+                    <Textarea
+                      value={caption}
+                      onChange={e => setCaption(e.target.value)}
+                      rows={8}
+                      className="text-xs resize-none"
+                    />
+                    <Button variant="outline" size="sm" className="w-full text-xs gap-1" onClick={handleCopyCaption}>
+                      {captionCopied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      {captionCopied ? "Copiada!" : "Copiar Legenda"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
               {!savedBrand && (
-                <div className="p-2 bg-accent/30 rounded-lg border border-border/30">
+                <div className="p-2 bg-accent/30 rounded-lg border border-border/30 mt-2">
                   <p className="text-[10px] text-muted-foreground">
                     <span className="font-medium">Dica:</span> Configure o Brand Kit na barra lateral para personalizar cores e fontes.
                   </p>
@@ -282,25 +406,63 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
             style={{ width: cfg.width * previewScale, height: cfg.height * previewScale }}
             className="shadow-2xl rounded-lg overflow-hidden relative"
           >
-            <TemplateComponent
-              ref={templateRef}
-              brand={brand}
-              content={content}
-              scale={previewScale}
-            />
+            <TemplateComponent ref={templateRef} brand={brand} content={content} scale={previewScale} />
           </div>
         </div>
       </div>
 
       {/* Hidden full-size template for export */}
       <div style={{ position: "absolute", left: -9999, top: -9999 }}>
-        <TemplateComponent
-          ref={exportRef}
-          brand={brand}
-          content={content}
-          scale={1}
-        />
+        <TemplateComponent ref={exportRef} brand={brand} content={content} scale={1} />
       </div>
+
+      {/* Stock Image Search Dialog */}
+      <Dialog open={stockDialogOpen} onOpenChange={setStockDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Search className="h-4 w-4" /> Banco de Imagens (Unsplash)
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex gap-2 mb-3">
+            <Input
+              value={stockQuery}
+              onChange={e => setStockQuery(e.target.value)}
+              placeholder="Buscar imagens..."
+              className="text-sm"
+              onKeyDown={e => e.key === "Enter" && handleSearchStock()}
+            />
+            <Button onClick={handleSearchStock} disabled={isSearchingStock} className="gap-1 shrink-0">
+              {isSearchingStock ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              Buscar
+            </Button>
+          </div>
+          <ScrollArea className="flex-1">
+            {stockImages.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {stockImages.map(img => (
+                  <button
+                    key={img.id}
+                    onClick={() => selectStockImage(img)}
+                    className="relative group rounded-lg overflow-hidden border border-border/30 hover:border-primary transition-all aspect-[3/4]"
+                  >
+                    <img src={img.thumbUrl} alt={img.alt} className="w-full h-full object-cover" loading="lazy" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end">
+                      <span className="text-[10px] text-white p-1.5 opacity-0 group-hover:opacity-100 transition-opacity truncate w-full">
+                        📷 {img.author}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : !isSearchingStock ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                Digite um termo e clique em buscar para encontrar imagens gratuitas.
+              </div>
+            ) : null}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
