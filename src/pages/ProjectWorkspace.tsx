@@ -304,7 +304,8 @@ export default function ProjectWorkspace() {
             project={project}
             projectId={project.id}
             hasGeneratedContent={modules?.some((m) => !!m.generated_content)}
-        />
+          />
+        )}
       </div>
 
       {/* Batch config dialog */}
