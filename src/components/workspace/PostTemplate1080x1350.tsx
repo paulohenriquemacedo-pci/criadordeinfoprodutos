@@ -199,13 +199,20 @@ const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
 
           {/* Body */}
           {content.body && (
-            <p style={{
-              fontSize: 24,
-              color: textColor,
-              opacity: 0.65,
-              lineHeight: 1.6,
-              maxWidth: "90%",
-            }}>
+            <p
+              style={{
+                fontSize: 24,
+                color: textColor,
+                opacity: 0.65,
+                lineHeight: 1.6,
+                maxWidth: "90%",
+                cursor: onContentChange ? "text" : "default",
+                outline: "none",
+              }}
+              contentEditable={!!onContentChange}
+              suppressContentEditableWarning
+              onBlur={e => onContentChange?.("body", e.currentTarget.textContent || "")}
+            >
               {content.body}
             </p>
           )}
