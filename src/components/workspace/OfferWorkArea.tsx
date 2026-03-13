@@ -886,6 +886,34 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
             )}
           </div>
         </ScrollArea>
+
+        {/* Refinement input */}
+        {evaluation && !evaluating && (
+          <div className="p-3 border-t border-border/30 space-y-2">
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <RefreshCw className="h-3 w-3" />
+              Refinar & Aprofundar — forneça contexto adicional para a IA reconsiderar
+            </p>
+            <div className="flex gap-2">
+              <Textarea
+                placeholder="Ex: 'Considere que meu público tem ticket médio de R$200' ou 'Aprofunde a análise dos bônus considerando que o concorrente X oferece...' "
+                value={refinementInput}
+                onChange={e => setRefinementInput(e.target.value)}
+                rows={2}
+                className="flex-1 text-sm resize-none"
+              />
+              <Button
+                size="sm"
+                onClick={handleRefineEvaluation}
+                disabled={refining || !refinementInput.trim()}
+                className="gap-1.5 self-end"
+              >
+                {refining ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {refining ? "Refinando..." : "Enviar"}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Product Form Dialog */}
