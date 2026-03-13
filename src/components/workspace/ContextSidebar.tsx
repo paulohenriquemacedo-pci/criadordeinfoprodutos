@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Upload, FileText, Eye, Loader2, Trash2, Target, Users, Zap, AlertTriangle } from "lucide-react";
+import { Upload, FileText, Eye, Loader2, Trash2, Target, Users, Zap, AlertTriangle, BarChart3, FolderOpen, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import ProjectProgressPanel from "./ProjectProgressPanel";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface Project {
   id: string;
