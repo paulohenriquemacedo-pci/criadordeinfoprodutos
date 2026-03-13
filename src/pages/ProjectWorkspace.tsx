@@ -13,9 +13,11 @@ import ContextSidebar from "@/components/workspace/ContextSidebar";
 import BatchGenerationScreen from "@/components/workspace/BatchGenerationScreen";
 import BatchConfigDialog, { BatchEngineConfig } from "@/components/workspace/BatchConfigDialog";
 import PromptExportImport from "@/components/workspace/PromptExportImport";
+import { ArrowLeft, Settings, Search, Sparkles, Download, Trash2, MoreVertical, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HelpTooltip } from "@/components/HelpTooltip";
-import { ArrowLeft, Settings, Search, Sparkles, Download, Trash2, MoreVertical } from "lucide-react";
+import { WelcomeDialog } from "@/components/WelcomeDialog";
+
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -56,6 +58,7 @@ export default function ProjectWorkspace() {
   const batch = useBatchGeneration();
   const [batchMode, setBatchMode] = useState<"research" | "generation">("research");
   const [clearResearchConfirm, setClearResearchConfirm] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
 
   const handleBatchConfirm = (config: BatchEngineConfig) => {
     if (!projectId) return;
@@ -252,6 +255,9 @@ export default function ProjectWorkspace() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button variant="ghost" size="icon" onClick={() => setWelcomeOpen(true)} title="Como usar">
+            <HelpCircle className="h-4 w-4" />
+          </Button>
           <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
             <DialogTrigger asChild>
               <Button variant="ghost" size="icon" onClick={openSettings}>
@@ -276,6 +282,8 @@ export default function ProjectWorkspace() {
           </Dialog>
         </div>
       </header>
+
+      <WelcomeDialog open={welcomeOpen} onOpenChange={setWelcomeOpen} />
 
       {/* 3-panel layout */}
       <div className="flex-1 flex overflow-hidden min-w-0">

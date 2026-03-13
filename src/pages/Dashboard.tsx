@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Sparkles, LogOut, FolderOpen, Clock, FileText, Rocket, Upload, ArrowLeft, Zap, Trash2 } from "lucide-react";
+import { Plus, Sparkles, LogOut, FolderOpen, Clock, FileText, Rocket, Upload, ArrowLeft, Zap, Trash2, HelpCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,6 +34,7 @@ export default function Dashboard() {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<CreationMode>(null);
   const [form, setForm] = useState({ name: "", niche: "", promise: "", target_audience: "" });
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [batchProjectId, setBatchProjectId] = useState<string | null>(null);
   const batch = useBatchGeneration();
 
@@ -102,7 +103,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <WelcomeDialog />
+      <WelcomeDialog open={welcomeOpen} onOpenChange={setWelcomeOpen} />
       {/* Header */}
       <header className="border-b border-border/50 glass-panel sticky top-0 z-50">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
@@ -112,6 +113,9 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
+            <Button variant="ghost" size="icon" onClick={() => setWelcomeOpen(true)} title="Como usar">
+              <HelpCircle className="h-4 w-4" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={signOut}>
               <LogOut className="h-4 w-4" />
             </Button>

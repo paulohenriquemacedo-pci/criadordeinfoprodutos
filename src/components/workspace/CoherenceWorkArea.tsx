@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import StrategicMemoryPanel from "./StrategicMemoryPanel";
+import { HelpTooltip } from "@/components/HelpTooltip";
 
 interface Contradiction {
   issue: string;
@@ -178,6 +179,7 @@ export default function CoherenceWorkArea({ projectId, project }: Props) {
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">M0</Badge>
           <h2 className="text-lg font-semibold">Central Estratégica</h2>
+          <HelpTooltip text="A Memória Estratégica consolida insights do projeto. A Validação de Coerência analisa contradições, tom de voz e glossário entre todos os módulos gerados." side="right" />
         </div>
         <p className="text-sm text-muted-foreground mt-1">
           Memória estratégica consolidada e validação de coerência entre módulos

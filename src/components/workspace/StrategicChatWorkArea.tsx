@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { Plus, Trash2, MessageSquare, Send, Loader2, Settings2, Sparkles, Bot, User, Copy, Download } from "lucide-react";
+import { HelpTooltip } from "@/components/HelpTooltip";
 
 interface Props {
   projectId: string;
@@ -287,6 +288,7 @@ export default function StrategicChatWorkArea({ projectId, project }: Props) {
             <h2 className="text-sm font-semibold flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
               {activeConv?.title || "Consultor Estratégico IA"}
+              <HelpTooltip text="Chat livre com IA que acessa todo o contexto do projeto. Use os templates prontos ou faça perguntas livres. Você pode exportar respostas para os módulos." side="bottom" size={13} />
             </h2>
             <p className="text-[11px] text-muted-foreground">
               Contexto: {contextModules.length === 11 ? "Todos os módulos" : `${contextModules.length} módulos selecionados`}

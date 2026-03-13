@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Plus, Sparkles, Trash2, Palette, Loader2, Star, ArrowLeft, RefreshCw, ChevronRight, Instagram, Megaphone, FileText, Copy, Download, MessageSquare, ShoppingBag, Heart, Image } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { HelpTooltip } from "@/components/HelpTooltip";
 
 interface Props {
   projectId: string;
@@ -124,6 +125,7 @@ export default function CreativeHubWorkArea({ projectId, project }: Props) {
           <div className="flex items-center gap-2">
             <Palette className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-semibold">Hub Criativo</h2>
+            <HelpTooltip text="Escolha um template (carrossel, reel, ad, etc.) para criar uma task. Dentro da task, gere versões de conteúdo, crie materiais visuais com imagens e legendas automáticas." side="bottom" />
             <Badge variant="secondary" className="text-xs">{tasks?.length || 0} tasks</Badge>
           </div>
           <Button size="sm" onClick={() => setNewTaskOpen(true)} className="gap-1.5">
