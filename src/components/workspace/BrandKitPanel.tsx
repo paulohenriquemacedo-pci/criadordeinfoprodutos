@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Palette, Save, Loader2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
@@ -77,8 +76,8 @@ export default function BrandKitPanel({ projectId }: Props) {
   }
 
   return (
-    <ScrollArea className="h-full">
-      <div className="p-4 space-y-5">
+    <div>
+      <div className="space-y-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Palette className="h-4 w-4 text-primary" />
@@ -202,6 +201,6 @@ export default function BrandKitPanel({ projectId }: Props) {
           </div>
         </div>
       </div>
-    </ScrollArea>
+    </div>
   );
 }
