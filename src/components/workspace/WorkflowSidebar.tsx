@@ -1,10 +1,10 @@
 import { MODULE_CONFIG, ModuleNumber } from "@/lib/modules";
 import { cn } from "@/lib/utils";
-import { FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, TrendingUp, AlertTriangle, Shield, BookOpen, Palette, Package } from "lucide-react";
+import { FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, TrendingUp, AlertTriangle, Shield, BookOpen, Palette, Package, Bot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const iconMap: Record<string, any> = {
-  FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, TrendingUp, Shield, BookOpen, Palette, Package,
+  FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, TrendingUp, Shield, BookOpen, Palette, Package, Bot,
 };
 
 interface Props {
@@ -65,6 +65,8 @@ export default function WorkflowSidebar({ activeModule, onSelectModule, modules 
                 </button>
                 {isM0 && <div className="my-2 border-t border-border/30" />}
                 {config.number === 8 && <div className="my-2 border-t border-border/30" />}
+                {config.number === 9 && <div className="my-2 border-t border-border/30" />}
+                {config.number === 11 && <div className="my-2 border-t border-border/30" />}
                 {config.number === 9 && <div className="my-2 border-t border-border/30" />}
               </div>
             );

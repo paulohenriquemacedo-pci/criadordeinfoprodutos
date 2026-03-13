@@ -11,6 +11,7 @@ export const MODULE_CONFIG = [
   { number: 9, title: "Definição de Oferta", icon: "Package", description: "Defina produtos, bônus, bumps e avalie sua oferta" },
   { number: 10, title: "Hub Criativo", icon: "Palette", description: "Crie peças de marketing, ads, posts e landing pages" },
   { number: 11, title: "Produção de Conteúdo", icon: "BookOpen", description: "Crie o produto final capítulo a capítulo" },
+  { number: 12, title: "Consultor Estratégico", icon: "Bot", description: "Chat livre com IA sobre todo o contexto do projeto" },
 ] as const;
 
-export type ModuleNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
+export type ModuleNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;

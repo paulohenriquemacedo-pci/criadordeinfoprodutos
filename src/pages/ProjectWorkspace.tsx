@@ -8,6 +8,7 @@ import CoherenceWorkArea from "@/components/workspace/CoherenceWorkArea";
 import ProductionWorkArea from "@/components/workspace/ProductionWorkArea";
 import CreativeHubWorkArea from "@/components/workspace/CreativeHubWorkArea";
 import OfferWorkArea from "@/components/workspace/OfferWorkArea";
+import StrategicChatWorkArea from "@/components/workspace/StrategicChatWorkArea";
 import ContextSidebar from "@/components/workspace/ContextSidebar";
 import BatchGenerationScreen from "@/components/workspace/BatchGenerationScreen";
 import BatchConfigDialog, { BatchEngineConfig } from "@/components/workspace/BatchConfigDialog";
@@ -286,6 +287,11 @@ export default function ProjectWorkspace() {
             projectId={project.id}
             project={project}
           />
+        ) : activeModule === 12 ? (
+          <StrategicChatWorkArea
+            projectId={project.id}
+            project={project}
+          />
         ) : (
           <ModuleWorkArea
             projectId={project.id}
@@ -293,11 +299,13 @@ export default function ProjectWorkspace() {
             moduleConfig={MODULE_CONFIG.find((m) => m.number === activeModule)!}
           />
         )}
-        <ContextSidebar
-          project={project}
-          projectId={project.id}
-          hasGeneratedContent={modules?.some((m) => !!m.generated_content)}
-        />
+        {activeModule !== 12 && (
+          <ContextSidebar
+            project={project}
+            projectId={project.id}
+            hasGeneratedContent={modules?.some((m) => !!m.generated_content)}
+          />
+        )}
       </div>
 
       {/* Batch config dialog */}

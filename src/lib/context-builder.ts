@@ -12,6 +12,7 @@ const MODULE_CONFIG_LABELS: Record<number, string> = {
   9: "Definição de Oferta",
   10: "Hub Criativo",
   11: "Produção de Conteúdo",
+  12: "Consultor Estratégico",
 };
 
 export interface PdfPart {
@@ -56,7 +57,7 @@ function extractKeyDecisions(content: string, moduleNumber: number): string {
   return "";
 }
 
-export async function buildProjectContext(projectId: string) {
+export async function buildProjectContext(projectId: string, filterModules?: number[]) {
   // Fetch project briefing
   const { data: project } = await supabase
     .from("projects")
@@ -103,13 +104,17 @@ ${JSON.stringify(strategicMemory, null, 2)}`
     return parts.join("\n\n---\n\n");
   };
 
-  const previousOutputs = (modules || [])
+  const filteredModules = filterModules
+    ? (modules || []).filter(m => filterModules.includes(m.module_number))
+    : (modules || []);
+
+  const previousOutputs = filteredModules
     .filter((m) => m.generated_content)
     .map((m) => `MÓDULO ${m.module_number} (${MODULE_CONFIG_LABELS[m.module_number] || ""}):\n${m.generated_content}`)
     .join("\n\n---\n\n");
 
   // Extract key decisions from all completed modules for quick reference
-  const keyDecisions = (modules || [])
+  const keyDecisions = filteredModules
     .filter((m) => m.generated_content)
     .map((m) => extractKeyDecisions(m.generated_content!, m.module_number))
     .filter(Boolean)
