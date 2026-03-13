@@ -135,12 +135,12 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
 
   const extracted = extractContentFromMarkdown(versionContent);
 
-  // Image generation states — pre-fill with headline for convenience
-  const [imagePrompt, setImagePrompt] = useState(extracted.headline?.replace(/\*+/g, "").slice(0, 80) || "");
+  // Image generation states — pre-fill with AI-suggested prompt or headline
+  const [imagePrompt, setImagePrompt] = useState(extracted.imagePromptSuggestion || extracted.headline?.replace(/\*+/g, "").slice(0, 80) || "");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
-  // Stock image search states
-  const [stockQuery, setStockQuery] = useState("");
+  // Stock image search states — pre-fill with suggested keywords
+  const [stockQuery, setStockQuery] = useState(extracted.searchKeywords || "");
   const [stockImages, setStockImages] = useState<StockImage[]>([]);
   const [isSearchingStock, setIsSearchingStock] = useState(false);
   const [stockDialogOpen, setStockDialogOpen] = useState(false);
@@ -162,6 +162,7 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
     cta: extracted.cta || "",
     footer: "",
     imageUrl: "",
+    logoUrl: brand.logo_url || "",
   });
 
   const cfg = FORMAT_CONFIG[format];
