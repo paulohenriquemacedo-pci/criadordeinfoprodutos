@@ -8,6 +8,7 @@ interface PostContentData {
   cta?: string;
   footer?: string;
   logoUrl?: string;
+  imageUrl?: string;
   highlightWords?: string[];
 }
 
@@ -122,6 +123,29 @@ const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
               style={{ height: 56, objectFit: "contain" }}
               crossOrigin="anonymous"
             />
+          </div>
+        )}
+
+        {/* Static image */}
+        {content.imageUrl && (
+          <div style={{
+            position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0,
+          }}>
+            <img
+              src={content.imageUrl}
+              alt=""
+              crossOrigin="anonymous"
+              style={{
+                width: "100%", height: "100%", objectFit: "cover",
+                opacity: brand.visual_style === "dark" ? 0.25 : 0.35,
+              }}
+            />
+            <div style={{
+              position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
+              background: brand.visual_style === "dark"
+                ? "linear-gradient(180deg, rgba(11,25,41,0.6) 0%, rgba(11,25,41,0.95) 100%)"
+                : "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%)",
+            }} />
           </div>
         )}
 
