@@ -260,6 +260,7 @@ export default function OfferWorkArea({ projectId, project }: Props) {
 
   // Load last saved evaluation when selecting a product
   useEffect(() => {
+    setEvaluation("");
     if (!selectedProduct) return;
     const loadLastEvaluation = async () => {
       const { data } = await supabase
