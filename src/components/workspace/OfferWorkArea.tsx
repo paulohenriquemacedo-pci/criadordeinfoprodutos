@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useProducts, useProductBonuses, useProductBumps, useCreateProduct, useUpdateProduct, useDeleteProduct, useCreateBonus, useDeleteBonus, useCreateBump, useDeleteBump, useSaveOfferVersion, Product } from "@/hooks/useOffers";
 import { useProjectModules } from "@/hooks/useProjects";
 import { Button } from "@/components/ui/button";
