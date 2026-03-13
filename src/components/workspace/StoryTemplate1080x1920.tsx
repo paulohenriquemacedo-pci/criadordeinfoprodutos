@@ -27,7 +27,7 @@ function renderHighlightedText(
 }
 
 const StoryTemplate1080x1920 = forwardRef<HTMLDivElement, Props>(
-  ({ brand, content, scale = 0.25 }, ref) => {
+  ({ brand, content, scale = 0.25, onContentChange }, ref) => {
     const isDark = brand.visual_style === "dark" || brand.visual_style === "bold";
     const textColor = isDark ? "#FFFFFF" : brand.text_color;
 
