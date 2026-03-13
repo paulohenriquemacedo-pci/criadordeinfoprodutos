@@ -252,6 +252,8 @@ export default function OfferWorkArea({ projectId, project }: Props) {
   const [productFormOpen, setProductFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
   const [evaluating, setEvaluating] = useState(false);
+  const [evalProgress, setEvalProgress] = useState(0);
+  const [evalStage, setEvalStage] = useState("");
   const [evaluation, setEvaluation] = useState<string>("");
   const [importing, setImporting] = useState(false);
   const [importingM2, setImportingM2] = useState(false);
