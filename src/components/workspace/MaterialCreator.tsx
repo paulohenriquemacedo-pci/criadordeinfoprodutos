@@ -137,6 +137,9 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
           <ScrollArea className="h-full">
             <div className="p-3 space-y-3">
               <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Conteúdo</h4>
+              <p className="text-[10px] text-muted-foreground">
+                Use <code className="bg-muted px-1 rounded">*texto*</code> para destaque amarelo e <code className="bg-muted px-1 rounded">**texto**</code> para vermelho.
+              </p>
               
               <div className="space-y-1">
                 <Label className="text-xs">Título Principal</Label>
@@ -145,7 +148,7 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
                   onChange={e => setContent(p => ({ ...p, headline: e.target.value }))}
                   rows={2}
                   className="text-xs resize-none"
-                  placeholder="Headline impactante..."
+                  placeholder="Use *destaque* e **forte** para hierarquia de cores"
                 />
               </div>
 
