@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import { FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, TrendingUp, AlertTriangle, Shield, BookOpen, Palette, Package, Bot, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
 
 const iconMap: Record<string, any> = {
   FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, TrendingUp, Shield, BookOpen, Palette, Package, Bot,
@@ -68,9 +67,6 @@ export default function WorkflowSidebar({ activeModule, onSelectModule, modules 
                         </TooltipContent>
                       </Tooltip>
                     </div>
-                        <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/30 text-primary/70 font-normal">novo</Badge>
-                      )}
-                    </div>
                   </div>
                   {hasContent && !isOutdated && (
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-0">✓</Badge>
@@ -80,7 +76,6 @@ export default function WorkflowSidebar({ activeModule, onSelectModule, modules 
                 {config.number === 8 && <div className="my-2 border-t border-border/30" />}
                 {config.number === 9 && <div className="my-2 border-t border-border/30" />}
                 {config.number === 11 && <div className="my-2 border-t border-border/30" />}
-                {config.number === 9 && <div className="my-2 border-t border-border/30" />}
               </div>
             );
           })}
