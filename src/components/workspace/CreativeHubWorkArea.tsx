@@ -375,7 +375,21 @@ REGRAS:
 - Use dados e estratégias dos módulos como base
 - Formate em Markdown
 - Seja específico e acionável
-${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}`;
+${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}
+${task.template_type === "single_post" ? `
+FORMATO OBRIGATÓRIO PARA POST DE IMAGEM:
+Você DEVE usar EXATAMENTE esta estrutura com os rótulos abaixo (não altere os rótulos):
+
+**Título:** [frase de impacto principal, curta e poderosa, máximo 80 caracteres]
+**Subtítulo:** [complemento do título, máximo 100 caracteres]
+**Corpo:** [texto de apoio, 1-2 frases curtas que expandem a ideia]
+**CTA:** [chamada para ação curta para barra inferior, ex: SAIBA MAIS, LINK NA BIO, ARRASTE PARA CIMA]
+**Prompt de Imagem:** [descrição detalhada em inglês de uma imagem de fundo ideal para este post, estilo cinematográfico]
+**Palavras-chave de Busca:** [3-5 termos para busca em banco de imagens, separados por vírgula]
+
+IMPORTANTE: Use *palavra* para destacar em amarelo e **palavra** para destacar em vermelho no Título e Subtítulo.
+NÃO adicione nada além desses campos. NÃO use títulos com #.
+` : ""}`;
 
       const previousVersionsText = versions?.filter(v => v.content).map(v => `VERSÃO ${v.version_number}:\n${v.content}`).join("\n\n---\n\n") || "";
 
