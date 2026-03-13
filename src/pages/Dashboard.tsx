@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Sparkles, LogOut, FolderOpen, Clock, FileText, Rocket, Upload, ArrowLeft, Zap, Trash2, HelpCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
@@ -138,11 +138,9 @@ export default function Dashboard() {
           </div>
           <Dialog open={open} onOpenChange={handleOpenChange}>
             <div className="flex items-center gap-2">
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" /> Novo Projeto
-                </Button>
-              </DialogTrigger>
+              <Button className="gap-2" onClick={() => handleOpenChange(true)}>
+                <Plus className="h-4 w-4" /> Novo Projeto
+              </Button>
               <HelpTooltip text="Crie um projeto do zero (preenchendo briefing) ou a partir de material existente (enviando PDFs)." side="bottom" />
             </div>
             <DialogContent className="sm:max-w-lg">

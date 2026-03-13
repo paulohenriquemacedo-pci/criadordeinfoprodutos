@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { HelpTooltip } from "@/components/HelpTooltip";
 import { WelcomeDialog } from "@/components/WelcomeDialog";
 
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
@@ -259,11 +259,9 @@ export default function ProjectWorkspace() {
             <HelpCircle className="h-4 w-4" />
           </Button>
           <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" onClick={openSettings}>
-                <Settings className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
+            <Button variant="ghost" size="icon" onClick={openSettings}>
+              <Settings className="h-4 w-4" />
+            </Button>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Configurações do Projeto</DialogTitle>
