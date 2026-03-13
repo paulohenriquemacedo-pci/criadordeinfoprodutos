@@ -570,6 +570,7 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
       toast.error("Erro na avaliação: " + err.message);
     } finally {
       setEvaluating(false);
+      setTimeout(() => { setEvalProgress(0); setEvalStage(""); }, 1500);
     }
   };
 
