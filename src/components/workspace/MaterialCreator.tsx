@@ -202,7 +202,7 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const [imagePrompt, setImagePrompt] = useState(extracted.imagePromptSuggestion || extracted.headline?.replace(/\*+/g, "").slice(0, 80) || "");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
-  // Stock image search states — pre-fill with suggested keywords
+  // Stock image search states — pre-fill with suggested keywords (NOT the headline)
   const [stockQuery, setStockQuery] = useState(extracted.searchKeywords || "");
   const [stockImages, setStockImages] = useState<StockImage[]>([]);
   const [isSearchingStock, setIsSearchingStock] = useState(false);
@@ -485,7 +485,7 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
                 <Button
                   variant="outline" size="sm"
                   className="w-full text-xs gap-1 mb-2"
-                  onClick={() => { setStockDialogOpen(true); setStockQuery(content.headline?.replace(/\*+/g, "") || projectNiche || ""); }}
+                  onClick={() => { setStockDialogOpen(true); if (!stockQuery) setStockQuery(extracted.searchKeywords || projectNiche || ""); }}
                 >
                   <Search className="h-3 w-3" /> Buscar no Banco de Imagens
                 </Button>
