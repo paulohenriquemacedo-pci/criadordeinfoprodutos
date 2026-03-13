@@ -455,9 +455,15 @@ export default function OfferWorkArea({ projectId, project }: Props) {
     if (!selectedProduct) { toast.error("Selecione um produto primeiro"); return; }
     setEvaluating(true);
     setEvaluation("");
+    setEvalProgress(5);
+    setEvalStage("Preparando contexto...");
 
     try {
+      setEvalProgress(10);
+      setEvalStage("Construindo contexto do projeto...");
       const context = await buildProjectContext(projectId);
+      setEvalProgress(20);
+      setEvalStage("Carregando dados da oferta...");
 
       // Fetch bonuses and bumps for the selected product
       const { data: bonuses } = await supabase.from("product_bonuses" as any).select("*").eq("product_id", selectedProduct.id).order("sort_order");
