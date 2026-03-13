@@ -137,6 +137,7 @@ export default function Dashboard() {
               <Button className="gap-2">
                 <Plus className="h-4 w-4" /> Novo Projeto
               </Button>
+              <HelpTooltip text="Crie um projeto do zero (preenchendo briefing) ou a partir de material existente (enviando PDFs)." side="bottom" />
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg">
               {/* Step 1: Choose mode */}
