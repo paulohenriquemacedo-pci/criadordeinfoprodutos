@@ -216,7 +216,7 @@ export default function ContextSidebar({ project, projectId, hasGeneratedContent
   };
 
   return (
-    <aside className="border-l border-border/50 bg-card/30 shrink-0 flex flex-col overflow-hidden hidden lg:flex relative">
+    <aside className="border-l border-border/50 bg-card/30 shrink-0 flex flex-col hidden lg:flex relative">
       {/* Collapsed strip with vertical tab buttons */}
       <div className="flex flex-col items-center gap-1 py-2 px-1 border-b border-border/30">
         <Button
