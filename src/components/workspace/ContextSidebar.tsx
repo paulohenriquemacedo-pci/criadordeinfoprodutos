@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Upload, FileText, Eye, Loader2, Trash2, Target, Users, Zap, AlertTriangle, BarChart3, FolderOpen, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { Upload, FileText, Eye, Loader2, Trash2, Target, Users, Zap, AlertTriangle, BarChart3, FolderOpen, PanelRightClose, PanelRightOpen, Palette } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import ProjectProgressPanel from "./ProjectProgressPanel";
+import BrandKitPanel from "./BrandKitPanel";
 import { AnimatePresence, motion } from "framer-motion";
 
 interface Project {
@@ -245,6 +246,15 @@ export default function ContextSidebar({ project, projectId, hasGeneratedContent
         >
           <FolderOpen className="h-4 w-4" />
         </Button>
+        <Button
+          variant={expanded && activeTab === "brand" ? "default" : "ghost"}
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => handleTabClick("brand")}
+          title="Brand Kit"
+        >
+          <Palette className="h-4 w-4" />
+        </Button>
         <div className="border-t border-border/30 w-full my-1" />
         <Button
           variant="ghost"
@@ -269,7 +279,7 @@ export default function ContextSidebar({ project, projectId, hasGeneratedContent
           >
             <div className="flex items-center justify-between px-3 py-2 border-b border-border/30">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                {activeTab === "progress" ? "Progresso" : activeTab === "context" ? "Contexto" : "Arquivos"}
+                {activeTab === "progress" ? "Progresso" : activeTab === "context" ? "Contexto" : activeTab === "brand" ? "Brand Kit" : "Arquivos"}
               </span>
               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setExpanded(false)}>
                 <PanelRightClose className="h-3.5 w-3.5" />
@@ -385,6 +395,10 @@ export default function ContextSidebar({ project, projectId, hasGeneratedContent
                     ))}
                   </div>
                 </section>
+              )}
+
+              {activeTab === "brand" && (
+                <BrandKitPanel projectId={projectId} />
               )}
             </div>
           </motion.div>

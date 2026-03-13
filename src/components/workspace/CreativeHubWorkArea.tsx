@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useCreativeTasks, useCreateCreativeTask, useDeleteCreativeTask, useCreateCreativeVersion, useCreativeVersions, useToggleFavoriteVersion, useUpdateCreativeTask, CreativeTask } from "@/hooks/useCreativeHub";
+import MaterialCreator from "./MaterialCreator";
 import { useProducts } from "@/hooks/useOffers";
 import { buildProjectContext } from "@/lib/context-builder";
 import { MODULE_CONFIG } from "@/lib/modules";
@@ -13,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Sparkles, Trash2, Palette, Loader2, Star, ArrowLeft, RefreshCw, ChevronRight, Instagram, Megaphone, FileText, Copy, Download, MessageSquare, ShoppingBag, Heart } from "lucide-react";
+import { Plus, Sparkles, Trash2, Palette, Loader2, Star, ArrowLeft, RefreshCw, ChevronRight, Instagram, Megaphone, FileText, Copy, Download, MessageSquare, ShoppingBag, Heart, Image } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface Props {
@@ -303,6 +304,7 @@ function CreativeTaskWorkspace({ task, projectId, project, onBack }: { task: Cre
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamText, setStreamText] = useState("");
   const [showRefinementFor, setShowRefinementFor] = useState<string | null>(null);
+  const [materialVersion, setMaterialVersion] = useState<{ content: string } | null>(null);
 
   const taskAny = task as any;
   const contentFocus = taskAny.content_focus || "engagement";
@@ -471,6 +473,17 @@ ${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}`;
     toast.success("Download iniciado!");
   };
 
+  if (materialVersion) {
+    return (
+      <MaterialCreator
+        projectId={projectId}
+        versionContent={materialVersion.content}
+        taskTitle={task.title}
+        onBack={() => setMaterialVersion(null)}
+      />
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
@@ -554,6 +567,9 @@ ${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}`;
                         )}
                       </div>
                       <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setMaterialVersion({ content: v.content })} title="Criar Material Visual">
+                          <Image className="h-3 w-3" />
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadVersion(v)} title="Download .md">
                           <Download className="h-3 w-3" />
                         </Button>
