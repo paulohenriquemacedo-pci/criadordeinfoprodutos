@@ -14,6 +14,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { MODULE_CONFIG } from "@/lib/modules";
+import { HelpTooltip } from "@/components/HelpTooltip";
+import { WelcomeDialog } from "@/components/WelcomeDialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useBatchGeneration } from "@/hooks/useBatchGeneration";
