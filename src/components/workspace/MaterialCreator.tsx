@@ -68,6 +68,7 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
     body: extracted.body || "",
     cta: extracted.cta || "",
     footer: "",
+    imageUrl: "",
   });
 
   const handleExport = useCallback(async () => {
