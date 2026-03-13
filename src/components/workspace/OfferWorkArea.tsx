@@ -485,6 +485,8 @@ ${(bonuses as any[])?.map((b: any) => `- ${b.name}: ${b.description || ""} | Val
 BUMPS/UPSELLS (${(bumps as any[])?.length || 0}):
 ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.description || ""} | Preço: ${b.price ? `R$${b.price}` : "N/A"} | Trigger: ${b.trigger_point} | Proposta: ${b.value_proposition || "N/A"}`).join("\n") || "Nenhum bump cadastrado"}`;
 
+      setEvalProgress(30);
+      setEvalStage("Enviando para avaliação IA...");
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
 
