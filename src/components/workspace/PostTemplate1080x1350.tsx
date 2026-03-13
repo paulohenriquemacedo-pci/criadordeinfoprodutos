@@ -230,14 +230,21 @@ const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
             alignItems: "center",
             justifyContent: "center",
           }}>
-            <span style={{
-              color: "#FFFFFF",
-              fontSize: 30,
-              fontWeight: 700,
-              fontFamily: brand.heading_font,
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-            }}>
+            <span
+              style={{
+                color: "#FFFFFF",
+                fontSize: 30,
+                fontWeight: 700,
+                fontFamily: brand.heading_font,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                cursor: onContentChange ? "text" : "default",
+                outline: "none",
+              }}
+              contentEditable={!!onContentChange}
+              suppressContentEditableWarning
+              onBlur={e => onContentChange?.("cta", e.currentTarget.textContent || "")}
+            >
               {content.cta}
             </span>
           </div>
