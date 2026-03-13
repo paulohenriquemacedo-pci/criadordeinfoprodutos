@@ -1,6 +1,8 @@
 import { MODULE_CONFIG, ModuleNumber } from "@/lib/modules";
 import { cn } from "@/lib/utils";
-import { FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, TrendingUp, AlertTriangle, Shield, BookOpen, Palette, Package, Bot } from "lucide-react";
+import { FileText, LayoutGrid, Megaphone, Rss, Image, Mail, MessageCircle, TrendingUp, AlertTriangle, Shield, BookOpen, Palette, Package, Bot, Info } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 
 const iconMap: Record<string, any> = {
