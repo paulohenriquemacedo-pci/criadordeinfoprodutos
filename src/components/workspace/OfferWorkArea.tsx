@@ -542,6 +542,10 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
               || parsed.candidates?.[0]?.content?.parts?.[0]?.text;
             if (content) {
               result += content;
+              chunkCount++;
+              // Progress from 40% to 85% during streaming
+              const streamProgress = Math.min(85, 40 + chunkCount * 0.5);
+              setEvalProgress(streamProgress);
               setEvaluation(result);
             }
           } catch { /* partial json */ }
