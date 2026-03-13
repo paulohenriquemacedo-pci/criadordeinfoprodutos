@@ -257,6 +257,8 @@ export default function OfferWorkArea({ projectId, project }: Props) {
   const [evaluation, setEvaluation] = useState<string>("");
   const [importing, setImporting] = useState(false);
   const [importingM2, setImportingM2] = useState(false);
+  const [refinementInput, setRefinementInput] = useState("");
+  const [refining, setRefining] = useState(false);
 
   // Load last saved evaluation when selecting a product
   useEffect(() => {
