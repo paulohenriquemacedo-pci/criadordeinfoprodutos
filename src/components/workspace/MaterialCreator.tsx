@@ -45,25 +45,56 @@ function extractContentFromMarkdown(markdown: string): PostContentData {
   let subheadline = "";
   let body = "";
   let cta = "";
+  const bodyParts: string[] = [];
 
   for (const line of lines) {
     const trimmed = line.trim();
-    if (trimmed.startsWith("# ") && !headline) {
-      headline = trimmed.replace(/^#+\s*/, "");
-    } else if (trimmed.startsWith("## ") && !subheadline) {
-      subheadline = trimmed.replace(/^#+\s*/, "");
-    } else if ((trimmed.startsWith("**") && trimmed.includes("CTA")) || trimmed.toLowerCase().includes("cta:")) {
-      cta = trimmed.replace(/\*\*/g, "").replace(/cta:?\s*/i, "").trim();
-    } else if (!body && !trimmed.startsWith("#") && !trimmed.startsWith("-") && !trimmed.startsWith("*") && trimmed.length > 20) {
-      body = trimmed.replace(/\*\*/g, "").slice(0, 150);
+    const clean = trimmed.replace(/\*\*/g, "").replace(/\*/g, "");
+
+    // Detect headline: first # heading, or labeled "Título" / "Headline" / "Gancho"
+    if (!headline && (trimmed.startsWith("# ") || /^(título|headline|gancho|hook)\s*[:：]/i.test(clean))) {
+      headline = clean.replace(/^#+\s*/, "").replace(/^(título|headline|gancho|hook)\s*[:：]\s*/i, "").trim();
+    }
+    // Detect subheadline: ## heading or labeled "Subtítulo" / "Sub"
+    else if (!subheadline && (trimmed.startsWith("## ") || /^(subtítulo|sub-?headline|subhead)\s*[:：]/i.test(clean))) {
+      subheadline = clean.replace(/^#+\s*/, "").replace(/^(subtítulo|sub-?headline|subhead)\s*[:：]\s*/i, "").trim();
+    }
+    // Detect CTA
+    else if (!cta && (/cta\s*[:：]/i.test(clean) || /call.to.action\s*[:：]/i.test(clean) || /chamada.para.ação\s*[:：]/i.test(clean))) {
+      cta = clean.replace(/^.*?[:：]\s*/, "").trim();
+    }
+    // Collect body paragraphs (non-heading, non-list, substantial text)
+    else if (!trimmed.startsWith("#") && !trimmed.startsWith("---") && clean.length > 15) {
+      // Skip metadata-like lines
+      if (!/^(legenda|caption|hashtag|formato|tom|plataforma|slide|imagem)\s*[:：]/i.test(clean)) {
+        bodyParts.push(clean);
+      }
     }
   }
 
+  // Fallback: use first meaningful line as headline
   if (!headline) {
-    headline = lines[0]?.replace(/[#*]/g, "").trim().slice(0, 80) || "Seu Título Aqui";
+    const first = lines[0]?.replace(/[#*]/g, "").trim().slice(0, 80);
+    headline = first || "Seu Título Aqui";
   }
 
-  return { headline, subheadline, body, cta };
+  // Build body from collected paragraphs (first 2-3)
+  if (!body && bodyParts.length > 0) {
+    body = bodyParts.slice(0, 3).join(" ").slice(0, 200);
+  }
+
+  // Try to find CTA from body text if not explicitly labeled
+  if (!cta) {
+    const ctaLine = lines.find(l => {
+      const c = l.trim().toLowerCase();
+      return c.includes("clique") || c.includes("acesse") || c.includes("saiba mais") || c.includes("link na bio") || c.includes("arraste") || c.includes("comente");
+    });
+    if (ctaLine) {
+      cta = ctaLine.replace(/\*\*/g, "").replace(/\*/g, "").trim().slice(0, 80);
+    }
+  }
+
+  return { headline: headline.slice(0, 120), subheadline: subheadline.slice(0, 120), body, cta };
 }
 
 export default function MaterialCreator({ projectId, versionContent, taskTitle, onBack, projectNiche, projectAudience }: Props) {
