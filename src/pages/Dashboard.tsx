@@ -102,6 +102,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <WelcomeDialog />
       {/* Header */}
       <header className="border-b border-border/50 glass-panel sticky top-0 z-50">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
