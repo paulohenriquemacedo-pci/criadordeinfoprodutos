@@ -217,7 +217,7 @@ Garanta profundidade, exemplos práticos e coerência com o restante do produto.
         if (jsonStr === "[DONE]") break;
         try {
           const parsed = JSON.parse(jsonStr);
-          const delta = parsed.choices?.[0]?.delta?.content;
+          const delta = parsed.choices?.[0]?.delta?.content || parsed.candidates?.[0]?.content?.parts?.[0]?.text;
           if (delta) {
             text += delta;
             if (chapter.id === generatingChapterId || !generatingChapterId) {

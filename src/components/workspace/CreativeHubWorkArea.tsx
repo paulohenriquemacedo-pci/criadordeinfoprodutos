@@ -308,7 +308,7 @@ ${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}`;
           if (jsonStr === "[DONE]") break;
           try {
             const parsed = JSON.parse(jsonStr);
-            const delta = parsed.choices?.[0]?.delta?.content;
+            const delta = parsed.choices?.[0]?.delta?.content || parsed.candidates?.[0]?.content?.parts?.[0]?.text;
             if (delta) { text += delta; setStreamText(text); }
           } catch {}
         }
