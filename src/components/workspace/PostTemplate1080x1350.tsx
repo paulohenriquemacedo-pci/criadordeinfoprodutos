@@ -46,7 +46,7 @@ function renderHighlightedText(
 }
 
 const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
-  ({ brand, content, scale = 0.3 }, ref) => {
+  ({ brand, content, scale = 0.3, onContentChange }, ref) => {
     const isDark = brand.visual_style === "dark" || brand.visual_style === "bold";
 
     const backgrounds: Record<string, React.CSSProperties> = {
