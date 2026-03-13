@@ -567,6 +567,9 @@ ${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}`;
                         )}
                       </div>
                       <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setMaterialVersion({ content: v.content })} title="Criar Material Visual">
+                          <Image className="h-3 w-3" />
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadVersion(v)} title="Download .md">
                           <Download className="h-3 w-3" />
                         </Button>
