@@ -203,14 +203,16 @@ const StoryTemplate1080x1920 = forwardRef<HTMLDivElement, Props>(
             justifyContent: "center",
             gap: 8,
           }}>
-            <span style={{
-              color: "#FFFFFF",
-              fontSize: 32,
-              fontWeight: 700,
-              fontFamily: brand.heading_font,
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-            }}>
+            <span
+              style={{
+                color: "#FFFFFF", fontSize: 32, fontWeight: 700,
+                fontFamily: brand.heading_font, letterSpacing: "0.04em", textTransform: "uppercase",
+                cursor: onContentChange ? "text" : "default", outline: "none",
+              }}
+              contentEditable={!!onContentChange}
+              suppressContentEditableWarning
+              onBlur={e => onContentChange?.("cta", e.currentTarget.textContent || "")}
+            >
               {content.cta}
             </span>
           </div>
