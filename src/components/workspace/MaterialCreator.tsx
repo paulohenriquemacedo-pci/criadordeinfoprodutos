@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import html2canvas from "html2canvas";
 import { useBrandSettings, DEFAULT_BRAND, BrandSettings } from "@/hooks/useBrandSettings";
 import PostTemplate1080x1350, { PostContentData } from "./PostTemplate1080x1350";
+import StoryTemplate1080x1920 from "./StoryTemplate1080x1920";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +10,14 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Download, ArrowLeft, Loader2, Image, RefreshCw, Eye } from "lucide-react";
+import { Download, ArrowLeft, Loader2, Image, RefreshCw } from "lucide-react";
+
+type TemplateFormat = "feed" | "story";
+
+const FORMAT_CONFIG: Record<TemplateFormat, { label: string; badge: string; width: number; height: number }> = {
+  feed: { label: "Feed Post", badge: "1080×1350", width: 1080, height: 1350 },
+  story: { label: "Story", badge: "1080×1920", width: 1080, height: 1920 },
+};
 
 interface Props {
   projectId: string;
@@ -20,8 +28,6 @@ interface Props {
 
 function extractContentFromMarkdown(markdown: string): PostContentData {
   const lines = markdown.split("\n").filter(l => l.trim());
-  
-  // Try to extract structured content
   let headline = "";
   let subheadline = "";
   let body = "";
@@ -40,7 +46,6 @@ function extractContentFromMarkdown(markdown: string): PostContentData {
     }
   }
 
-  // Fallback
   if (!headline) {
     headline = lines[0]?.replace(/[#*]/g, "").trim().slice(0, 80) || "Seu Título Aqui";
   }
@@ -53,8 +58,8 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const templateRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [format, setFormat] = useState<TemplateFormat>("feed");
 
-  // Use saved brand or defaults
   const brand: BrandSettings = savedBrand || {
     id: "", project_id: projectId, created_at: "", updated_at: "",
     ...DEFAULT_BRAND,
@@ -71,6 +76,8 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
     imageUrl: "",
   });
 
+  const cfg = FORMAT_CONFIG[format];
+
   const handleExport = useCallback(async () => {
     if (!exportRef.current) return;
     setIsExporting(true);
@@ -79,20 +86,20 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
         scale: 1,
         useCORS: true,
         backgroundColor: null,
-        width: 1080,
-        height: 1350,
+        width: cfg.width,
+        height: cfg.height,
       });
       const link = document.createElement("a");
-      link.download = `${taskTitle.replace(/[^a-zA-Z0-9]/g, "_")}_1080x1350.png`;
+      link.download = `${taskTitle.replace(/[^a-zA-Z0-9]/g, "_")}_${cfg.width}x${cfg.height}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
-      toast.success("Imagem exportada em 1080×1350!");
+      toast.success(`Imagem exportada em ${cfg.badge}!`);
     } catch (err: any) {
       toast.error("Erro ao exportar: " + err.message);
     } finally {
       setIsExporting(false);
     }
-  }, [taskTitle]);
+  }, [taskTitle, cfg]);
 
   const handleReExtract = () => {
     const re = extractContentFromMarkdown(versionContent);
@@ -107,8 +114,9 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
     toast.success("Conteúdo re-extraído do texto!");
   };
 
-  // Scale for preview area
-  const previewScale = 0.32;
+  const previewScale = format === "story" ? 0.24 : 0.32;
+
+  const TemplateComponent = format === "story" ? StoryTemplate1080x1920 : PostTemplate1080x1350;
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -121,7 +129,7 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
           <div className="flex items-center gap-2">
             <Image className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold">Criar Material Visual</h3>
-            <Badge variant="outline" className="text-[10px]">1080×1350</Badge>
+            <Badge variant="outline" className="text-[10px]">{cfg.badge}</Badge>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={handleReExtract} className="gap-1 text-xs">
@@ -138,6 +146,26 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
         <div className="w-72 border-r border-border/50 shrink-0">
           <ScrollArea className="h-full">
             <div className="p-3 space-y-3">
+              {/* Format selector */}
+              <div className="space-y-1">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Formato</h4>
+                <div className="flex gap-1">
+                  {(Object.entries(FORMAT_CONFIG) as [TemplateFormat, typeof cfg][]).map(([key, val]) => (
+                    <button
+                      key={key}
+                      onClick={() => setFormat(key)}
+                      className={`flex-1 text-xs py-1.5 px-2 rounded-md border transition-all ${
+                        format === key
+                          ? "border-primary bg-primary/10 text-primary font-medium"
+                          : "border-border/50 text-muted-foreground hover:border-primary/30"
+                      }`}
+                    >
+                      {val.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Conteúdo</h4>
               <p className="text-[10px] text-muted-foreground">
                 Use <code className="bg-muted px-1 rounded">*texto*</code> para destaque amarelo e <code className="bg-muted px-1 rounded">**texto**</code> para vermelho.
@@ -236,6 +264,7 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
                   </Button>
                 )}
               </div>
+
               {!savedBrand && (
                 <div className="p-2 bg-accent/30 rounded-lg border border-border/30">
                   <p className="text-[10px] text-muted-foreground">
@@ -249,8 +278,11 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
 
         {/* Preview */}
         <div className="flex-1 flex items-center justify-center bg-muted/30 overflow-auto p-4">
-          <div style={{ width: 1080 * previewScale, height: 1350 * previewScale }} className="shadow-2xl rounded-lg overflow-hidden relative">
-            <PostTemplate1080x1350
+          <div
+            style={{ width: cfg.width * previewScale, height: cfg.height * previewScale }}
+            className="shadow-2xl rounded-lg overflow-hidden relative"
+          >
+            <TemplateComponent
               ref={templateRef}
               brand={brand}
               content={content}
@@ -262,7 +294,7 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
 
       {/* Hidden full-size template for export */}
       <div style={{ position: "absolute", left: -9999, top: -9999 }}>
-        <PostTemplate1080x1350
+        <TemplateComponent
           ref={exportRef}
           brand={brand}
           content={content}
