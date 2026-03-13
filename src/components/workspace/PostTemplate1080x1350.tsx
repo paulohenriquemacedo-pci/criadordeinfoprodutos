@@ -8,6 +8,7 @@ interface PostContentData {
   cta?: string;
   footer?: string;
   logoUrl?: string;
+  imageUrl?: string;
   highlightWords?: string[];
 }
 
