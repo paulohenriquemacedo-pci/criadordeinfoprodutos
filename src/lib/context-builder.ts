@@ -57,7 +57,7 @@ function extractKeyDecisions(content: string, moduleNumber: number): string {
   return "";
 }
 
-export async function buildProjectContext(projectId: string) {
+export async function buildProjectContext(projectId: string, filterModules?: number[]) {
   // Fetch project briefing
   const { data: project } = await supabase
     .from("projects")
