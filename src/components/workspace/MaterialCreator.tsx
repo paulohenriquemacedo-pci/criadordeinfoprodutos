@@ -202,7 +202,7 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const [imagePrompt, setImagePrompt] = useState(extracted.imagePromptSuggestion || extracted.headline?.replace(/\*+/g, "").slice(0, 80) || "");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
-  // Stock image search states — pre-fill with suggested keywords
+  // Stock image search states — pre-fill with suggested keywords (NOT the headline)
   const [stockQuery, setStockQuery] = useState(extracted.searchKeywords || "");
   const [stockImages, setStockImages] = useState<StockImage[]>([]);
   const [isSearchingStock, setIsSearchingStock] = useState(false);
