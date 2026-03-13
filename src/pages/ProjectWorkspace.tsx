@@ -287,6 +287,11 @@ export default function ProjectWorkspace() {
             projectId={project.id}
             project={project}
           />
+        ) : activeModule === 12 ? (
+          <StrategicChatWorkArea
+            projectId={project.id}
+            project={project}
+          />
         ) : (
           <ModuleWorkArea
             projectId={project.id}

@@ -12,6 +12,7 @@ const MODULE_CONFIG_LABELS: Record<number, string> = {
   9: "Definição de Oferta",
   10: "Hub Criativo",
   11: "Produção de Conteúdo",
+  12: "Consultor Estratégico",
 };
 
 export interface PdfPart {
