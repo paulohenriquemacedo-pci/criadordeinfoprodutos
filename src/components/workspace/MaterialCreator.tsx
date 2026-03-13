@@ -369,7 +369,33 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
                 <Input value={content.footer || ""} onChange={e => setContent(p => ({ ...p, footer: e.target.value }))} className="text-xs h-8" placeholder="@seuinstagram" />
               </div>
 
-              {/* === IMAGE SOURCE SECTION === */}
+              {/* === LOGO SECTION === */}
+              <div className="border-t border-border/30 pt-3">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">🏷️ Logomarca</h4>
+                {content.logoUrl && (
+                  <div className="mb-2 p-2 bg-muted/30 rounded-lg flex items-center gap-2">
+                    <img src={content.logoUrl} alt="Logo" className="h-8 object-contain" />
+                    <Button variant="ghost" size="sm" className="text-xs text-destructive ml-auto h-6"
+                      onClick={() => setContent(p => ({ ...p, logoUrl: "" }))}>
+                      Remover
+                    </Button>
+                  </div>
+                )}
+                <Input
+                  value={content.logoUrl || ""}
+                  onChange={e => setContent(p => ({ ...p, logoUrl: e.target.value }))}
+                  className="text-xs h-8 mb-1.5"
+                  placeholder="Cole a URL da logomarca..."
+                />
+                <input type="file" accept="image/*" className="hidden" id="logo-upload"
+                  onChange={e => { const file = e.target.files?.[0]; if (file) setContent(p => ({ ...p, logoUrl: URL.createObjectURL(file) })); }}
+                />
+                <Button variant="outline" size="sm" className="w-full text-xs gap-1"
+                  onClick={() => document.getElementById("logo-upload")?.click()}>
+                  <Image className="h-3 w-3" /> Upload Logo
+                </Button>
+              </div>
+
               <div className="border-t border-border/30 pt-3">
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">🖼️ Imagem de Fundo</h4>
 
