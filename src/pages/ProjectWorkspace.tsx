@@ -29,11 +29,26 @@ import { AnimatePresence } from "framer-motion";
 export default function ProjectWorkspace() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: project, isLoading: projectLoading } = useProject(projectId);
   const { data: modules } = useProjectModules(projectId);
   const updateProject = useUpdateProject();
   const markOutdated = useMarkModulesOutdated();
-  const [activeModule, setActiveModule] = useState<ModuleNumber>(0);
+
+  const getInitialModule = (): ModuleNumber => {
+    const param = searchParams.get("m");
+    if (param !== null) {
+      const num = parseInt(param, 10);
+      if (num >= 0 && num <= 12) return num as ModuleNumber;
+    }
+    return 0;
+  };
+  const [activeModule, setActiveModuleState] = useState<ModuleNumber>(getInitialModule);
+
+  const setActiveModule = useCallback((mod: ModuleNumber) => {
+    setActiveModuleState(mod);
+    setSearchParams({ m: String(mod) }, { replace: true });
+  }, [setSearchParams]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [batchConfigOpen, setBatchConfigOpen] = useState(false);
   const [editForm, setEditForm] = useState({ name: "", niche: "", promise: "", target_audience: "" });
