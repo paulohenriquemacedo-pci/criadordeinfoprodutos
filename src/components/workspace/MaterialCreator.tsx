@@ -104,6 +104,8 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const [isExporting, setIsExporting] = useState(false);
   const [format, setFormat] = useState<TemplateFormat>("feed");
 
+  const extracted = extractContentFromMarkdown(versionContent);
+
   // Image generation states — pre-fill with headline for convenience
   const [imagePrompt, setImagePrompt] = useState(extracted.headline?.replace(/\*+/g, "").slice(0, 80) || "");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -123,8 +125,6 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
     id: "", project_id: projectId, created_at: "", updated_at: "",
     ...DEFAULT_BRAND,
   };
-
-  const extracted = extractContentFromMarkdown(versionContent);
 
   const [content, setContent] = useState<PostContentData>({
     headline: extracted.headline,
