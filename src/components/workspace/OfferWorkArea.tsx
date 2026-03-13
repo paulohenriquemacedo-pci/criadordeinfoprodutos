@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, Package, Gift, Zap, Sparkles, Loader2, Save, Upload, FileText, BookOpen, LayoutGrid } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -251,6 +252,8 @@ export default function OfferWorkArea({ projectId, project }: Props) {
   const [productFormOpen, setProductFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
   const [evaluating, setEvaluating] = useState(false);
+  const [evalProgress, setEvalProgress] = useState(0);
+  const [evalStage, setEvalStage] = useState("");
   const [evaluation, setEvaluation] = useState<string>("");
   const [importing, setImporting] = useState(false);
   const [importingM2, setImportingM2] = useState(false);
@@ -452,9 +455,15 @@ export default function OfferWorkArea({ projectId, project }: Props) {
     if (!selectedProduct) { toast.error("Selecione um produto primeiro"); return; }
     setEvaluating(true);
     setEvaluation("");
+    setEvalProgress(5);
+    setEvalStage("Preparando contexto...");
 
     try {
+      setEvalProgress(10);
+      setEvalStage("Construindo contexto do projeto...");
       const context = await buildProjectContext(projectId);
+      setEvalProgress(20);
+      setEvalStage("Carregando dados da oferta...");
 
       // Fetch bonuses and bumps for the selected product
       const { data: bonuses } = await supabase.from("product_bonuses" as any).select("*").eq("product_id", selectedProduct.id).order("sort_order");
@@ -476,6 +485,8 @@ ${(bonuses as any[])?.map((b: any) => `- ${b.name}: ${b.description || ""} | Val
 BUMPS/UPSELLS (${(bumps as any[])?.length || 0}):
 ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.description || ""} | Preço: ${b.price ? `R$${b.price}` : "N/A"} | Trigger: ${b.trigger_point} | Proposta: ${b.value_proposition || "N/A"}`).join("\n") || "Nenhum bump cadastrado"}`;
 
+      setEvalProgress(30);
+      setEvalStage("Enviando para avaliação IA...");
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
 
@@ -502,10 +513,14 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
 
       if (!response.body) throw new Error("Stream não disponível");
 
+      setEvalProgress(40);
+      setEvalStage("Gerando avaliação...");
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let textBuffer = "";
       let result = "";
+      let chunkCount = 0;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -527,11 +542,17 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
               || parsed.candidates?.[0]?.content?.parts?.[0]?.text;
             if (content) {
               result += content;
+              chunkCount++;
+              // Progress from 40% to 85% during streaming
+              const streamProgress = Math.min(85, 40 + chunkCount * 0.5);
+              setEvalProgress(streamProgress);
               setEvaluation(result);
             }
           } catch { /* partial json */ }
         }
       }
+      setEvalProgress(90);
+      setEvalStage("Salvando resultado...");
 
       // Save version snapshot
       const snapshot = {
@@ -542,11 +563,14 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
         timestamp: new Date().toISOString(),
       };
       await saveVersion.mutateAsync({ product_id: selectedProduct.id, snapshot });
+      setEvalProgress(100);
+      setEvalStage("Concluído!");
 
     } catch (err: any) {
       toast.error("Erro na avaliação: " + err.message);
     } finally {
       setEvaluating(false);
+      setTimeout(() => { setEvalProgress(0); setEvalStage(""); }, 1500);
     }
   };
 
@@ -683,6 +707,17 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
             </Button>
           </div>
         </div>
+
+        {/* Progress bar */}
+        {evaluating && evalProgress > 0 && (
+          <div className="px-4 py-2 border-b border-border/30 space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">{evalStage}</span>
+              <span className="font-medium text-primary">{Math.round(evalProgress)}%</span>
+            </div>
+            <Progress value={evalProgress} className="h-1.5" />
+          </div>
+        )}
 
         <ScrollArea className="flex-1">
           <div className="p-4">
