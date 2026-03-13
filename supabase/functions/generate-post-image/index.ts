@@ -5,17 +5,85 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+async function tryLovableGateway(enhancedPrompt: string, apiKey: string): Promise<string | null> {
+  try {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-image",
+        messages: [{ role: "user", content: enhancedPrompt }],
+        modalities: ["image", "text"],
+      }),
+    });
+
+    if (response.status === 429 || response.status === 402) {
+      console.log(`Lovable gateway returned ${response.status}, falling back to Gemini API`);
+      await response.text();
+      return null;
+    }
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error("Lovable gateway error:", response.status, text);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.images?.[0]?.image_url?.url || null;
+  } catch (e) {
+    console.error("Lovable gateway exception:", e);
+    return null;
+  }
+}
+
+async function tryGeminiDirect(enhancedPrompt: string, apiKey: string): Promise<string | null> {
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: enhancedPrompt }] }],
+          generationConfig: {
+            responseModalities: ["TEXT", "IMAGE"],
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error("Gemini direct error:", response.status, text);
+      return null;
+    }
+
+    const data = await response.json();
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    for (const part of parts) {
+      if (part.inlineData) {
+        return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+      }
+    }
+    return null;
+  } catch (e) {
+    console.error("Gemini direct exception:", e);
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const { prompt, style, width, height } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
     const aspectRatio = width && height ? `${width}x${height}` : "1080x1350";
-    
+
     const enhancedPrompt = `Create a professional, high-quality background image for a social media post (${aspectRatio}).
 Style: ${style || "dark premium, cinematic lighting, moody atmosphere"}.
 Subject/Theme: ${prompt}.
@@ -28,41 +96,25 @@ Requirements:
 
     console.log("Generating image with prompt:", enhancedPrompt.slice(0, 100));
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
-        messages: [{ role: "user", content: enhancedPrompt }],
-        modalities: ["image", "text"],
-      }),
-    });
+    // Try Lovable gateway first
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    let imageUrl: string | null = null;
 
-    if (!response.ok) {
-      const status = response.status;
-      if (status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições atingido. Tente novamente em alguns instantes." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const text = await response.text();
-      console.error("AI gateway error:", status, text);
-      throw new Error(`AI gateway error: ${status}`);
+    if (LOVABLE_API_KEY) {
+      imageUrl = await tryLovableGateway(enhancedPrompt, LOVABLE_API_KEY);
     }
 
-    const data = await response.json();
-    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    // Fallback to Gemini direct API
+    if (!imageUrl) {
+      const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+      if (GEMINI_API_KEY) {
+        console.log("Using Gemini API fallback for image generation");
+        imageUrl = await tryGeminiDirect(enhancedPrompt, GEMINI_API_KEY);
+      }
+    }
 
     if (!imageUrl) {
-      throw new Error("No image was generated");
+      throw new Error("Não foi possível gerar a imagem. Verifique seus créditos ou tente novamente.");
     }
 
     console.log("Image generated successfully");
