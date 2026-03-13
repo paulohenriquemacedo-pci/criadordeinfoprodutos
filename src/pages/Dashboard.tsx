@@ -14,6 +14,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { MODULE_CONFIG } from "@/lib/modules";
+import { HelpTooltip } from "@/components/HelpTooltip";
+import { WelcomeDialog } from "@/components/WelcomeDialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useBatchGeneration } from "@/hooks/useBatchGeneration";
@@ -100,6 +102,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <WelcomeDialog />
       {/* Header */}
       <header className="border-b border-border/50 glass-panel sticky top-0 z-50">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
@@ -123,7 +126,10 @@ export default function Dashboard() {
           className="flex items-center justify-between mb-8"
         >
           <div>
-            <h1 className="text-3xl font-bold">Seus Projetos</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold">Seus Projetos</h1>
+              <HelpTooltip text="Aqui ficam todos os seus infoprodutos. Clique em um projeto para abrir a área de trabalho ou crie um novo." side="right" />
+            </div>
             <p className="text-muted-foreground mt-1">Gerencie seus infoprodutos com IA</p>
           </div>
           <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -131,6 +137,7 @@ export default function Dashboard() {
               <Button className="gap-2">
                 <Plus className="h-4 w-4" /> Novo Projeto
               </Button>
+              <HelpTooltip text="Crie um projeto do zero (preenchendo briefing) ou a partir de material existente (enviando PDFs)." side="bottom" />
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg">
               {/* Step 1: Choose mode */}

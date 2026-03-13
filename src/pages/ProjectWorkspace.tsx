@@ -14,6 +14,7 @@ import BatchGenerationScreen from "@/components/workspace/BatchGenerationScreen"
 import BatchConfigDialog, { BatchEngineConfig } from "@/components/workspace/BatchConfigDialog";
 import PromptExportImport from "@/components/workspace/PromptExportImport";
 import { Button } from "@/components/ui/button";
+import { HelpTooltip } from "@/components/HelpTooltip";
 import { ArrowLeft, Settings, Search, Sparkles, Download, Trash2, MoreVertical } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -218,6 +219,7 @@ export default function ProjectWorkspace() {
           </div>
         </div>
         <div className="flex items-center gap-1">
+          <HelpTooltip text="Use 'Pesquisar Tudo' para rodar pesquisa de mercado em todos os módulos. 'Gerar Tudo' cria o conteúdo de todos os módulos de uma vez." side="bottom" />
           <PromptExportImport projectId={project.id} />
           <Button variant="outline" size="sm" onClick={() => { setBatchMode("research"); setBatchConfigOpen(true); }} className="gap-1.5" title="Pesquisar todos os módulos de uma vez">
             <Search className="h-4 w-4" /> Pesquisar Tudo
