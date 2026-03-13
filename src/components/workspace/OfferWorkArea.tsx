@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Package, Gift, Zap, Sparkles, Loader2, Save, Upload, FileText, BookOpen, LayoutGrid, Download } from "lucide-react";
+import { Plus, Trash2, Package, Gift, Zap, Sparkles, Loader2, Save, Upload, FileText, BookOpen, LayoutGrid, Download, Send, RefreshCw } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -257,6 +257,8 @@ export default function OfferWorkArea({ projectId, project }: Props) {
   const [evaluation, setEvaluation] = useState<string>("");
   const [importing, setImporting] = useState(false);
   const [importingM2, setImportingM2] = useState(false);
+  const [refinementInput, setRefinementInput] = useState("");
+  const [refining, setRefining] = useState(false);
 
   // Load last saved evaluation when selecting a product
   useEffect(() => {
@@ -617,6 +619,111 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
     toast.success("Avaliação salva no módulo M9!");
   };
 
+  const handleRefineEvaluation = async () => {
+    if (!refinementInput.trim() || !selectedProduct || !evaluation) return;
+    setRefining(true);
+
+    try {
+      const context = await buildProjectContext(projectId);
+
+      const { data: bonuses } = await supabase.from("product_bonuses" as any).select("*").eq("product_id", selectedProduct.id).order("sort_order");
+      const { data: bumps } = await supabase.from("product_bumps" as any).select("*").eq("product_id", selectedProduct.id).order("sort_order");
+
+      const offerContext = `
+PRODUTO PRINCIPAL:
+- Nome: ${selectedProduct.name}
+- Descrição: ${selectedProduct.description || "N/A"}
+- Preço: ${selectedProduct.price ? `R$${selectedProduct.price}` : "Não definido"}
+- Tipo: ${selectedProduct.product_type}
+- Posicionamento: ${selectedProduct.positioning || "N/A"}
+- Formato de entrega: ${selectedProduct.delivery_format || "N/A"}
+- Transformação prometida: ${selectedProduct.target_transformation || "N/A"}
+
+BÔNUS (${(bonuses as any[])?.length || 0}):
+${(bonuses as any[])?.map((b: any) => `- ${b.name}: ${b.description || ""} | Valor percebido: ${b.perceived_value ? `R$${b.perceived_value}` : "N/A"}`).join("\n") || "Nenhum"}
+
+BUMPS/UPSELLS (${(bumps as any[])?.length || 0}):
+${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.description || ""} | Preço: ${b.price ? `R$${b.price}` : "N/A"}`).join("\n") || "Nenhum"}`;
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      const refinementPrompt = `${context.fullContext}\n\n========\n\nOFERTA AVALIADA:\n${offerContext}\n\n========\n\nAVALIAÇÃO ANTERIOR (GERADA POR VOCÊ):\n${evaluation}\n\n========\n\nFEEDBACK DO USUÁRIO PARA REFINAMENTO:\n${refinementInput}\n\nCom base no feedback acima, REFINE e APRIMORE a avaliação anterior. Considere os novos elementos, contexto e perspectivas fornecidos. Mantenha a mesma estrutura de avaliação, mas atualize as análises, notas e recomendações conforme o novo entendimento. Seja específico sobre o que mudou em relação à avaliação anterior.`;
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evaluate-offer`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            offerContext: refinementPrompt,
+            projectContext: "",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `Erro ${response.status}`);
+      }
+      if (!response.body) throw new Error("Stream não disponível");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+      let result = "";
+
+      setEvaluation("");
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "" || !line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content
+              || parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (content) {
+              result += content;
+              setEvaluation(result);
+            }
+          } catch { /* partial json */ }
+        }
+      }
+
+      // Save refined version
+      const snapshot = {
+        product: selectedProduct,
+        bonuses: bonuses || [],
+        bumps: bumps || [],
+        evaluation: result,
+        refinement: refinementInput,
+        timestamp: new Date().toISOString(),
+      };
+      await saveVersion.mutateAsync({ product_id: selectedProduct.id, snapshot });
+      setRefinementInput("");
+      toast.success("Avaliação refinada e salva!");
+
+    } catch (err: any) {
+      toast.error("Erro ao refinar: " + err.message);
+    } finally {
+      setRefining(false);
+    }
+  };
+
   if (isLoading) return <div className="flex-1 flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
 
   return (
@@ -779,6 +886,34 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
             )}
           </div>
         </ScrollArea>
+
+        {/* Refinement input */}
+        {evaluation && !evaluating && (
+          <div className="p-3 border-t border-border/30 space-y-2">
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <RefreshCw className="h-3 w-3" />
+              Refinar & Aprofundar — forneça contexto adicional para a IA reconsiderar
+            </p>
+            <div className="flex gap-2">
+              <Textarea
+                placeholder="Ex: 'Considere que meu público tem ticket médio de R$200' ou 'Aprofunde a análise dos bônus considerando que o concorrente X oferece...' "
+                value={refinementInput}
+                onChange={e => setRefinementInput(e.target.value)}
+                rows={2}
+                className="flex-1 text-sm resize-none"
+              />
+              <Button
+                size="sm"
+                onClick={handleRefineEvaluation}
+                disabled={refining || !refinementInput.trim()}
+                className="gap-1.5 self-end"
+              >
+                {refining ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {refining ? "Refinando..." : "Enviar"}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Product Form Dialog */}
