@@ -58,6 +58,7 @@ export default function ProjectWorkspace() {
   const batch = useBatchGeneration();
   const [batchMode, setBatchMode] = useState<"research" | "generation">("research");
   const [clearResearchConfirm, setClearResearchConfirm] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
 
   const handleBatchConfirm = (config: BatchEngineConfig) => {
     if (!projectId) return;
