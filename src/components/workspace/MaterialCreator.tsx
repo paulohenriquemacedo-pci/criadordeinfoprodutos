@@ -104,8 +104,8 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const [isExporting, setIsExporting] = useState(false);
   const [format, setFormat] = useState<TemplateFormat>("feed");
 
-  // Image generation states
-  const [imagePrompt, setImagePrompt] = useState("");
+  // Image generation states — pre-fill with headline for convenience
+  const [imagePrompt, setImagePrompt] = useState(extracted.headline?.replace(/\*+/g, "").slice(0, 80) || "");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   // Stock image search states
