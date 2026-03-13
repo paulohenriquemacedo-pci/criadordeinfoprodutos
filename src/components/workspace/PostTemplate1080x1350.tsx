@@ -156,17 +156,24 @@ const PostTemplate1080x1350 = forwardRef<HTMLDivElement, Props>(
           justifyContent: "center", position: "relative", zIndex: 1,
         }}>
           {/* Headline with highlight support */}
-          <h1 style={{
-            fontFamily: brand.heading_font,
-            fontSize: content.headline.length > 60 ? 54 : content.headline.length > 30 ? 66 : 80,
-            fontWeight: 800,
-            lineHeight: 1.05,
-            color: textColor,
-            marginBottom: 28,
-            letterSpacing: brand.heading_font.includes("Bebas") ? "0.03em" : "-0.02em",
-            textTransform: brand.heading_font.includes("Bebas") ? "uppercase" : "none",
-          }}>
-            {renderHighlightedText(content.headline, brand.accent_color)}
+          <h1
+            style={{
+              fontFamily: brand.heading_font,
+              fontSize: content.headline.length > 60 ? 54 : content.headline.length > 30 ? 66 : 80,
+              fontWeight: 800,
+              lineHeight: 1.05,
+              color: textColor,
+              marginBottom: 28,
+              letterSpacing: brand.heading_font.includes("Bebas") ? "0.03em" : "-0.02em",
+              textTransform: brand.heading_font.includes("Bebas") ? "uppercase" : "none",
+              cursor: onContentChange ? "text" : "default",
+              outline: "none",
+            }}
+            contentEditable={!!onContentChange}
+            suppressContentEditableWarning
+            onBlur={e => onContentChange?.("headline", e.currentTarget.textContent || "")}
+          >
+            {onContentChange ? content.headline : renderHighlightedText(content.headline, brand.accent_color)}
           </h1>
 
           {/* Subheadline */}
