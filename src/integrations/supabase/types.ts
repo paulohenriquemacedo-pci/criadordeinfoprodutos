@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      brand_settings: {
+        Row: {
+          accent_color: string
+          background_color: string
+          body_font: string
+          created_at: string
+          heading_font: string
+          id: string
+          logo_url: string | null
+          primary_color: string
+          project_id: string
+          secondary_color: string
+          text_color: string
+          updated_at: string
+          visual_style: string
+        }
+        Insert: {
+          accent_color?: string
+          background_color?: string
+          body_font?: string
+          created_at?: string
+          heading_font?: string
+          id?: string
+          logo_url?: string | null
+          primary_color?: string
+          project_id: string
+          secondary_color?: string
+          text_color?: string
+          updated_at?: string
+          visual_style?: string
+        }
+        Update: {
+          accent_color?: string
+          background_color?: string
+          body_font?: string
+          created_at?: string
+          heading_font?: string
+          id?: string
+          logo_url?: string | null
+          primary_color?: string
+          project_id?: string
+          secondary_color?: string
+          text_color?: string
+          updated_at?: string
+          visual_style?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_settings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_conversations: {
         Row: {
           context_modules: number[]
@@ -77,6 +133,82 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creative_assets: {
+        Row: {
+          ai_background_url: string | null
+          asset_type: string
+          content_data: Json
+          created_at: string
+          format: string
+          height: number
+          id: string
+          image_url: string | null
+          project_id: string
+          status: string
+          task_id: string
+          template_id: string
+          updated_at: string
+          version_id: string | null
+          width: number
+        }
+        Insert: {
+          ai_background_url?: string | null
+          asset_type?: string
+          content_data?: Json
+          created_at?: string
+          format?: string
+          height?: number
+          id?: string
+          image_url?: string | null
+          project_id: string
+          status?: string
+          task_id: string
+          template_id?: string
+          updated_at?: string
+          version_id?: string | null
+          width?: number
+        }
+        Update: {
+          ai_background_url?: string | null
+          asset_type?: string
+          content_data?: Json
+          created_at?: string
+          format?: string
+          height?: number
+          id?: string
+          image_url?: string | null
+          project_id?: string
+          status?: string
+          task_id?: string
+          template_id?: string
+          updated_at?: string
+          version_id?: string | null
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creative_assets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creative_assets_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "creative_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creative_assets_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "creative_versions"
             referencedColumns: ["id"]
           },
         ]
