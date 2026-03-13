@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Upload, FileText, Eye, Loader2, Trash2, Target, Users, Zap, AlertTriangle, BarChart3, FolderOpen, PanelRightClose, PanelRightOpen, Palette } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import ProjectProgressPanel from "./ProjectProgressPanel";
+import BrandKitPanel from "./BrandKitPanel";
 import { AnimatePresence, motion } from "framer-motion";
 
 interface Project {
