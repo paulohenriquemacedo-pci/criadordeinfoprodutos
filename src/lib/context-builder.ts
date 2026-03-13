@@ -114,7 +114,7 @@ ${JSON.stringify(strategicMemory, null, 2)}`
     .join("\n\n---\n\n");
 
   // Extract key decisions from all completed modules for quick reference
-  const keyDecisions = (modules || [])
+  const keyDecisions = filteredModules
     .filter((m) => m.generated_content)
     .map((m) => extractKeyDecisions(m.generated_content!, m.module_number))
     .filter(Boolean)
