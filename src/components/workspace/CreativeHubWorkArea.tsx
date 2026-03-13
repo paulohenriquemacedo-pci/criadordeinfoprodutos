@@ -480,6 +480,8 @@ ${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}`;
         versionContent={materialVersion.content}
         taskTitle={task.title}
         onBack={() => setMaterialVersion(null)}
+        projectNiche={project?.niche || undefined}
+        projectAudience={project?.target_audience || undefined}
       />
     );
   }
