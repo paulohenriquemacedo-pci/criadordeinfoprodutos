@@ -193,7 +193,10 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
       headline: re.headline, subheadline: re.subheadline || "",
       body: re.body || "", cta: re.cta || "", footer: "",
       imageUrl: prev.imageUrl || "",
+      logoUrl: prev.logoUrl || "",
     }));
+    if (re.imagePromptSuggestion) setImagePrompt(re.imagePromptSuggestion);
+    if (re.searchKeywords) setStockQuery(re.searchKeywords);
     toast.success("Conteúdo re-extraído do texto!");
   };
 
