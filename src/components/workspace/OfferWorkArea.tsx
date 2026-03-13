@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useProducts, useProductBonuses, useProductBumps, useCreateProduct, useUpdateProduct, useDeleteProduct, useCreateBonus, useDeleteBonus, useCreateBump, useDeleteBump, useSaveOfferVersion, Product } from "@/hooks/useOffers";
 import { useProjectModules } from "@/hooks/useProjects";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Package, Gift, Zap, Sparkles, Loader2, Save, Upload, FileText, BookOpen, LayoutGrid } from "lucide-react";
+import { Plus, Trash2, Package, Gift, Zap, Sparkles, Loader2, Save, Upload, FileText, BookOpen, LayoutGrid, Download } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -257,6 +257,39 @@ export default function OfferWorkArea({ projectId, project }: Props) {
   const [evaluation, setEvaluation] = useState<string>("");
   const [importing, setImporting] = useState(false);
   const [importingM2, setImportingM2] = useState(false);
+
+  // Load last saved evaluation when selecting a product
+  useEffect(() => {
+    if (!selectedProduct) return;
+    const loadLastEvaluation = async () => {
+      const { data } = await supabase
+        .from("offer_versions")
+        .select("snapshot")
+        .eq("product_id", selectedProduct.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (data?.[0]?.snapshot) {
+        const snapshot = data[0].snapshot as any;
+        if (snapshot.evaluation) {
+          setEvaluation(snapshot.evaluation);
+        }
+      }
+    };
+    loadLastEvaluation();
+  }, [selectedProduct?.id]);
+
+  const handleDownloadEvaluation = () => {
+    if (!evaluation || !selectedProduct) return;
+    const blob = new Blob([evaluation], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `avaliacao-${selectedProduct.name.replace(/\s+/g, "-").toLowerCase()}.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const handleImportFromModules = async (moduleNumbers: number[]) => {
     setImportingM2(true);
@@ -692,9 +725,14 @@ ${(bumps as any[])?.map((b: any) => `- ${b.name} (${b.bump_type}): ${b.descripti
           </div>
           <div className="flex gap-2">
             {evaluation && (
-              <Button variant="outline" size="sm" onClick={handleSaveToModule} className="gap-1.5">
-                <Save className="h-4 w-4" /> Salvar no M9
-              </Button>
+              <>
+                <Button variant="outline" size="sm" onClick={handleDownloadEvaluation} className="gap-1.5">
+                  <Download className="h-4 w-4" /> Download
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleSaveToModule} className="gap-1.5">
+                  <Save className="h-4 w-4" /> Salvar no M9
+                </Button>
+              </>
             )}
             <Button
               size="sm"
