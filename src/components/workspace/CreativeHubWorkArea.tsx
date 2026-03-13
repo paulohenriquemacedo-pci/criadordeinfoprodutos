@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useCreativeTasks, useCreateCreativeTask, useDeleteCreativeTask, useCreateCreativeVersion, useCreativeVersions, useToggleFavoriteVersion, useUpdateCreativeTask, CreativeTask } from "@/hooks/useCreativeHub";
+import MaterialCreator from "./MaterialCreator";
 import { useProducts } from "@/hooks/useOffers";
 import { buildProjectContext } from "@/lib/context-builder";
 import { MODULE_CONFIG } from "@/lib/modules";
