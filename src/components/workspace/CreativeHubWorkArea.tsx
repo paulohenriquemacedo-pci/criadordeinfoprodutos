@@ -473,6 +473,17 @@ ${task.tone ? `- TOM DESEJADO: ${task.tone}` : ""}`;
     toast.success("Download iniciado!");
   };
 
+  if (materialVersion) {
+    return (
+      <MaterialCreator
+        projectId={projectId}
+        versionContent={materialVersion.content}
+        taskTitle={task.title}
+        onBack={() => setMaterialVersion(null)}
+      />
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
