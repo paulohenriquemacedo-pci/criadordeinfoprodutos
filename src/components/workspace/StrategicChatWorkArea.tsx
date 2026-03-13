@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { Plus, Trash2, MessageSquare, Send, Loader2, Settings2, Sparkles, Bot, User, Copy, Download } from "lucide-react";
+import { HelpTooltip } from "@/components/HelpTooltip";
 
 interface Props {
   projectId: string;
