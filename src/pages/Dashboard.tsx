@@ -126,7 +126,10 @@ export default function Dashboard() {
           className="flex items-center justify-between mb-8"
         >
           <div>
-            <h1 className="text-3xl font-bold">Seus Projetos</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold">Seus Projetos</h1>
+              <HelpTooltip text="Aqui ficam todos os seus infoprodutos. Clique em um projeto para abrir a área de trabalho ou crie um novo." side="right" />
+            </div>
             <p className="text-muted-foreground mt-1">Gerencie seus infoprodutos com IA</p>
           </div>
           <Dialog open={open} onOpenChange={handleOpenChange}>
