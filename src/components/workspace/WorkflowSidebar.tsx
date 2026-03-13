@@ -59,6 +59,17 @@ export default function WorkflowSidebar({ activeModule, onSelectModule, modules 
                       {config.number === 9 && (
                         <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/30 text-primary/70 font-normal">novo</Badge>
                       )}
+                      <Tooltip delayDuration={300}>
+                        <TooltipTrigger asChild>
+                          <Info className="h-3 w-3 text-muted-foreground/40 hover:text-primary/70 transition-colors shrink-0 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-[220px] text-xs">
+                          {config.description}
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                        <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/30 text-primary/70 font-normal">novo</Badge>
+                      )}
                     </div>
                   </div>
                   {hasContent && !isOutdated && (
