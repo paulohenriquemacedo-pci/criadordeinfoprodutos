@@ -8,6 +8,7 @@ import CoherenceWorkArea from "@/components/workspace/CoherenceWorkArea";
 import ProductionWorkArea from "@/components/workspace/ProductionWorkArea";
 import CreativeHubWorkArea from "@/components/workspace/CreativeHubWorkArea";
 import OfferWorkArea from "@/components/workspace/OfferWorkArea";
+import StrategicChatWorkArea from "@/components/workspace/StrategicChatWorkArea";
 import ContextSidebar from "@/components/workspace/ContextSidebar";
 import BatchGenerationScreen from "@/components/workspace/BatchGenerationScreen";
 import BatchConfigDialog, { BatchEngineConfig } from "@/components/workspace/BatchConfigDialog";
