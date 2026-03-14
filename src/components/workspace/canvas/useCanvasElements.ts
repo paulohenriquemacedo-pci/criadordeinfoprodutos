@@ -20,7 +20,7 @@ export function buildInitialElements(
     elements.push({
       id: uid(), type: "image", x: 0, y: 0,
       width: canvasWidth, height: canvasHeight,
-      rotation: 0, opacity: 0.3,
+      rotation: 0, opacity: 1,
       locked: false, visible: true, zIndex: -10,
       src: content.imageUrl,
     });
@@ -43,9 +43,10 @@ export function buildInitialElements(
       width: canvasWidth - 144, height: 300,
       rotation: 0, opacity: 1, locked: false, visible: true, zIndex: z++,
       text: content.headline.replace(/\*/g, ""),
-      fontSize, fontFamily: brand.heading_font,
+      fontSize, fontFamily: "Bebas Neue",
       fontStyle: "bold", fill: textColor,
-      align: "left", lineHeight: 1.1,
+      align: "left", lineHeight: 0.9,
+      shadowColor: "#000000", shadowBlur: 30, shadowOffsetX: 0, shadowOffsetY: 0,
     });
   }
 
@@ -56,9 +57,10 @@ export function buildInitialElements(
       width: canvasWidth - 144, height: 150,
       rotation: 0, opacity: 0.85, locked: false, visible: true, zIndex: z++,
       text: content.subheadline.replace(/\*/g, ""),
-      fontSize: 30, fontFamily: brand.body_font,
+      fontSize: 30, fontFamily: "Bebas Neue",
       fontStyle: "normal", fill: textColor,
-      align: "left", lineHeight: 1.4,
+      align: "left", lineHeight: 0.9,
+      shadowColor: "#000000", shadowBlur: 30, shadowOffsetX: 0, shadowOffsetY: 0,
     });
   }
 
@@ -69,9 +71,10 @@ export function buildInitialElements(
       width: canvasWidth - 180, height: 200,
       rotation: 0, opacity: 0.65, locked: false, visible: true, zIndex: z++,
       text: content.body,
-      fontSize: 24, fontFamily: brand.body_font,
+      fontSize: 24, fontFamily: "Bebas Neue",
       fontStyle: "normal", fill: textColor,
-      align: "left", lineHeight: 1.6,
+      align: "left", lineHeight: 0.9,
+      shadowColor: "#000000", shadowBlur: 30, shadowOffsetX: 0, shadowOffsetY: 0,
     });
   }
 
@@ -89,9 +92,10 @@ export function buildInitialElements(
       width: canvasWidth - 144, height: 50,
       rotation: 0, opacity: 1, locked: false, visible: true, zIndex: z++,
       text: content.cta,
-      fontSize: 30, fontFamily: brand.heading_font,
+      fontSize: 30, fontFamily: "Bebas Neue",
       fontStyle: "bold", fill: "#FFFFFF",
-      align: "center", lineHeight: 1.2,
+      align: "center", lineHeight: 0.9,
+      shadowColor: "#000000", shadowBlur: 30, shadowOffsetX: 0, shadowOffsetY: 0,
     });
   }
 
