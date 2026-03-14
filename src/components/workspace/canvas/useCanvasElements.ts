@@ -20,7 +20,7 @@ export function buildInitialElements(
     elements.push({
       id: uid(), type: "image", x: 0, y: 0,
       width: canvasWidth, height: canvasHeight,
-      rotation: 0, opacity: 0.3,
+      rotation: 0, opacity: 1,
       locked: false, visible: true, zIndex: -10,
       src: content.imageUrl,
     });
