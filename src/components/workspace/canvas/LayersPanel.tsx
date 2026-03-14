@@ -18,6 +18,7 @@ const TYPE_ICONS: Record<string, React.FC<{ className?: string }>> = {
 };
 
 function getLabel(el: CanvasElement): string {
+  if (el.name) return el.name;
   if (el.type === "text") return el.text?.slice(0, 25) || "Texto";
   if (el.type === "logo") return "Logo";
   if (el.type === "image") return "Imagem";

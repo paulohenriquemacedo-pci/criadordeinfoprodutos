@@ -18,7 +18,7 @@ export function buildInitialElements(
 
   if (content.imageUrl) {
     elements.push({
-      id: uid(), type: "image", x: 0, y: 0,
+      id: uid(), type: "image", name: "IMAGEM DE FUNDO", x: 0, y: 0,
       width: canvasWidth, height: canvasHeight,
       rotation: 0, opacity: 1,
       locked: false, visible: true, zIndex: -10,
@@ -28,7 +28,7 @@ export function buildInitialElements(
 
   if (content.logoUrl) {
     elements.push({
-      id: uid(), type: "logo", x: 72, y: 64,
+      id: uid(), type: "logo", name: "LOGO", x: 72, y: 64,
       width: 180, height: 56, rotation: 0, opacity: 1,
       locked: false, visible: true, zIndex: z++,
       src: content.logoUrl,
@@ -38,7 +38,7 @@ export function buildInitialElements(
   if (content.headline) {
     const fontSize = content.headline.length > 60 ? 54 : content.headline.length > 30 ? 66 : 80;
     elements.push({
-      id: uid(), type: "text",
+      id: uid(), type: "text", name: "TÍTULO",
       x: 72, y: canvasHeight * 0.3,
       width: canvasWidth - 144, height: 300,
       rotation: 0, opacity: 1, locked: false, visible: true, zIndex: z++,
@@ -52,7 +52,7 @@ export function buildInitialElements(
 
   if (content.subheadline) {
     elements.push({
-      id: uid(), type: "text",
+      id: uid(), type: "text", name: "SUBTÍTULO",
       x: 72, y: canvasHeight * 0.55,
       width: canvasWidth - 144, height: 150,
       rotation: 0, opacity: 0.85, locked: false, visible: true, zIndex: z++,
@@ -66,7 +66,7 @@ export function buildInitialElements(
 
   if (content.body) {
     elements.push({
-      id: uid(), type: "text",
+      id: uid(), type: "text", name: "CORPO",
       x: 72, y: canvasHeight * 0.68,
       width: canvasWidth - 180, height: 200,
       rotation: 0, opacity: 0.65, locked: false, visible: true, zIndex: z++,
@@ -80,14 +80,14 @@ export function buildInitialElements(
 
   if (content.cta) {
     elements.push({
-      id: uid(), type: "shape",
+      id: uid(), type: "shape", name: "FUNDO CTA",
       x: 0, y: canvasHeight - 90,
       width: canvasWidth, height: 90,
       rotation: 0, opacity: 1, locked: false, visible: true, zIndex: z++,
       shapeType: "rect", fill: brand.primary_color,
     });
     elements.push({
-      id: uid(), type: "text",
+      id: uid(), type: "text", name: "CTA",
       x: 72, y: canvasHeight - 72,
       width: canvasWidth - 144, height: 50,
       rotation: 0, opacity: 1, locked: false, visible: true, zIndex: z++,
