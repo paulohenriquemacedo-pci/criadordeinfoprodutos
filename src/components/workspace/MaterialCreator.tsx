@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Download, ArrowLeft, Loader2, Image, RefreshCw, Sparkles, Search,
-  FileText, Copy, Check, Type, Square, Plus, Layers,
+  FileText, Copy, Check, Type, Square, Plus, Layers, Save, FolderOpen, Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Konva from "konva";
