@@ -211,14 +211,20 @@ export function exportStageToPNG(
   const oldWidth = stage.width();
   const oldHeight = stage.height();
 
+  // Hide all Transformers so they don't appear in the export
+  const transformers = stage.find("Transformer");
+  transformers.forEach((tr) => tr.visible(false));
+
   stage.scaleX(1);
   stage.scaleY(1);
   stage.width(config.width);
   stage.height(config.height);
   stage.draw();
 
-  const dataURL = stage.toDataURL({ pixelRatio: 1, mimeType: "image/png" });
+  const dataURL = stage.toDataURL({ pixelRatio: 2, mimeType: "image/png" });
 
+  // Restore Transformers and original scale
+  transformers.forEach((tr) => tr.visible(true));
   stage.scaleX(oldScaleX);
   stage.scaleY(oldScaleY);
   stage.width(oldWidth);
