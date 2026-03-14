@@ -12,9 +12,9 @@ export function buildInitialElements(
   canvasWidth: number,
   canvasHeight: number
 ): CanvasElement[] {
-  const isDark = brand.visual_style === "dark" || brand.visual_style === "bold";
-  const textColor = isDark ? "#FFFFFF" : brand.text_color;
+  const textColor = brand.text_color || "#1a1a1a";
   const elements: CanvasElement[] = [];
+  let z = 10; // Start text elements at z=10, leaving room for images below
   let z = 0;
 
   // Background image
