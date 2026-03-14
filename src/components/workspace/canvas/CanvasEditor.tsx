@@ -201,8 +201,10 @@ export function exportStageToPNG(
   config: CanvasConfig,
   fileName: string
 ) {
-  if (!stageRef.current) return;
-  // Temporarily scale to 1:1 for export
+  if (!stageRef.current) {
+    throw new Error("Stage não inicializado.");
+  }
+
   const stage = stageRef.current;
   const oldScaleX = stage.scaleX();
   const oldScaleY = stage.scaleY();
@@ -217,7 +219,6 @@ export function exportStageToPNG(
 
   const dataURL = stage.toDataURL({ pixelRatio: 1, mimeType: "image/png" });
 
-  // Restore
   stage.scaleX(oldScaleX);
   stage.scaleY(oldScaleY);
   stage.width(oldWidth);

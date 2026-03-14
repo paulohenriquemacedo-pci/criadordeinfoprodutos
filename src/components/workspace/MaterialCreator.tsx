@@ -485,15 +485,20 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
         </div>
 
         {/* Canvas Area */}
-        <div className="flex-1 flex items-center justify-center bg-muted/30 overflow-auto p-4" data-canvas-export>
-          <CanvasEditor
-            config={canvasConfig}
-            elements={elements}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            onUpdate={updateElement}
-            scale={previewScale}
-          />
+        <div className="flex-1 overflow-auto bg-workspace p-6" data-canvas-export>
+          <div className="min-h-full min-w-max flex items-center justify-center">
+            <div className="rounded-xl border border-border/60 bg-workspace-frame p-3 shadow-sm">
+              <CanvasEditor
+                config={canvasConfig}
+                elements={elements}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                onUpdate={updateElement}
+                scale={previewScale}
+                stageRef={stageRef}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
