@@ -217,12 +217,15 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (data?.imageUrl) {
-        // Add as background image element
-        addElement({
-          id: `img_${Date.now()}`, type: "image", x: 0, y: 0,
-          width: cfg.width, height: cfg.height, rotation: 0,
-          opacity: 0.3, locked: false, visible: true, zIndex: -1,
-          src: data.imageUrl,
+        // Add as background image element (always at bottom)
+        setElements(prev => {
+          const minZ = Math.min(0, ...prev.map(el => el.zIndex)) - 1;
+          return [...prev, {
+            id: `img_${Date.now()}`, type: "image" as const, x: 0, y: 0,
+            width: cfg.width, height: cfg.height, rotation: 0,
+            opacity: 0.3, locked: false, visible: true, zIndex: minZ,
+            src: data.imageUrl,
+          }];
         });
         toast.success("Imagem adicionada ao canvas!");
       }
