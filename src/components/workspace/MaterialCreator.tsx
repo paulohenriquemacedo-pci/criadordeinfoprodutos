@@ -435,10 +435,13 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
                       const file = e.target.files?.[0];
                       if (file) {
                         const url = URL.createObjectURL(file);
-                        addElement({
-                          id: `img_${Date.now()}`, type: "image", x: 0, y: 0,
-                          width: cfg.width, height: cfg.height, rotation: 0,
-                          opacity: 0.3, locked: false, visible: true, zIndex: 0, src: url,
+                        setElements(prev => {
+                          const minZ = Math.min(0, ...prev.map(el => el.zIndex)) - 1;
+                          return [...prev, {
+                            id: `img_${Date.now()}`, type: "image" as const, x: 0, y: 0,
+                            width: cfg.width, height: cfg.height, rotation: 0,
+                            opacity: 0.3, locked: false, visible: true, zIndex: minZ, src: url,
+                          }];
                         });
                       }
                     }}
