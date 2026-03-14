@@ -178,6 +178,11 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
     updateElement, deleteElement, addElement, duplicateElement, moveLayer,
   } = useCanvasElements(initialElements, canvasStorageKey);
 
+  // Persist bgColor
+  useEffect(() => {
+    try { localStorage.setItem(`${canvasStorageKey}_bg`, bgColor); } catch {}
+  }, [bgColor, canvasStorageKey]);
+
   const canvasConfig: CanvasConfig = { width: cfg.width, height: cfg.height, backgroundColor: bgColor };
 
   // Stage ref for export
