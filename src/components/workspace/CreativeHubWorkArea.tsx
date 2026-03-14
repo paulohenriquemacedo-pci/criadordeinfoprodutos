@@ -56,7 +56,14 @@ export default function CreativeHubWorkArea({ projectId, project }: Props) {
   const createTask = useCreateCreativeTask();
   const deleteTask = useDeleteCreativeTask();
 
-  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const activeTaskStorageKey = `m10_active_task_${projectId}`;
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(activeTaskStorageKey);
+    } catch {
+      return null;
+    }
+  });
   const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [newTask, setNewTask] = useState({
     category: "social", title: "", description: "", template_type: "", tone: "",
@@ -68,6 +75,19 @@ export default function CreativeHubWorkArea({ projectId, project }: Props) {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const { data: products } = useProducts(projectId);
+
+  useEffect(() => {
+    try {
+      if (activeTaskId) localStorage.setItem(activeTaskStorageKey, activeTaskId);
+      else localStorage.removeItem(activeTaskStorageKey);
+    } catch {}
+  }, [activeTaskId, activeTaskStorageKey]);
+
+  useEffect(() => {
+    if (!tasks || !activeTaskId) return;
+    const exists = tasks.some((t) => t.id === activeTaskId);
+    if (!exists) setActiveTaskId(null);
+  }, [tasks, activeTaskId]);
 
   const activeTask = tasks?.find(t => t.id === activeTaskId);
 
