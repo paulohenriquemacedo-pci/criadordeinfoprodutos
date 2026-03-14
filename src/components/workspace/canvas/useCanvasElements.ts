@@ -14,8 +14,7 @@ export function buildInitialElements(
 ): CanvasElement[] {
   const textColor = brand.text_color || "#1a1a1a";
   const elements: CanvasElement[] = [];
-  let z = 10; // Start text elements at z=10, leaving room for images below
-  let z = 0;
+  let z = 10;
 
   // Background image - always at the very bottom
   if (content.imageUrl) {
