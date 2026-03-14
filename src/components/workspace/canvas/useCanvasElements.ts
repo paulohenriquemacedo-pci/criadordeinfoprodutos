@@ -38,7 +38,7 @@ export function buildInitialElements(
   if (content.headline) {
     const fontSize = content.headline.length > 60 ? 54 : content.headline.length > 30 ? 66 : 80;
     elements.push({
-      id: uid(), type: "text",
+      id: uid(), type: "text", name: "TÍTULO",
       x: 72, y: canvasHeight * 0.3,
       width: canvasWidth - 144, height: 300,
       rotation: 0, opacity: 1, locked: false, visible: true, zIndex: z++,
