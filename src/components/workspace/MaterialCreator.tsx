@@ -151,7 +151,13 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const [caption, setCaption] = useState("");
   const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
   const [captionCopied, setCaptionCopied] = useState(false);
-  const [bgColor, setBgColor] = useState("#FFFFFF");
+  const [bgColor, setBgColor] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`${canvasStorageKey}_bg`);
+      if (saved) return saved;
+    } catch {}
+    return "#FFFFFF";
+  });
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
