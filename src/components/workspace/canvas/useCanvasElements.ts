@@ -99,6 +99,9 @@ export function buildInitialElements(
 }
 
 export function useCanvasElements(initial: CanvasElement[], storageKey?: string) {
+  const initialRef = useRef(initial);
+  initialRef.current = initial;
+
   const [elements, setElements] = useState<CanvasElement[]>(() => {
     if (storageKey) {
       try {
@@ -117,6 +120,12 @@ export function useCanvasElements(initial: CanvasElement[], storageKey?: string)
   const prevKeyRef = useRef(storageKey);
   useEffect(() => {
     if (prevKeyRef.current === storageKey) return;
+    // Save current elements under the OLD key before switching
+    if (prevKeyRef.current) {
+      try {
+        localStorage.setItem(prevKeyRef.current, JSON.stringify(elements));
+      } catch {}
+    }
     prevKeyRef.current = storageKey;
     setSelectedId(null);
     if (storageKey) {
@@ -131,14 +140,13 @@ export function useCanvasElements(initial: CanvasElement[], storageKey?: string)
         }
       } catch {}
     }
-    setElements(initial);
-  }, [storageKey, initial]);
+    setElements(initialRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
 
-  // Persist elements to localStorage on change
-  const isFirstRender = useRef(true);
+  // Persist elements to localStorage on every change
   useEffect(() => {
     if (!storageKey) return;
-    if (isFirstRender.current) { isFirstRender.current = false; return; }
     try {
       localStorage.setItem(storageKey, JSON.stringify(elements));
     } catch {}
