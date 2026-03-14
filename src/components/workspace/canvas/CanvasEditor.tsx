@@ -10,6 +10,7 @@ interface Props {
   onSelect: (id: string | null) => void;
   onUpdate: (id: string, changes: Partial<CanvasElement>) => void;
   scale: number;
+  stageRef?: React.RefObject<Konva.Stage | null>;
 }
 
 function URLImage({ src, ...props }: { src: string } & Record<string, any>) {
@@ -23,8 +24,9 @@ function URLImage({ src, ...props }: { src: string } & Record<string, any>) {
   return image ? <KonvaImage image={image} {...props} /> : null;
 }
 
-export default function CanvasEditor({ config, elements, selectedId, onSelect, onUpdate, scale }: Props) {
-  const stageRef = useRef<Konva.Stage>(null);
+export default function CanvasEditor({ config, elements, selectedId, onSelect, onUpdate, scale, stageRef: externalStageRef }: Props) {
+  const localStageRef = useRef<Konva.Stage>(null);
+  const stageRef = externalStageRef ?? localStageRef;
   const trRef = useRef<Konva.Transformer>(null);
 
   // Attach transformer to selected node
@@ -40,7 +42,7 @@ export default function CanvasEditor({ config, elements, selectedId, onSelect, o
     }
     trRef.current.nodes([]);
     trRef.current.getLayer()?.batchDraw();
-  }, [selectedId, elements]);
+  }, [selectedId, elements, stageRef]);
 
   const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
     if (e.target === stageRef.current) {
@@ -199,8 +201,10 @@ export function exportStageToPNG(
   config: CanvasConfig,
   fileName: string
 ) {
-  if (!stageRef.current) return;
-  // Temporarily scale to 1:1 for export
+  if (!stageRef.current) {
+    throw new Error("Stage não inicializado.");
+  }
+
   const stage = stageRef.current;
   const oldScaleX = stage.scaleX();
   const oldScaleY = stage.scaleY();
@@ -215,7 +219,6 @@ export function exportStageToPNG(
 
   const dataURL = stage.toDataURL({ pixelRatio: 1, mimeType: "image/png" });
 
-  // Restore
   stage.scaleX(oldScaleX);
   stage.scaleY(oldScaleY);
   stage.width(oldWidth);

@@ -167,44 +167,28 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const canvasConfig: CanvasConfig = { width: cfg.width, height: cfg.height, backgroundColor: bgColor };
 
   // Stage ref for export
-  const stageRef = useRef<Konva.Stage>(null);
+  const stageRef = useRef<Konva.Stage | null>(null);
 
   const previewScale = format === "story" ? 0.24 : 0.32;
 
   // Export PNG via Konva
   const handleExport = useCallback(() => {
-    // We need to access stage from the CanvasEditor; use a workaround via DOM
-    const stageContainer = document.querySelector(".konvajs-content canvas") as HTMLCanvasElement;
-    if (!stageContainer) { toast.error("Canvas não encontrado."); return; }
+    if (!stageRef.current) {
+      toast.error("Canvas não encontrado.");
+      return;
+    }
 
-    // Re-render at full scale for export
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = cfg.width;
-    tempCanvas.height = cfg.height;
-    
-    // Use Konva stage method via ref - we'll get it from the stage component
-    const stage = (document.querySelector("canvas")?.parentElement as any)?.__konvaStage;
-    
-    // Simpler approach: use html2canvas on the stage container
-    toast.info("Exportando...");
-    import("html2canvas").then(({ default: html2canvas }) => {
-      const stageEl = document.querySelector("[data-canvas-export]") as HTMLElement;
-      if (!stageEl) { toast.error("Canvas não encontrado."); return; }
-      html2canvas(stageEl, {
-        scale: 1 / previewScale,
-        useCORS: true,
-        backgroundColor: null,
-        width: cfg.width * previewScale,
-        height: cfg.height * previewScale,
-      }).then(canvas => {
-        const link = document.createElement("a");
-        link.download = `${taskTitle.replace(/[^a-zA-Z0-9]/g, "_")}_${cfg.width}x${cfg.height}.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-        toast.success(`Imagem exportada em ${cfg.badge}!`);
-      }).catch(err => toast.error("Erro ao exportar: " + err.message));
-    });
-  }, [taskTitle, cfg, previewScale]);
+    try {
+      exportStageToPNG(
+        stageRef,
+        canvasConfig,
+        `${taskTitle.replace(/[^a-zA-Z0-9]/g, "_")}_${format}_${cfg.width}x${cfg.height}.png`
+      );
+      toast.success(`Imagem exportada em ${cfg.badge}!`);
+    } catch (err: any) {
+      toast.error("Erro ao exportar: " + (err?.message || "falha inesperada"));
+    }
+  }, [canvasConfig, cfg, format, taskTitle]);
 
   // AI Image Generation
   const handleGenerateImage = async () => {
@@ -501,15 +485,20 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
         </div>
 
         {/* Canvas Area */}
-        <div className="flex-1 flex items-center justify-center bg-muted/30 overflow-auto p-4" data-canvas-export>
-          <CanvasEditor
-            config={canvasConfig}
-            elements={elements}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            onUpdate={updateElement}
-            scale={previewScale}
-          />
+        <div className="flex-1 overflow-auto bg-workspace p-6" data-canvas-export>
+          <div className="min-h-full min-w-max flex items-center justify-center">
+            <div className="rounded-xl border border-border/60 bg-workspace-frame p-3 shadow-sm">
+              <CanvasEditor
+                config={canvasConfig}
+                elements={elements}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                onUpdate={updateElement}
+                scale={previewScale}
+                stageRef={stageRef}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
