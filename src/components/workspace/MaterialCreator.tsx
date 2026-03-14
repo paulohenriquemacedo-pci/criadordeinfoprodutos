@@ -152,6 +152,12 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
   const [captionCopied, setCaptionCopied] = useState(false);
   const [bgColor, setBgColor] = useState("#FFFFFF");
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+
+  // Design templates
+  const { templates, saveTemplate, deleteTemplate } = useDesignTemplates();
 
   // Canvas elements — persisted via localStorage
   const canvasStorageKey = `canvas_${projectId}_${taskTitle.slice(0, 30)}_${format}`;
