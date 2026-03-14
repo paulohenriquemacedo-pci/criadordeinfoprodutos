@@ -389,6 +389,12 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
           ))}
         </div>
 
+        <Button variant="outline" size="sm" onClick={() => setTemplateDialogOpen(true)} className="gap-1 text-xs">
+          <FolderOpen className="h-3 w-3" /> Templates
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setSaveTemplateDialogOpen(true)} className="gap-1 text-xs">
+          <Save className="h-3 w-3" /> Salvar Template
+        </Button>
         <Button variant="outline" size="sm" onClick={handleReExtract} className="gap-1 text-xs">
           <RefreshCw className="h-3 w-3" /> Re-extrair
         </Button>
