@@ -43,8 +43,8 @@ async function tryLovableGateway(enhancedPrompt: string, apiKey: string): Promis
 async function tryGeminiDirect(enhancedPrompt: string, apiKey: string): Promise<string | null> {
   // Try multiple model names for compatibility
   const models = [
-    "gemini-2.0-flash-preview-image-generation",
-    "gemini-2.0-flash-exp-image-generation",
+    "gemini-2.5-flash-image-preview",
+    "gemini-2.5-flash-image",
   ];
 
   for (const model of models) {
