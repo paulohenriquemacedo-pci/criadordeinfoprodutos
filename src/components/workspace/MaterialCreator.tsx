@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Download, ArrowLeft, Loader2, Image, RefreshCw, Sparkles, Search,
-  FileText, Copy, Check, Type, Square, Plus, Layers,
+  FileText, Copy, Check, Type, Square, Plus, Layers, Save, FolderOpen, Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Konva from "konva";
@@ -22,6 +22,7 @@ import StylePanel from "./canvas/StylePanel";
 import LayersPanel from "./canvas/LayersPanel";
 import { CanvasElement, CanvasConfig } from "./canvas/types";
 import { buildInitialElements, useCanvasElements } from "./canvas/useCanvasElements";
+import { useDesignTemplates } from "@/hooks/useDesignTemplates";
 
 type TemplateFormat = "feed" | "story";
 
@@ -151,6 +152,12 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
   const [captionCopied, setCaptionCopied] = useState(false);
   const [bgColor, setBgColor] = useState("#FFFFFF");
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+
+  // Design templates
+  const { templates, saveTemplate, deleteTemplate } = useDesignTemplates();
 
   // Canvas elements — persisted via localStorage
   const canvasStorageKey = `canvas_${projectId}_${taskTitle.slice(0, 30)}_${format}`;
@@ -330,6 +337,27 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
     toast.success("Canvas recriado com conteúdo re-extraído!");
   };
 
+  const handleSaveTemplate = () => {
+    if (!templateName.trim()) { toast.error("Digite um nome para o template."); return; }
+    saveTemplate(templateName.trim(), format, elements, bgColor);
+    setTemplateName("");
+    setSaveTemplateDialogOpen(false);
+    toast.success("Template salvo com sucesso!");
+  };
+
+  const handleLoadTemplate = (tpl: typeof templates[0]) => {
+    // Remap element IDs to avoid conflicts, keep all style properties
+    const newElements = tpl.elements.map((el, i) => ({
+      ...el,
+      id: `tpl_${Date.now()}_${i}`,
+    }));
+    setElements(newElements);
+    setBgColor(tpl.bgColor);
+    setSelectedId(null);
+    setTemplateDialogOpen(false);
+    toast.success(`Template "${tpl.name}" aplicado!`);
+  };
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
@@ -361,6 +389,12 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
           ))}
         </div>
 
+        <Button variant="outline" size="sm" onClick={() => setTemplateDialogOpen(true)} className="gap-1 text-xs">
+          <FolderOpen className="h-3 w-3" /> Templates
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setSaveTemplateDialogOpen(true)} className="gap-1 text-xs">
+          <Save className="h-3 w-3" /> Salvar Template
+        </Button>
         <Button variant="outline" size="sm" onClick={handleReExtract} className="gap-1 text-xs">
           <RefreshCw className="h-3 w-3" /> Re-extrair
         </Button>
@@ -535,6 +569,106 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
                 Digite um termo e clique em buscar para encontrar imagens gratuitas.
               </div>
             ) : null}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Save Template Dialog */}
+      <Dialog open={saveTemplateDialogOpen} onOpenChange={setSaveTemplateDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Save className="h-4 w-4" /> Salvar como Template
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Salve o layout atual (posições, fontes, sombras, formas) como template reutilizável. Imagens de fundo não são incluídas.
+            </p>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Nome do Template</Label>
+              <Input
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                placeholder="Ex: Post Educativo Escuro"
+                className="text-sm"
+                onKeyDown={(e) => e.key === "Enter" && handleSaveTemplate()}
+              />
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Badge variant="outline" className="text-[10px]">{cfg.badge}</Badge>
+              <span>{elements.length} elementos</span>
+            </div>
+            <Button onClick={handleSaveTemplate} className="w-full gap-1">
+              <Save className="h-4 w-4" /> Salvar Template
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Load Template Dialog */}
+      <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FolderOpen className="h-4 w-4" /> Meus Templates
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="flex-1">
+            {templates.length > 0 ? (
+              <div className="space-y-2">
+                {templates.map((tpl) => (
+                  <div
+                    key={tpl.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-border/50 hover:border-primary/40 transition-all group"
+                  >
+                    <div
+                      className="w-10 h-12 rounded border border-border/30 shrink-0"
+                      style={{ backgroundColor: tpl.bgColor }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{tpl.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge variant="outline" className="text-[10px]">
+                          {tpl.format === "feed" ? "1080×1350" : "1080×1920"}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground">
+                          {tpl.elements.length} elementos
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {new Date(tpl.createdAt).toLocaleDateString("pt-BR")}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="text-xs gap-1"
+                        onClick={() => handleLoadTemplate(tpl)}
+                      >
+                        Aplicar
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => {
+                          deleteTemplate(tpl.id);
+                          toast.success("Template removido.");
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                Nenhum template salvo. Crie um design e clique em "Salvar Template" para reutilizá-lo.
+              </div>
+            )}
           </ScrollArea>
         </DialogContent>
       </Dialog>
