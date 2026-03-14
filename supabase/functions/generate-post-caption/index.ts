@@ -15,6 +15,7 @@ async function tryLovableGateway(systemPrompt: string, userPrompt: string, apiKe
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
+        max_tokens: 4096,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -53,7 +54,7 @@ async function tryGeminiDirect(systemPrompt: string, userPrompt: string, apiKey:
           contents: [{ parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
           generationConfig: {
             temperature: 0.8,
-            maxOutputTokens: 1400,
+            maxOutputTokens: 4096,
           },
         }),
       }
