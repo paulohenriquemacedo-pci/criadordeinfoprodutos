@@ -1,6 +1,7 @@
 export interface CanvasElement {
   id: string;
   type: "text" | "image" | "shape" | "logo";
+  name?: string;
   x: number;
   y: number;
   width: number;
