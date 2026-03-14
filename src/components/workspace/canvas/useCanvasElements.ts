@@ -98,7 +98,11 @@ export function buildInitialElements(
   return elements;
 }
 
-export function useCanvasElements(initial: CanvasElement[], storageKey?: string) {
+export function useCanvasElements(
+  initial: CanvasElement[],
+  storageKey?: string,
+  canvasSize?: { width: number; height: number }
+) {
   const initialRef = useRef(initial);
   initialRef.current = initial;
 
