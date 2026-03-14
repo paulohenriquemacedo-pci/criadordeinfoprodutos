@@ -43,7 +43,7 @@ async function tryLovableGateway(enhancedPrompt: string, apiKey: string): Promis
 async function tryGeminiDirect(enhancedPrompt: string, apiKey: string): Promise<string | null> {
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
