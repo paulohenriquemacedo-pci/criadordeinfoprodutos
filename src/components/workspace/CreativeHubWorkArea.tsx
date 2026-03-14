@@ -537,7 +537,7 @@ NÃO adicione nada além desses campos. NÃO use títulos com #.
         projectId={projectId}
         versionContent={materialVersion.content}
         taskTitle={task.title}
-        onBack={() => setMaterialVersion(null)}
+        onBack={() => setMaterialVersionId(null)}
         projectNiche={project?.niche || undefined}
         projectAudience={project?.target_audience || undefined}
       />
