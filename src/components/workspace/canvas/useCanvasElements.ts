@@ -52,7 +52,7 @@ export function buildInitialElements(
 
   if (content.subheadline) {
     elements.push({
-      id: uid(), type: "text",
+      id: uid(), type: "text", name: "SUBTÍTULO",
       x: 72, y: canvasHeight * 0.55,
       width: canvasWidth - 144, height: 150,
       rotation: 0, opacity: 0.85, locked: false, visible: true, zIndex: z++,
