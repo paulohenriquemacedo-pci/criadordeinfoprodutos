@@ -150,9 +150,7 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const [caption, setCaption] = useState("");
   const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
   const [captionCopied, setCaptionCopied] = useState(false);
-  const [bgColor, setBgColor] = useState(
-    brand.visual_style === "dark" ? brand.secondary_color || "#0a0f1a" : brand.background_color || "#FFFFFF"
-  );
+  const [bgColor, setBgColor] = useState("#FFFFFF");
 
   // Canvas elements
   const initialContent: PostContentData = {
