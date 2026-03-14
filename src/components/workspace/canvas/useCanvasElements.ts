@@ -113,6 +113,27 @@ export function useCanvasElements(initial: CanvasElement[], storageKey?: string)
   });
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // Reload elements when storageKey changes (e.g. switching between feed/story)
+  const prevKeyRef = useRef(storageKey);
+  useEffect(() => {
+    if (prevKeyRef.current === storageKey) return;
+    prevKeyRef.current = storageKey;
+    setSelectedId(null);
+    if (storageKey) {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setElements(parsed);
+            return;
+          }
+        }
+      } catch {}
+    }
+    setElements(initial);
+  }, [storageKey, initial]);
+
   // Persist elements to localStorage on change
   const isFirstRender = useRef(true);
   useEffect(() => {
