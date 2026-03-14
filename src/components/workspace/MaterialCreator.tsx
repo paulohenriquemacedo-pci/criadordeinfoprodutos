@@ -176,7 +176,7 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const {
     elements, setElements, selectedId, setSelectedId, selectedElement,
     updateElement, deleteElement, addElement, duplicateElement, moveLayer,
-  } = useCanvasElements(initialElements, canvasStorageKey);
+  } = useCanvasElements(initialElements, canvasStorageKey, { width: cfg.width, height: cfg.height });
 
   // Persist bgColor
   useEffect(() => {

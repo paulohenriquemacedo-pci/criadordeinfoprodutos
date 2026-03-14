@@ -98,7 +98,11 @@ export function buildInitialElements(
   return elements;
 }
 
-export function useCanvasElements(initial: CanvasElement[], storageKey?: string) {
+export function useCanvasElements(
+  initial: CanvasElement[],
+  storageKey?: string,
+  canvasSize?: { width: number; height: number }
+) {
   const initialRef = useRef(initial);
   initialRef.current = initial;
 
@@ -121,13 +125,15 @@ export function useCanvasElements(initial: CanvasElement[], storageKey?: string)
   useEffect(() => {
     if (prevKeyRef.current === storageKey) return;
     // Save current elements under the OLD key before switching
-    if (prevKeyRef.current) {
+    const oldKey = prevKeyRef.current;
+    if (oldKey) {
       try {
-        localStorage.setItem(prevKeyRef.current, JSON.stringify(elements));
+        localStorage.setItem(oldKey, JSON.stringify(elements));
       } catch {}
     }
     prevKeyRef.current = storageKey;
     setSelectedId(null);
+    // Try to load saved data for this format
     if (storageKey) {
       try {
         const saved = localStorage.getItem(storageKey);
@@ -135,6 +141,30 @@ export function useCanvasElements(initial: CanvasElement[], storageKey?: string)
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
             setElements(parsed);
+            return;
+          }
+        }
+      } catch {}
+    }
+    // No saved data: clone from previous format and adapt image sizes
+    if (oldKey && canvasSize) {
+      try {
+        const oldSaved = localStorage.getItem(oldKey);
+        if (oldSaved) {
+          const oldElements: CanvasElement[] = JSON.parse(oldSaved);
+          if (Array.isArray(oldElements) && oldElements.length > 0) {
+            const adapted = oldElements.map(el => {
+              // Resize full-bleed background images to new canvas size
+              if ((el.type === "image") && el.x === 0 && el.y === 0) {
+                return { ...el, width: canvasSize.width, height: canvasSize.height };
+              }
+              // Resize full-width shapes (e.g. CTA bar) to new width
+              if (el.type === "shape" && el.x === 0 && el.width >= 1000) {
+                return { ...el, width: canvasSize.width };
+              }
+              return { ...el };
+            });
+            setElements(adapted);
             return;
           }
         }
