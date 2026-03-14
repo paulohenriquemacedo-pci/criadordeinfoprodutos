@@ -337,6 +337,27 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
     toast.success("Canvas recriado com conteúdo re-extraído!");
   };
 
+  const handleSaveTemplate = () => {
+    if (!templateName.trim()) { toast.error("Digite um nome para o template."); return; }
+    saveTemplate(templateName.trim(), format, elements, bgColor);
+    setTemplateName("");
+    setSaveTemplateDialogOpen(false);
+    toast.success("Template salvo com sucesso!");
+  };
+
+  const handleLoadTemplate = (tpl: typeof templates[0]) => {
+    // Remap element IDs to avoid conflicts, keep all style properties
+    const newElements = tpl.elements.map((el, i) => ({
+      ...el,
+      id: `tpl_${Date.now()}_${i}`,
+    }));
+    setElements(newElements);
+    setBgColor(tpl.bgColor);
+    setSelectedId(null);
+    setTemplateDialogOpen(false);
+    toast.success(`Template "${tpl.name}" aplicado!`);
+  };
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
