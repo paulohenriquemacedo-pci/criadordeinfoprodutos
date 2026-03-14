@@ -327,7 +327,14 @@ function CreativeTaskWorkspace({ task, projectId, project, onBack }: { task: Cre
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamText, setStreamText] = useState("");
   const [showRefinementFor, setShowRefinementFor] = useState<string | null>(null);
-  const [materialVersion, setMaterialVersion] = useState<{ content: string } | null>(null);
+  const materialStorageKey = `m10_material_version_${projectId}_${task.id}`;
+  const [materialVersionId, setMaterialVersionId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(materialStorageKey);
+    } catch {
+      return null;
+    }
+  });
 
   const taskAny = task as any;
   const contentFocus = taskAny.content_focus || "engagement";
@@ -336,6 +343,20 @@ function CreativeTaskWorkspace({ task, projectId, project, onBack }: { task: Cre
 
   // Fetch product details if product focus
   const selectedProduct = products?.find((p: any) => p.id === productId);
+  const materialVersion = versions?.find((v) => v.id === materialVersionId) || null;
+
+  useEffect(() => {
+    try {
+      if (materialVersionId) localStorage.setItem(materialStorageKey, materialVersionId);
+      else localStorage.removeItem(materialStorageKey);
+    } catch {}
+  }, [materialVersionId, materialStorageKey]);
+
+  useEffect(() => {
+    if (!materialVersionId || versionsLoading) return;
+    const exists = versions?.some((v) => v.id === materialVersionId);
+    if (!exists) setMaterialVersionId(null);
+  }, [materialVersionId, versions, versionsLoading]);
 
   const handleGenerate = useCallback(async (refinementPrompt?: string) => {
     setIsGenerating(true);
