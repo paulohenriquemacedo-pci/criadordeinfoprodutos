@@ -12,18 +12,17 @@ export function buildInitialElements(
   canvasWidth: number,
   canvasHeight: number
 ): CanvasElement[] {
-  const isDark = brand.visual_style === "dark" || brand.visual_style === "bold";
-  const textColor = isDark ? "#FFFFFF" : brand.text_color;
+  const textColor = brand.text_color || "#1a1a1a";
   const elements: CanvasElement[] = [];
-  let z = 0;
+  let z = 10;
 
-  // Background image
+  // Background image - always at the very bottom
   if (content.imageUrl) {
     elements.push({
       id: uid(), type: "image", x: 0, y: 0,
       width: canvasWidth, height: canvasHeight,
-      rotation: 0, opacity: isDark ? 0.25 : 0.35,
-      locked: false, visible: true, zIndex: z++,
+      rotation: 0, opacity: 0.3,
+      locked: false, visible: true, zIndex: -10,
       src: content.imageUrl,
     });
   }
