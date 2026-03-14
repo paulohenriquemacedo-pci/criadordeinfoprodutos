@@ -87,7 +87,7 @@ export function buildInitialElements(
       shapeType: "rect", fill: brand.primary_color,
     });
     elements.push({
-      id: uid(), type: "text",
+      id: uid(), type: "text", name: "CTA",
       x: 72, y: canvasHeight - 72,
       width: canvasWidth - 144, height: 50,
       rotation: 0, opacity: 1, locked: false, visible: true, zIndex: z++,

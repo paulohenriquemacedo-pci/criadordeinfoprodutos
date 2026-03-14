@@ -95,7 +95,7 @@ export default function StylePanel({ element, onUpdate, onDelete, onDuplicate, o
       {element.type === "text" && (
         <>
           <div className="border-t border-border/30 pt-3 space-y-2">
-            <Label className="text-xs font-medium">Texto</Label>
+            <Label className="text-xs font-medium">{element.name || "Texto"}</Label>
             <Textarea
               value={element.text || ""}
               onChange={e => u({ text: e.target.value })}
