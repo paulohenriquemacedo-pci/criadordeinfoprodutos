@@ -41,39 +41,53 @@ async function tryLovableGateway(enhancedPrompt: string, apiKey: string): Promis
 }
 
 async function tryGeminiDirect(enhancedPrompt: string, apiKey: string): Promise<string | null> {
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: enhancedPrompt }] }],
-          generationConfig: {
-            responseModalities: ["TEXT", "IMAGE"],
-          },
-        }),
-      }
-    );
+  // Try multiple model names for compatibility
+  const models = [
+    "gemini-2.5-flash-image-preview",
+    "gemini-2.5-flash-image",
+  ];
 
-    if (!response.ok) {
-      const text = await response.text();
-      console.error("Gemini direct error:", response.status, text);
-      return null;
-    }
+  for (const model of models) {
+    try {
+      console.log(`Trying Gemini direct with model: ${model}`);
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: enhancedPrompt }] }],
+            generationConfig: {
+              responseModalities: ["TEXT", "IMAGE"],
+            },
+          }),
+        }
+      );
 
-    const data = await response.json();
-    const parts = data.candidates?.[0]?.content?.parts || [];
-    for (const part of parts) {
-      if (part.inlineData) {
-        return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+      if (response.status === 404) {
+        console.log(`Model ${model} not found, trying next...`);
+        await response.text();
+        continue;
       }
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error(`Gemini direct error (${model}):`, response.status, text);
+        continue;
+      }
+
+      const data = await response.json();
+      const parts = data.candidates?.[0]?.content?.parts || [];
+      for (const part of parts) {
+        if (part.inlineData) {
+          return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+        }
+      }
+    } catch (e) {
+      console.error(`Gemini direct exception (${model}):`, e);
     }
-    return null;
-  } catch (e) {
-    console.error("Gemini direct exception:", e);
-    return null;
   }
+  return null;
 }
 
 serve(async (req) => {
