@@ -92,9 +92,10 @@ export function buildInitialElements(
       width: canvasWidth - 144, height: 50,
       rotation: 0, opacity: 1, locked: false, visible: true, zIndex: z++,
       text: content.cta,
-      fontSize: 30, fontFamily: brand.heading_font,
+      fontSize: 30, fontFamily: "Bebas Neue",
       fontStyle: "bold", fill: "#FFFFFF",
-      align: "center", lineHeight: 1.2,
+      align: "center", lineHeight: 0.9,
+      shadowColor: "#000000", shadowBlur: 30, shadowOffsetX: 0, shadowOffsetY: 0,
     });
   }
 
