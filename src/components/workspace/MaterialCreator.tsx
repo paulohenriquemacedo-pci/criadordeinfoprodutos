@@ -419,11 +419,63 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
         <div className="w-72 border-r border-border/50 shrink-0">
           <ScrollArea className="h-full">
             <Tabs defaultValue="elements" className="w-full">
-              <TabsList className="w-full grid grid-cols-3 h-9">
+              <TabsList className="w-full grid grid-cols-4 h-9">
+                <TabsTrigger value="content" className="text-xs gap-1"><FileText className="h-3 w-3" /> Texto</TabsTrigger>
                 <TabsTrigger value="elements" className="text-xs gap-1"><Plus className="h-3 w-3" /> Adicionar</TabsTrigger>
                 <TabsTrigger value="style" className="text-xs gap-1"><Sparkles className="h-3 w-3" /> Estilo</TabsTrigger>
                 <TabsTrigger value="layers" className="text-xs gap-1"><Layers className="h-3 w-3" /> Camadas</TabsTrigger>
               </TabsList>
+
+              {/* AI CONTENT REFERENCE */}
+              <TabsContent value="content" className="p-3 space-y-3">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Conteúdo Gerado pela IA</h4>
+                <p className="text-[10px] text-muted-foreground">Copie os textos abaixo e cole nos elementos do canvas.</p>
+                {[
+                  { label: "Título", value: extracted.headline },
+                  { label: "Subtítulo", value: extracted.subheadline },
+                  { label: "Corpo", value: extracted.body },
+                  { label: "CTA", value: extracted.cta },
+                  { label: "Prompt de Imagem", value: extracted.imagePromptSuggestion },
+                  { label: "Palavras-chave", value: extracted.searchKeywords },
+                ].filter(f => f.value).map((field) => (
+                  <div key={field.label} className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[10px] text-muted-foreground uppercase">{field.label}</Label>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5"
+                        onClick={() => {
+                          navigator.clipboard.writeText(field.value || "");
+                          toast.success(`${field.label} copiado!`);
+                        }}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <p className="text-xs bg-muted/50 rounded-md p-2 leading-relaxed select-all cursor-text break-words">{field.value}</p>
+                  </div>
+                ))}
+
+                {/* Full raw content */}
+                <div className="border-t border-border/30 pt-3 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] text-muted-foreground uppercase">Conteúdo Completo</Label>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5"
+                      onClick={() => {
+                        navigator.clipboard.writeText(versionContent);
+                        toast.success("Conteúdo completo copiado!");
+                      }}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <pre className="text-[10px] bg-muted/50 rounded-md p-2 whitespace-pre-wrap select-all cursor-text max-h-48 overflow-auto leading-relaxed">{versionContent}</pre>
+                </div>
+              </TabsContent>
 
               {/* ADD ELEMENTS */}
               <TabsContent value="elements" className="p-3 space-y-3">
