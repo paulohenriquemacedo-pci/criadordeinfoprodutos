@@ -436,7 +436,7 @@ NÃO adicione nada além desses campos. NÃO use títulos com #.
 
       const userMessage = refinementPrompt
         ? `VERSÕES ANTERIORES:\n${previousVersionsText}\n\nREFINAMENTO SOLICITADO: ${refinementPrompt}`
-        : `TASK: ${task.title}\n${task.description ? `DESCRIÇÃO: ${task.description}` : ""}\n${task.template_type ? `TIPO: ${task.template_type}` : ""}\n\nCrie o conteúdo solicitado com qualidade profissional.`;
+        : `TASK: ${task.title}\n${task.description ? `DESCRIÇÃO: ${task.description}` : ""}\n${task.template_type ? `TIPO: ${task.template_type}` : ""}${prompt.trim() ? `\n\nTEMA/ASSUNTO SOLICITADO PELO USUÁRIO: ${prompt.trim()}` : ""}\n\nCrie o conteúdo solicitado com qualidade profissional. ${prompt.trim() ? "IMPORTANTE: O conteúdo DEVE ser sobre o tema/assunto especificado acima pelo usuário." : ""}`;
 
       const messages = [
         { role: "system", content: systemPrompt },
