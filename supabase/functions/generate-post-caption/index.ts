@@ -54,7 +54,7 @@ async function tryGeminiDirect(systemPrompt: string, userPrompt: string, apiKey:
           contents: [{ parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
           generationConfig: {
             temperature: 0.8,
-            maxOutputTokens: 1400,
+            maxOutputTokens: 4096,
           },
         }),
       }
