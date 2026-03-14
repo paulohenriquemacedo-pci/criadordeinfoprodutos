@@ -80,7 +80,7 @@ export function buildInitialElements(
 
   if (content.cta) {
     elements.push({
-      id: uid(), type: "shape",
+      id: uid(), type: "shape", name: "FUNDO CTA",
       x: 0, y: canvasHeight - 90,
       width: canvasWidth, height: 90,
       rotation: 0, opacity: 1, locked: false, visible: true, zIndex: z++,
