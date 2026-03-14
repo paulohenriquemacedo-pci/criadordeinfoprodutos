@@ -17,13 +17,13 @@ export function buildInitialElements(
   let z = 10; // Start text elements at z=10, leaving room for images below
   let z = 0;
 
-  // Background image
+  // Background image - always at the very bottom
   if (content.imageUrl) {
     elements.push({
       id: uid(), type: "image", x: 0, y: 0,
       width: canvasWidth, height: canvasHeight,
-      rotation: 0, opacity: isDark ? 0.25 : 0.35,
-      locked: false, visible: true, zIndex: z++,
+      rotation: 0, opacity: 0.3,
+      locked: false, visible: true, zIndex: -10,
       src: content.imageUrl,
     });
   }
