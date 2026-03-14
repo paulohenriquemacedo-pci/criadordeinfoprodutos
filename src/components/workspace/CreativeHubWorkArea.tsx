@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useCreativeTasks, useCreateCreativeTask, useDeleteCreativeTask, useCreateCreativeVersion, useCreativeVersions, useToggleFavoriteVersion, useUpdateCreativeTask, CreativeTask } from "@/hooks/useCreativeHub";
 import MaterialCreator from "./MaterialCreator";
 import { useProducts } from "@/hooks/useOffers";
@@ -56,7 +56,14 @@ export default function CreativeHubWorkArea({ projectId, project }: Props) {
   const createTask = useCreateCreativeTask();
   const deleteTask = useDeleteCreativeTask();
 
-  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const activeTaskStorageKey = `m10_active_task_${projectId}`;
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(activeTaskStorageKey);
+    } catch {
+      return null;
+    }
+  });
   const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [newTask, setNewTask] = useState({
     category: "social", title: "", description: "", template_type: "", tone: "",
@@ -68,6 +75,19 @@ export default function CreativeHubWorkArea({ projectId, project }: Props) {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const { data: products } = useProducts(projectId);
+
+  useEffect(() => {
+    try {
+      if (activeTaskId) localStorage.setItem(activeTaskStorageKey, activeTaskId);
+      else localStorage.removeItem(activeTaskStorageKey);
+    } catch {}
+  }, [activeTaskId, activeTaskStorageKey]);
+
+  useEffect(() => {
+    if (!tasks || !activeTaskId) return;
+    const exists = tasks.some((t) => t.id === activeTaskId);
+    if (!exists) setActiveTaskId(null);
+  }, [tasks, activeTaskId]);
 
   const activeTask = tasks?.find(t => t.id === activeTaskId);
 
@@ -307,7 +327,14 @@ function CreativeTaskWorkspace({ task, projectId, project, onBack }: { task: Cre
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamText, setStreamText] = useState("");
   const [showRefinementFor, setShowRefinementFor] = useState<string | null>(null);
-  const [materialVersion, setMaterialVersion] = useState<{ content: string } | null>(null);
+  const materialStorageKey = `m10_material_version_${projectId}_${task.id}`;
+  const [materialVersionId, setMaterialVersionId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(materialStorageKey);
+    } catch {
+      return null;
+    }
+  });
 
   const taskAny = task as any;
   const contentFocus = taskAny.content_focus || "engagement";
@@ -316,6 +343,20 @@ function CreativeTaskWorkspace({ task, projectId, project, onBack }: { task: Cre
 
   // Fetch product details if product focus
   const selectedProduct = products?.find((p: any) => p.id === productId);
+  const materialVersion = versions?.find((v) => v.id === materialVersionId) || null;
+
+  useEffect(() => {
+    try {
+      if (materialVersionId) localStorage.setItem(materialStorageKey, materialVersionId);
+      else localStorage.removeItem(materialStorageKey);
+    } catch {}
+  }, [materialVersionId, materialStorageKey]);
+
+  useEffect(() => {
+    if (!materialVersionId || versionsLoading) return;
+    const exists = versions?.some((v) => v.id === materialVersionId);
+    if (!exists) setMaterialVersionId(null);
+  }, [materialVersionId, versions, versionsLoading]);
 
   const handleGenerate = useCallback(async (refinementPrompt?: string) => {
     setIsGenerating(true);
@@ -496,7 +537,7 @@ NÃO adicione nada além desses campos. NÃO use títulos com #.
         projectId={projectId}
         versionContent={materialVersion.content}
         taskTitle={task.title}
-        onBack={() => setMaterialVersion(null)}
+        onBack={() => setMaterialVersionId(null)}
         projectNiche={project?.niche || undefined}
         projectAudience={project?.target_audience || undefined}
       />
@@ -586,7 +627,7 @@ NÃO adicione nada além desses campos. NÃO use títulos com #.
                         )}
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setMaterialVersion({ content: v.content })} title="Criar Material Visual">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setMaterialVersionId(v.id)} title="Criar Material Visual">
                           <Image className="h-3 w-3" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadVersion(v)} title="Download .md">
