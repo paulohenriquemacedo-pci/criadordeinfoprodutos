@@ -43,9 +43,10 @@ export function buildInitialElements(
       width: canvasWidth - 144, height: 300,
       rotation: 0, opacity: 1, locked: false, visible: true, zIndex: z++,
       text: content.headline.replace(/\*/g, ""),
-      fontSize, fontFamily: brand.heading_font,
+      fontSize, fontFamily: "Bebas Neue",
       fontStyle: "bold", fill: textColor,
-      align: "left", lineHeight: 1.1,
+      align: "left", lineHeight: 0.9,
+      shadowColor: "#000000", shadowBlur: 30, shadowOffsetX: 0, shadowOffsetY: 0,
     });
   }
 
