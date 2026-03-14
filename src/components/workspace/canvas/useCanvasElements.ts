@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { CanvasElement } from "./types";
 import { BrandSettings } from "@/hooks/useBrandSettings";
 import { PostContentData } from "../PostTemplate1080x1350";
@@ -16,7 +16,6 @@ export function buildInitialElements(
   const elements: CanvasElement[] = [];
   let z = 10;
 
-  // Background image - always at the very bottom
   if (content.imageUrl) {
     elements.push({
       id: uid(), type: "image", x: 0, y: 0,
@@ -27,7 +26,6 @@ export function buildInitialElements(
     });
   }
 
-  // Logo
   if (content.logoUrl) {
     elements.push({
       id: uid(), type: "logo", x: 72, y: 64,
@@ -37,7 +35,6 @@ export function buildInitialElements(
     });
   }
 
-  // Headline
   if (content.headline) {
     const fontSize = content.headline.length > 60 ? 54 : content.headline.length > 30 ? 66 : 80;
     elements.push({
@@ -52,7 +49,6 @@ export function buildInitialElements(
     });
   }
 
-  // Subheadline
   if (content.subheadline) {
     elements.push({
       id: uid(), type: "text",
@@ -66,7 +62,6 @@ export function buildInitialElements(
     });
   }
 
-  // Body
   if (content.body) {
     elements.push({
       id: uid(), type: "text",
@@ -80,7 +75,6 @@ export function buildInitialElements(
     });
   }
 
-  // CTA bar background
   if (content.cta) {
     elements.push({
       id: uid(), type: "shape",
@@ -104,9 +98,30 @@ export function buildInitialElements(
   return elements;
 }
 
-export function useCanvasElements(initial: CanvasElement[]) {
-  const [elements, setElements] = useState<CanvasElement[]>(initial);
+export function useCanvasElements(initial: CanvasElement[], storageKey?: string) {
+  const [elements, setElements] = useState<CanvasElement[]>(() => {
+    if (storageKey) {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+    }
+    return initial;
+  });
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Persist elements to localStorage on change
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (!storageKey) return;
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(elements));
+    } catch {}
+  }, [elements, storageKey]);
 
   const updateElement = useCallback((id: string, changes: Partial<CanvasElement>) => {
     setElements(prev => prev.map(el => el.id === id ? { ...el, ...changes } : el));
