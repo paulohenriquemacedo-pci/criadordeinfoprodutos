@@ -151,7 +151,13 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const [caption, setCaption] = useState("");
   const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
   const [captionCopied, setCaptionCopied] = useState(false);
-  const [bgColor, setBgColor] = useState("#FFFFFF");
+  const [bgColor, setBgColor] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`${canvasStorageKey}_bg`);
+      if (saved) return saved;
+    } catch {}
+    return "#FFFFFF";
+  });
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
@@ -171,6 +177,11 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
     elements, setElements, selectedId, setSelectedId, selectedElement,
     updateElement, deleteElement, addElement, duplicateElement, moveLayer,
   } = useCanvasElements(initialElements, canvasStorageKey);
+
+  // Persist bgColor
+  useEffect(() => {
+    try { localStorage.setItem(`${canvasStorageKey}_bg`, bgColor); } catch {}
+  }, [bgColor, canvasStorageKey]);
 
   const canvasConfig: CanvasConfig = { width: cfg.width, height: cfg.height, backgroundColor: bgColor };
 
