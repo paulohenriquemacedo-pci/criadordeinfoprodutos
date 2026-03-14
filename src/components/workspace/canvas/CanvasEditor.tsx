@@ -166,7 +166,7 @@ export default function CanvasEditor({ config, elements, selectedId, onSelect, o
         scaleX={scale}
         scaleY={scale}
         onClick={handleStageClick}
-        onTap={handleStageClick}
+        onTap={() => onSelect(null)}
         style={{ cursor: "default" }}
       >
         <Layer>
