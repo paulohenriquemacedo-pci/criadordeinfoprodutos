@@ -152,7 +152,8 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const [captionCopied, setCaptionCopied] = useState(false);
   const [bgColor, setBgColor] = useState("#FFFFFF");
 
-  // Canvas elements
+  // Canvas elements — persisted via localStorage
+  const canvasStorageKey = `canvas_${projectId}_${taskTitle.slice(0, 30)}_${format}`;
   const initialContent: PostContentData = {
     headline: extracted.headline, subheadline: extracted.subheadline || "",
     body: extracted.body || "", cta: extracted.cta || "", footer: "",
@@ -162,7 +163,7 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
   const {
     elements, setElements, selectedId, setSelectedId, selectedElement,
     updateElement, deleteElement, addElement, duplicateElement, moveLayer,
-  } = useCanvasElements(initialElements);
+  } = useCanvasElements(initialElements, canvasStorageKey);
 
   const canvasConfig: CanvasConfig = { width: cfg.width, height: cfg.height, backgroundColor: bgColor };
 
