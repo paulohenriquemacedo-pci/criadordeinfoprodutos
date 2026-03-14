@@ -22,6 +22,7 @@ import StylePanel from "./canvas/StylePanel";
 import LayersPanel from "./canvas/LayersPanel";
 import { CanvasElement, CanvasConfig } from "./canvas/types";
 import { buildInitialElements, useCanvasElements } from "./canvas/useCanvasElements";
+import { useDesignTemplates } from "@/hooks/useDesignTemplates";
 
 type TemplateFormat = "feed" | "story";
 
