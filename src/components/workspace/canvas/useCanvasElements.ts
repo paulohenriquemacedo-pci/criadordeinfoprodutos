@@ -28,7 +28,7 @@ export function buildInitialElements(
 
   if (content.logoUrl) {
     elements.push({
-      id: uid(), type: "logo", x: 72, y: 64,
+      id: uid(), type: "logo", name: "LOGO", x: 72, y: 64,
       width: 180, height: 56, rotation: 0, opacity: 1,
       locked: false, visible: true, zIndex: z++,
       src: content.logoUrl,
