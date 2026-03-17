@@ -178,7 +178,7 @@ export function useCanvasElements(
         }
       } catch {}
     }
-    return initial;
+    return backfillNames(initial);
   });
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -226,13 +226,13 @@ export function useCanvasElements(
               }
               return { ...el };
             });
-            setElements(adapted);
+            setElements(backfillNames(adapted));
             return;
           }
         }
       } catch {}
     }
-    setElements(initialRef.current);
+    setElements(backfillNames(initialRef.current));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
 
