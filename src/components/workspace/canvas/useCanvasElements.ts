@@ -102,17 +102,22 @@ export function buildInitialElements(
   return elements;
 }
 
-/** Backfill `name` for legacy elements that were saved without one */
+/** Backfill `name` for legacy elements and normalize text hierarchy */
 function backfillNames(elements: CanvasElement[]): CanvasElement[] {
-  return elements.map(el => {
+  const canonicalTextNames = new Set(["TÍTULO", "SUBTÍTULO", "CORPO", "TEXTO", "TITULO", "SUBTITULO"]);
+  const isCtaText = (el: CanvasElement) =>
+    el.type === "text" && el.align === "center" && Boolean(el.fontStyle?.includes("bold"));
+
+  const base = elements.map(el => {
     if (el.name === "TEXTO") return { ...el, name: "CORPO" };
+    if (el.name === "SUBTITULO") return { ...el, name: "SUBTÍTULO" };
     if (el.name) return el;
     if (el.type === "image") return { ...el, name: "IMAGEM DE FUNDO" };
     if (el.type === "logo") return { ...el, name: "LOGO" };
     if (el.type === "text") {
       if (el.fontSize && el.fontSize >= 54) return { ...el, name: "TÍTULO" };
       if (el.fontSize && el.fontSize >= 28 && el.fontSize <= 35) {
-        if (el.align === "center" && el.fontStyle?.includes("bold")) return { ...el, name: "CTA" };
+        if (isCtaText(el)) return { ...el, name: "CTA" };
         return { ...el, name: "SUBTÍTULO" };
       }
       if (el.fontStyle?.includes("italic") && !el.fontStyle?.includes("bold")) return { ...el, name: "CORPO" };
@@ -121,6 +126,37 @@ function backfillNames(elements: CanvasElement[]): CanvasElement[] {
     }
     if (el.type === "shape") return { ...el, name: "FUNDO CTA" };
     return el;
+  });
+
+  const hierarchyCandidates = base
+    .filter(
+      el =>
+        el.type === "text" &&
+        !isCtaText(el) &&
+        (!el.name || canonicalTextNames.has(el.name.toUpperCase()))
+    )
+    .sort((a, b) => a.y - b.y)
+    .slice(0, 3);
+
+  if (hierarchyCandidates.length < 3) return base;
+
+  const roleById = new Map<string, "TÍTULO" | "SUBTÍTULO" | "CORPO">([
+    [hierarchyCandidates[0].id, "TÍTULO"],
+    [hierarchyCandidates[1].id, "SUBTÍTULO"],
+    [hierarchyCandidates[2].id, "CORPO"],
+  ]);
+
+  return base.map(el => {
+    const forcedRole = roleById.get(el.id);
+    if (!forcedRole) return el;
+    if (forcedRole === "CORPO") {
+      return {
+        ...el,
+        name: "CORPO",
+        fontStyle: el.fontStyle?.includes("italic") ? el.fontStyle : "italic",
+      };
+    }
+    return { ...el, name: forcedRole };
   });
 }
 
