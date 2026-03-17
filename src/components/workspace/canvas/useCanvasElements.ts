@@ -117,8 +117,8 @@ function backfillNames(elements: CanvasElement[]): CanvasElement[] {
         if (el.opacity !== undefined && el.opacity < 0.9) return { ...el, name: "SUBTÍTULO" };
         return { ...el, name: "SUBTÍTULO" };
       }
-      if (el.fontSize && el.fontSize <= 26) return { ...el, name: "TEXTO" };
-      return { ...el, name: "TEXTO" };
+      if (el.fontSize && el.fontSize <= 26) return { ...el, name: "CORPO" };
+      return { ...el, name: "CORPO" };
     }
     if (el.type === "shape") return { ...el, name: "FUNDO CTA" };
     return el;
