@@ -102,6 +102,28 @@ export function buildInitialElements(
   return elements;
 }
 
+/** Backfill `name` for legacy elements that were saved without one */
+function backfillNames(elements: CanvasElement[]): CanvasElement[] {
+  return elements.map(el => {
+    if (el.name) return el;
+    if (el.type === "image") return { ...el, name: "IMAGEM DE FUNDO" };
+    if (el.type === "logo") return { ...el, name: "LOGO" };
+    if (el.type === "text") {
+      // Infer name from fontSize or content position
+      if (el.fontSize && el.fontSize >= 54) return { ...el, name: "TÍTULO" };
+      if (el.fontSize && el.fontSize >= 28 && el.fontSize <= 35) {
+        if (el.fontStyle === "bold") return { ...el, name: "CTA" };
+        if (el.opacity !== undefined && el.opacity < 0.9) return { ...el, name: "SUBTÍTULO" };
+        return { ...el, name: "SUBTÍTULO" };
+      }
+      if (el.fontSize && el.fontSize <= 26) return { ...el, name: "CORPO" };
+      return { ...el, name: "TEXTO" };
+    }
+    if (el.type === "shape") return { ...el, name: "FUNDO CTA" };
+    return el;
+  });
+}
+
 export function useCanvasElements(
   initial: CanvasElement[],
   storageKey?: string,
@@ -116,7 +138,7 @@ export function useCanvasElements(
         const saved = localStorage.getItem(storageKey);
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed) && parsed.length > 0) return backfillNames(parsed);
         }
       } catch {}
     }
