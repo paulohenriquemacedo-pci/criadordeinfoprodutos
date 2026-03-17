@@ -66,7 +66,7 @@ export function buildInitialElements(
 
   if (content.body) {
     elements.push({
-      id: uid(), type: "text", name: "CORPO",
+      id: uid(), type: "text", name: "TEXTO",
       x: 72, y: canvasHeight * 0.68,
       width: canvasWidth - 180, height: 200,
       rotation: 0, opacity: 0.65, locked: false, visible: true, zIndex: z++,
