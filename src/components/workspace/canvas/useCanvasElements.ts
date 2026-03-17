@@ -166,7 +166,7 @@ export function useCanvasElements(
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setElements(parsed);
+            setElements(backfillNames(parsed));
             return;
           }
         }
