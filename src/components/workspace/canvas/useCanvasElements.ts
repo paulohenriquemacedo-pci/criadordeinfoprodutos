@@ -110,13 +110,12 @@ function backfillNames(elements: CanvasElement[]): CanvasElement[] {
     if (el.type === "image") return { ...el, name: "IMAGEM DE FUNDO" };
     if (el.type === "logo") return { ...el, name: "LOGO" };
     if (el.type === "text") {
-      // Infer name from fontSize or content position
       if (el.fontSize && el.fontSize >= 54) return { ...el, name: "TÍTULO" };
       if (el.fontSize && el.fontSize >= 28 && el.fontSize <= 35) {
-        if (el.fontStyle === "bold") return { ...el, name: "CTA" };
-        if (el.opacity !== undefined && el.opacity < 0.9) return { ...el, name: "SUBTÍTULO" };
+        if (el.align === "center" && el.fontStyle?.includes("bold")) return { ...el, name: "CTA" };
         return { ...el, name: "SUBTÍTULO" };
       }
+      if (el.fontStyle?.includes("italic") && !el.fontStyle?.includes("bold")) return { ...el, name: "CORPO" };
       if (el.fontSize && el.fontSize <= 26) return { ...el, name: "CORPO" };
       return { ...el, name: "CORPO" };
     }
