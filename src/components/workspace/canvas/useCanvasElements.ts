@@ -66,7 +66,7 @@ export function buildInitialElements(
 
   if (content.body) {
     elements.push({
-      id: uid(), type: "text", name: "CORPO",
+      id: uid(), type: "text", name: "TEXTO",
       x: 72, y: canvasHeight * 0.68,
       width: canvasWidth - 180, height: 200,
       rotation: 0, opacity: 0.65, locked: false, visible: true, zIndex: z++,
@@ -105,6 +105,7 @@ export function buildInitialElements(
 /** Backfill `name` for legacy elements that were saved without one */
 function backfillNames(elements: CanvasElement[]): CanvasElement[] {
   return elements.map(el => {
+    if (el.name === "CORPO") return { ...el, name: "TEXTO" };
     if (el.name) return el;
     if (el.type === "image") return { ...el, name: "IMAGEM DE FUNDO" };
     if (el.type === "logo") return { ...el, name: "LOGO" };
@@ -116,7 +117,7 @@ function backfillNames(elements: CanvasElement[]): CanvasElement[] {
         if (el.opacity !== undefined && el.opacity < 0.9) return { ...el, name: "SUBTÍTULO" };
         return { ...el, name: "SUBTÍTULO" };
       }
-      if (el.fontSize && el.fontSize <= 26) return { ...el, name: "CORPO" };
+      if (el.fontSize && el.fontSize <= 26) return { ...el, name: "TEXTO" };
       return { ...el, name: "TEXTO" };
     }
     if (el.type === "shape") return { ...el, name: "FUNDO CTA" };
