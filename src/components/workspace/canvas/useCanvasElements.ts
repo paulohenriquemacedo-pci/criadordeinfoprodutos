@@ -105,7 +105,7 @@ export function buildInitialElements(
 /** Backfill `name` for legacy elements that were saved without one */
 function backfillNames(elements: CanvasElement[]): CanvasElement[] {
   return elements.map(el => {
-    if (el.name === "CORPO") return { ...el, name: "TEXTO" };
+    if (el.name === "TEXTO") return { ...el, name: "CORPO" };
     if (el.name) return el;
     if (el.type === "image") return { ...el, name: "IMAGEM DE FUNDO" };
     if (el.type === "logo") return { ...el, name: "LOGO" };
