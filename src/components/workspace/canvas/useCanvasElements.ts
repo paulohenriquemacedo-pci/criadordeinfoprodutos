@@ -128,17 +128,15 @@ function backfillNames(elements: CanvasElement[]): CanvasElement[] {
     return el;
   });
 
-  const hierarchyCandidates = base
-    .filter(
-      el =>
-        el.type === "text" &&
-        !isCtaText(el) &&
-        (!el.name || canonicalTextNames.has(el.name.toUpperCase()))
-    )
-    .sort((a, b) => a.y - b.y)
-    .slice(0, 3);
+  // Collect ALL non-CTA text elements and sort by vertical position
+  const allTextNonCta = base
+    .filter(el => el.type === "text" && !isCtaText(el))
+    .sort((a, b) => a.y - b.y);
 
-  if (hierarchyCandidates.length < 3) return base;
+  // Need at least 3 text blocks to enforce hierarchy
+  if (allTextNonCta.length < 3) return base;
+
+  const hierarchyCandidates = allTextNonCta.slice(0, 3);
 
   const roleById = new Map<string, "TÍTULO" | "SUBTÍTULO" | "CORPO">([
     [hierarchyCandidates[0].id, "TÍTULO"],
