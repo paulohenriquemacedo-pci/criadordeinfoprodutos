@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.strategic-chat]
 verify_jwt = false
+
+[functions.canva-oauth-callback]
+verify_jwt = false

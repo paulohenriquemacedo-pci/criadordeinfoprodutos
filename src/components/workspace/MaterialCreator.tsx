@@ -20,6 +20,7 @@ import Konva from "konva";
 import CanvasEditor, { exportStageToPNG } from "./canvas/CanvasEditor";
 import StylePanel from "./canvas/StylePanel";
 import LayersPanel from "./canvas/LayersPanel";
+import CanvaExportButton from "./canvas/CanvaExportButton";
 import { CanvasElement, CanvasConfig } from "./canvas/types";
 import { buildInitialElements, useCanvasElements } from "./canvas/useCanvasElements";
 import { useDesignTemplates } from "@/hooks/useDesignTemplates";
@@ -412,6 +413,14 @@ export default function MaterialCreator({ projectId, versionContent, taskTitle, 
         <Button size="sm" onClick={handleExport} className="gap-1">
           <Download className="h-4 w-4" /> Exportar PNG
         </Button>
+        <CanvaExportButton
+          format={format}
+          title={extracted.headline}
+          subtitle={extracted.subheadline}
+          body={extracted.body}
+          cta={extracted.cta}
+          imageUrl={elements.find(el => el.type === "image" && el.src)?.src}
+        />
       </div>
 
       <div className="flex-1 flex overflow-hidden">
