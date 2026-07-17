@@ -100,19 +100,49 @@ export default function CustomResearchPanel({ moduleId, savedCustomResearch, onC
       return { name: file.name, content };
     }
 
-    // Binary files: extract via edge function
-    const base64 = await fileToBase64(file);
     const mimeType = getMimeType(file, ext);
 
+    // PDFs (often large/multi-page) → upload to storage; the edge function downloads
+    // and tries native extraction first, falling back to Gemini OCR in batches.
+    if (ext === ".pdf") {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) {
+        toast.error("Sessão expirada. Faça login novamente.");
+        return null;
+      }
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const storagePath = `${userId}/temp-extract/${Date.now()}-${safeName}`;
+      const upload = await supabase.storage
+        .from("project-files")
+        .upload(storagePath, file, { contentType: mimeType, upsert: true });
+      if (upload.error) {
+        toast.error(`"${file.name}": falha no upload (${upload.error.message}).`);
+        return null;
+      }
+      try {
+        const { data, error } = await supabase.functions.invoke("extract-upload-text", {
+          body: { storagePath, fileName: file.name, mimeType },
+        });
+        if (error || !data?.text) {
+          toast.error(`"${file.name}": falha na extração de texto.`);
+          return null;
+        }
+        return { name: file.name, content: data.text };
+      } finally {
+        await supabase.storage.from("project-files").remove([storagePath]);
+      }
+    }
+
+    // Other binary files (docx/xlsx): send as base64 (usually small)
+    const base64 = await fileToBase64(file);
     const { data, error } = await supabase.functions.invoke("extract-upload-text", {
       body: { base64, fileName: file.name, mimeType },
     });
-
     if (error || !data?.text) {
       toast.error(`"${file.name}": falha na extração de texto.`);
       return null;
     }
-
     return { name: file.name, content: data.text };
   };
 
