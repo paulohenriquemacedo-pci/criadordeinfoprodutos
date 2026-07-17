@@ -202,7 +202,7 @@ export default function ProjectWorkspace() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Projeto não encontrado</p>
-          <Button onClick={() => navigate("/")}>Voltar ao Dashboard</Button>
+          <Button onClick={() => navigate("/dashboard")}>Voltar ao Dashboard</Button>
         </div>
       </div>
     );
@@ -213,7 +213,7 @@ export default function ProjectWorkspace() {
       {/* Top bar */}
       <header className="h-14 border-b border-border/50 glass-panel flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>

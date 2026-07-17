@@ -76,6 +76,7 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
   const [projectData, setProjectData] = useState<{ niche: string; promise: string; target_audience: string } | null>(null);
   const [refinedContext, setRefinedContext] = useState("");
   const [customResearch, setCustomResearch] = useState((module as any)?.custom_research || "");
+  const [selectedProvider, setSelectedProvider] = useState("gemini");
   const [selectedModel, setSelectedModel] = useState("gemini-2.5-pro");
   const updateModule = useUpdateModule();
   const { data: versions } = useModuleVersions(module?.id);
@@ -295,7 +296,8 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
             body: JSON.stringify({
               messages: msgs,
               pdfParts: pdfs.length > 0 ? pdfs : undefined,
-              model: `google/${selectedModel}`,
+              model: selectedModel,
+              provider: selectedProvider,
             }),
           }
         );
@@ -433,7 +435,7 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
       setIsGenerating(false);
       setGenerationPhase("");
     }
-  }, [module, projectId, moduleConfig, updateModule, researchContext, researchCitations, customResearch, refinedContext, ensureProjectData, autoResearch, selectedModel]);
+  }, [module, projectId, moduleConfig, updateModule, researchContext, researchCitations, customResearch, refinedContext, ensureProjectData, autoResearch, selectedModel, selectedProvider]);
 
   const handleSave = async () => {
     if (!module) return;
@@ -652,13 +654,56 @@ export default function ModuleWorkArea({ projectId, module, moduleConfig }: Prop
             {/* Model selector + Generate */}
             <div className="flex items-center gap-1 ml-1">
               <select
+                value={selectedProvider}
+                onChange={(e) => {
+                  const prov = e.target.value;
+                  setSelectedProvider(prov);
+                  if (prov === "gemini") {
+                    setSelectedModel("gemini-2.5-pro");
+                  } else if (prov === "groq") {
+                    setSelectedModel("llama-3.3-70b-versatile");
+                  } else if (prov === "openrouter") {
+                    setSelectedModel("anthropic/claude-3.5-sonnet:beta");
+                  } else if (prov === "perplexity") {
+                    setSelectedModel("sonar-pro");
+                  }
+                }}
+                className="h-8 text-xs rounded-md border border-border/50 bg-background px-2 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
+                disabled={isGenerating}
+              >
+                <option value="gemini">Gemini</option>
+                <option value="groq">Groq</option>
+                <option value="openrouter">OpenRouter</option>
+                <option value="perplexity">Perplexity</option>
+              </select>
+              <select
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
                 className="h-8 text-xs rounded-md border border-border/50 bg-background px-2 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
                 disabled={isGenerating}
               >
-                <option value="gemini-2.5-pro">Gemini Pro</option>
-                <option value="gemini-2.5-flash">Gemini Flash</option>
+                {selectedProvider === "gemini" && (
+                  <>
+                    <option value="gemini-2.5-pro">Gemini Pro</option>
+                    <option value="gemini-2.5-flash">Gemini Flash</option>
+                  </>
+                )}
+                {selectedProvider === "groq" && (
+                  <>
+                    <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+                  </>
+                )}
+                {selectedProvider === "openrouter" && (
+                  <>
+                    <option value="anthropic/claude-3.5-sonnet:beta">Claude 3.5 Sonnet</option>
+                    <option value="qwen/qwen-2.5-72b-instruct">Qwen 2.5 72B</option>
+                  </>
+                )}
+                {selectedProvider === "perplexity" && (
+                  <>
+                    <option value="sonar-pro">Sonar Pro</option>
+                  </>
+                )}
               </select>
               <Button size="sm" onClick={handleGenerate} disabled={isGenerating} className="gap-1 h-8">
                 {isGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}

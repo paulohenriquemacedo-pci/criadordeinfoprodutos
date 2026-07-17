@@ -18,27 +18,53 @@ serve(async (req) => {
     const searchQuery = customPrompt
       ? `Nicho: ${niche || "não definido"}\nPromessa do produto: ${promise || "não definida"}\nPúblico-alvo: ${targetAudience || "não definido"}\nMódulo atual: ${moduleNumber} - ${moduleTitle}\n\n${customPrompt}`
       : buildSearchQuery(niche, promise, targetAudience, moduleTitle, moduleNumber);
-    const response = await fetch("https://api.perplexity.ai/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "sonar-pro",
-        messages: [
-          {
-            role: "system",
-            content: `Você é um pesquisador de mercado digital especializado em infoprodutos no Brasil. 
+    let response;
+    if (PERPLEXITY_API_KEY.startsWith("sk-or-v1-")) {
+      response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://orquestradorinfoprodutos.lovable.app",
+          "X-Title": "Orquestrador de Infoprodutos",
+        },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            {
+              role: "system",
+              content: `Você é um pesquisador de mercado digital especializado em infoprodutos no Brasil. 
 Retorne dados objetivos e atualizados sobre o mercado, concorrentes, tendências, público-alvo e oportunidades.
 Sempre inclua dados concretos: números, nomes de concorrentes, preços praticados, estratégias observadas.
 Responda em português do Brasil.`,
-          },
-          { role: "user", content: searchQuery },
-        ],
-        search_recency_filter: "month",
-      }),
-    });
+            },
+            { role: "user", content: searchQuery },
+          ],
+        }),
+      });
+    } else {
+      response = await fetch("https://api.perplexity.ai/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "sonar-pro",
+          messages: [
+            {
+              role: "system",
+              content: `Você é um pesquisador de mercado digital especializado em infoprodutos no Brasil. 
+Retorne dados objetivos e atualizados sobre o mercado, concorrentes, tendências, público-alvo e oportunidades.
+Sempre inclua dados concretos: números, nomes de concorrentes, preços praticados, estratégias observadas.
+Responda em português do Brasil.`,
+            },
+            { role: "user", content: searchQuery },
+          ],
+          search_recency_filter: "month",
+        }),
+      });
+    }
 
     if (!response.ok) {
       const errText = await response.text();

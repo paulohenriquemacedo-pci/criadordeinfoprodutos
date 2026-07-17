@@ -82,6 +82,20 @@ export default function WorkflowSidebar({ activeModule, onSelectModule, modules 
             );
           })}
         </nav>
+        <div className="mt-6 border-t border-border/40 pt-4">
+          <a
+            href="/command-center/"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-muted-foreground hover:bg-secondary hover:text-foreground border border-dashed border-border/60 hover:border-primary/50"
+          >
+            <div className="flex items-center justify-center w-7 h-7 rounded-md bg-secondary text-primary shrink-0">
+              <Bot className="h-3.5 w-3.5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="block text-xs font-semibold">Command Center</span>
+              <span className="block text-[10px] text-muted-foreground">Sincronizador & IA Local</span>
+            </div>
+          </a>
+        </div>
       </div>
     </aside>
   );
