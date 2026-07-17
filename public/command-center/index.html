@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Center — Sistema A.C.A.D.E.M.I.A.</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Custom styling -->
+  <script type="module" crossorigin src="/command-center/assets/index-D1HDGHYS.js"></script>
+  <link rel="stylesheet" crossorigin href="/command-center/assets/index-Ca-Nqx7O.css">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <div class="logo-icon">A</div>
+                    <div>
+                        <h1 class="logo-title">A.C.A.D.E.M.I.A.</h1>
+                        <span class="logo-subtitle">Command Center</span>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="/" class="nav-item-gateway" style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; font-size: 13px; text-decoration: none; color: #8e9aaf; border: 1px dashed rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(0,255,255,0.5)'; this.style.color='#ffffff';" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='#8e9aaf';">
+                    <i data-lucide="rocket" style="color: #00ffff; width: 16px; height: 16px;"></i>
+                    <span style="font-weight: 600;">Ir para o Orquestrador</span>
+                </a>
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="kb">
+                    <i data-lucide="database"></i>
+                    <span>Base de Conhecimento</span>
+                </a>
+                <div class="nav-category">Orquestrador de IA (Nuvem)</div>
+                <a href="#" class="nav-item m0-nav" data-page="m0" style="border-left: 3px solid var(--accent-cyan);">
+                    <i data-lucide="shield-alert" style="color: var(--accent-cyan);"></i>
+                    <span style="font-weight: 700;">M0: Coerência</span>
+                </a>
+                <a href="#" class="nav-item" data-page="m1">
+                    <i data-lucide="file-text"></i>
+                    <span>M1: Briefing</span>
+                </a>
+                <a href="#" class="nav-item" data-page="m2">
+                    <i data-lucide="layout-grid"></i>
+                    <span>M2: Estrutura</span>
+                </a>
+                <a href="#" class="nav-item" data-page="m3">
+                    <i data-lucide="megaphone"></i>
+                    <span>M3: Copy & VSL</span>
+                </a>
+                <a href="#" class="nav-item" data-page="m4">
+                    <i data-lucide="rss"></i>
+                    <span>M4: Orgânico</span>
+                </a>
+                <a href="#" class="nav-item" data-page="m5">
+                    <i data-lucide="image"></i>
+                    <span>M5: Anúncios</span>
+                </a>
+                <a href="#" class="nav-item" data-page="m6">
+                    <i data-lucide="mail"></i>
+                    <span>M6: E-mail</span>
+                </a>
+                <a href="#" class="nav-item" data-page="m7">
+                    <i data-lucide="message-circle"></i>
+                    <span>M7: WhatsApp</span>
+                </a>
+                <a href="#" class="nav-item" data-page="m8">
+                    <i data-lucide="trending-up"></i>
+                    <span>M8: Funil</span>
+                </a>
+                <a href="#" class="nav-item" data-page="m9">
+                    <i data-lucide="package"></i>
+                    <span>M9: Oferta</span>
+                </a>
+                <a href="#" class="nav-item" data-page="m10">
+                    <i data-lucide="palette"></i>
+                    <span>M10: Hub Canva</span>
+                </a>
+
+                <div class="nav-category">Agentes de Marketing (Locais)</div>
+                <a href="#" class="nav-item" data-page="meta-ads">
+                    <i data-lucide="megaphone"></i>
+                    <span>Meta Ads Copy</span>
+                </a>
+                <a href="#" class="nav-item" data-page="instagram">
+                    <i data-lucide="instagram"></i>
+                    <span>Instagram Posts</span>
+                </a>
+                <a href="#" class="nav-item" data-page="blog">
+                    <i data-lucide="globe"></i>
+                    <span>Artigo SEO Blog</span>
+                </a>
+                <a href="#" class="nav-item" data-page="products">
+                    <i data-lucide="shopping-bag"></i>
+                    <span>Novos Produtos</span>
+                </a>
+                <a href="#" class="nav-item" data-page="theme-creator">
+                    <i data-lucide="sparkles"></i>
+                    <span>Criador de Temas</span>
+                </a>
+                <a href="#" class="nav-item" data-page="campaign">
+                    <i data-lucide="layers"></i>
+                    <span>Campanha 360°</span>
+                </a>
+
+                <div class="nav-category">Administração</div>
+                <a href="#" class="nav-item" data-page="settings">
+                    <i data-lucide="settings"></i>
+                    <span>Configurações</span>
+                </a>
+            </nav>
+            
+            <!-- Quick Status Indicator -->
+            <div class="sidebar-footer">
+                <div class="watcher-status-card">
+                    <div class="watcher-status-header">
+                        <div class="status-indicator online"></div>
+                        <span class="status-text">Cérebro Local Online</span>
+                    </div>
+                    <div class="watcher-stat-row">
+                        <span class="stat-label">Indexados:</span>
+                        <span class="stat-value" id="footer-indexed-files">0 arquivos</span>
+                    </div>
+                    <div class="watcher-stat-row">
+                        <span class="stat-label">Energia IA:</span>
+                        <span class="stat-value text-accent" id="footer-provider">Groq / Llama3</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="main-header">
+                <div class="header-search-container">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="global-search" placeholder="Pesquisar em todo o Sistema Academia..." class="search-input">
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary sync-btn" id="header-sync-btn">
+                        <i data-lucide="refresh-cw"></i>
+                        <span>Sincronizar</span>
+                    </button>
+                    <div class="active-provider-badge">
+                        <i data-lucide="cpu" class="badge-icon"></i>
+                        <span id="active-model-display">Groq (Llama 3.3)</span>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Dynamic Content Window -->
+            <div class="content-body" id="page-content">
+                <!-- Pages will be rendered here dynamically -->
+                <div class="loading-spinner-container">
+                    <div class="spinner"></div>
+                    <p>Sincronizando sistemas locais...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- Application Scripts -->
+</body>
+</html>
