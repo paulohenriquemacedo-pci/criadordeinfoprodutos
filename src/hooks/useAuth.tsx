@@ -11,6 +11,12 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
+// TEMP: autenticação desativada para avaliação. Defina como null para reativar o login.
+const TEMP_AUTO_LOGIN: { email: string; password: string } | null = {
+  email: "ometodopci@gmail.com",
+  password: "admin2026",
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -25,7 +31,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      // TEMP: auto-login para avaliação — remover depois
+      if (!session && TEMP_AUTO_LOGIN) {
+        const { error } = await supabase.auth.signInWithPassword(TEMP_AUTO_LOGIN);
+        if (!error) return; // onAuthStateChange atualiza o estado
+      }
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
