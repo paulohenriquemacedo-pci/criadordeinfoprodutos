@@ -84,7 +84,7 @@ export default function Gateway() {
                 <div className="w-12 h-12 rounded-lg bg-accent-cyan/10 flex items-center justify-center text-accent-cyan mb-4 group-hover:bg-accent-cyan/20 transition-colors" style={{ color: '#00ffff' }}>
                   <Cpu className="h-6 w-6" />
                 </div>
-                <CardTitle className="text-2xl group-hover:text-accent-cyan transition-colors flex items-center gap-2" style={{ '--accent-cyan-hover': '#00ffff' }}>
+                <CardTitle className="text-2xl group-hover:text-accent-cyan transition-colors flex items-center gap-2" style={{ '--accent-cyan-hover': '#00ffff' } as React.CSSProperties}>
                   Command Center
                 </CardTitle>
                 <CardDescription className="text-sm mt-2 leading-relaxed">
